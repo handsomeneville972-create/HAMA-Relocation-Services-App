@@ -28,7 +28,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textTertiary,
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.65)',
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.tabLabel,
       }}
