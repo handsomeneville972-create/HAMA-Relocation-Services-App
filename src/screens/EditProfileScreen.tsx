@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  Image, Animated, ActivityIndicator, Platform,
+  Image, Animated, ActivityIndicator, Alert, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { LiquidGlass } from '../components/LiquidGlass';
+import { LiquidGlass, LiquidInput } from '../components/LiquidGlass';
 import { GlassCard } from '../components/GlassCard';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar, deleteUserAvatars } from '../services/uploadService';
@@ -18,10 +18,11 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   const { currentUser, currentUserId, updateProfile } = useAuth();
 
   const [displayName, setDisplayName] = useState(currentUser.name);
+  const [username, setUsername] = useState(currentUser.username ?? '');
+  const [bio, setBio] = useState(currentUser.bio ?? '');
+  const [website, setWebsite] = useState(currentUser.website ?? '');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPicking, setIsPicking] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -33,199 +34,202 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
     }).start();
   }, []);
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
+  const pickImage = async (useCamera: boolean) => {
+    const permission = useCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== 'granted') return;
 
-    setIsPicking(true);
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
+    const result = useCamera
+      ? await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.8 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
 
-      if (!result.canceled && result.assets[0]) {
-        setAvatarUri(result.assets[0].uri);
-        setHasChanges(true);
-      }
-    } finally {
-      setIsPicking(false);
+    if (!result.canceled && result.assets[0]) {
+      setAvatarUri(result.assets[0].uri);
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') return;
+  const handleAvatarPress = () => {
+    Alert.alert('Change Profile Photo', '', [
+      { text: 'Take Photo', onPress: () => pickImage(true) },
+      { text: 'Choose from Gallery', onPress: () => pickImage(false) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
-    setIsPicking(true);
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setAvatarUri(result.assets[0].uri);
-        setHasChanges(true);
-      }
-    } finally {
-      setIsPicking(false);
-    }
+  const hasChanges = () => {
+    if (avatarUri) return true;
+    if (displayName.trim() !== currentUser.name) return true;
+    if ((username ?? '') !== (currentUser.username ?? '')) return true;
+    if ((bio ?? '') !== (currentUser.bio ?? '')) return true;
+    if ((website ?? '') !== (currentUser.website ?? '')) return true;
+    return false;
   };
 
   const handleSave = async () => {
-    if (!currentUserId || !hasChanges) return;
-
+    if (!currentUserId || !hasChanges()) return;
     setIsSaving(true);
+
     try {
       let avatarUrl = currentUser.avatar;
 
-      if (avatarUri && avatarUri !== currentUser.avatar) {
+      if (avatarUri) {
         const result = await uploadAvatar(currentUserId, avatarUri);
         if ('error' in result) {
+          Alert.alert('Upload Failed', result.error);
+          setIsSaving(false);
           return;
         }
         avatarUrl = result.url;
         deleteUserAvatars(currentUserId);
       }
 
-      updateProfile({ name: displayName.trim() || currentUser.name, avatar: avatarUrl });
+      await updateProfile({
+        name: displayName.trim() || currentUser.name,
+        avatar: avatarUrl,
+        username: username.trim() || undefined,
+        bio: bio.trim() || undefined,
+        website: website.trim() || undefined,
+      });
+
       navigation.goBack();
     } finally {
       setIsSaving(false);
     }
   };
 
-  const hasNameChanged = displayName.trim() !== currentUser.name;
-  const hasAvatarChanged = avatarUri !== null && avatarUri !== currentUser.avatar;
-  const canSave = (hasNameChanged || hasAvatarChanged) && !isSaving;
-
-  const avatarSource = avatarUri
-    ? { uri: avatarUri }
-    : currentUser.avatar
-      ? { uri: currentUser.avatar }
-      : null;
+  const canSave = hasChanges() && !isSaving;
+  const picSource = avatarUri ? { uri: avatarUri } : currentUser.avatar ? { uri: currentUser.avatar } : null;
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
-          <TouchableOpacity
-            style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={!canSave}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={[styles.saveButtonText, !canSave && styles.saveButtonTextDisabled]}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </LinearGradient>
+      {/* Header */}
+      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <TouchableOpacity
+          style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
+          onPress={handleSave}
+          disabled={!canSave}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={[styles.saveBtnText, !canSave && styles.saveBtnTextDisabled]}>Save</Text>
+          )}
+        </TouchableOpacity>
+      </LinearGradient>
 
+      <ScrollView showsVerticalScrollIndicator={false}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          {/* Avatar Section */}
-          <View style={styles.avatarSection}>
-            <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-              <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarBorder}>
-                {avatarSource ? (
-                  <Image source={avatarSource} style={styles.avatar} />
+          {/* Photo */}
+          <View style={styles.photoSection}>
+            <TouchableOpacity onPress={handleAvatarPress} style={styles.photoWrapper}>
+              <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
+                {picSource ? (
+                  <Image source={picSource} style={styles.photo} />
                 ) : (
-                  <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                    <Ionicons name="person" size={40} color={COLORS.textTertiary} />
+                  <View style={[styles.photo, styles.photoPlaceholder]}>
+                    <Ionicons name="person" size={44} color={COLORS.textTertiary} />
                   </View>
                 )}
-                <View style={styles.cameraBadge}>
-                  <Ionicons name="camera" size={16} color="#fff" />
-                </View>
               </LinearGradient>
+              <View style={styles.editBadge}>
+                <Ionicons name="camera" size={16} color="#fff" />
+              </View>
             </TouchableOpacity>
-            <Text style={styles.avatarHint}>Tap to change photo</Text>
-
-            {/* Photo source buttons */}
-            <View style={styles.photoActions}>
-              <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
-                <Ionicons name="images-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.photoButtonText}>Gallery</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
-                <Ionicons name="camera-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.photoButtonText}>Camera</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
-          {/* Form */}
-          <View style={styles.formSection}>
+          {/* Fields */}
+          <View style={styles.form}>
             <LiquidGlass variant="elevated">
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Display Name</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={20} color={COLORS.textTertiary} />
+              {/* Display Name */}
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Name</Text>
+                <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
                   <TextInput
                     style={styles.input}
                     value={displayName}
-                    onChangeText={(t) => { setDisplayName(t); setHasChanges(true); }}
+                    onChangeText={setDisplayName}
                     placeholder="Your display name"
                     placeholderTextColor={COLORS.textTertiary}
                     autoCapitalize="words"
                     maxLength={50}
                   />
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Username */}
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Username</Text>
+                <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
+                  <Text style={styles.atSign}>@</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="username"
+                    placeholderTextColor={COLORS.textTertiary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={30}
+                  />
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Bio */}
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Bio</Text>
+                <View style={styles.bioArea}>
+                  <TextInput
+                    style={[styles.input, styles.bioInput]}
+                    value={bio}
+                    onChangeText={setBio}
+                    placeholder="Describe yourself in 80 characters"
+                    placeholderTextColor={COLORS.textTertiary}
+                    multiline
+                    maxLength={80}
+                  />
+                  <Text style={styles.charCount}>{bio.length}/80</Text>
                 </View>
               </View>
 
               <View style={styles.divider} />
 
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Email</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="mail-outline" size={20} color={COLORS.textTertiary} />
+              {/* Website */}
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Website</Text>
+                <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
+                  <Ionicons name="link-outline" size={18} color={COLORS.textTertiary} />
                   <TextInput
-                    style={[styles.input, styles.inputDisabled]}
-                    value={currentUser.email}
-                    editable={false}
+                    style={styles.input}
+                    value={website}
+                    onChangeText={setWebsite}
+                    placeholder="Add a link"
+                    placeholderTextColor={COLORS.textTertiary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
                   />
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons
-                      name={currentUser.emailVerified ? 'checkmark-circle' : 'time-outline'}
-                      size={16}
-                      color={currentUser.emailVerified ? COLORS.success : COLORS.warning}
-                    />
-                  </View>
-                </View>
-                <Text style={styles.fieldHint}>Email cannot be changed</Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Phone</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="call-outline" size={20} color={COLORS.textTertiary} />
-                  <TextInput
-                    style={[styles.input, styles.inputDisabled]}
-                    value={currentUser.phone || 'Not set'}
-                    editable={false}
-                  />
-                </View>
-                <Text style={styles.fieldHint}>Add phone in Settings</Text>
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                </TouchableOpacity>
               </View>
             </LiquidGlass>
 
-            {/* Info card */}
+            {/* Info */}
             <GlassCard style={styles.infoCard}>
               <View style={styles.infoRow}>
                 <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
                 <Text style={styles.infoText}>
-                  Your profile photo and display name are visible to other users.
+                  Your name, @username, bio, and photo are visible to other users on the platform.
                 </Text>
               </View>
             </GlassCard>
@@ -248,7 +252,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -260,30 +264,30 @@ const styles = StyleSheet.create({
     ...FONTS.h3,
     color: COLORS.text,
   },
-  saveButton: {
+  saveBtn: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
   },
-  saveButtonDisabled: {
+  saveBtnDisabled: {
     backgroundColor: COLORS.bgCard,
   },
-  saveButtonText: {
+  saveBtnText: {
     ...FONTS.button,
     color: '#fff',
   },
-  saveButtonTextDisabled: {
+  saveBtnTextDisabled: {
     color: COLORS.textTertiary,
   },
-  avatarSection: {
+  photoSection: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,
   },
-  avatarWrapper: {
+  photoWrapper: {
     position: 'relative',
   },
-  avatarBorder: {
+  photoBorder: {
     width: 120,
     height: 120,
     borderRadius: 60,
@@ -291,17 +295,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...SHADOWS.glow,
   },
-  avatar: {
+  photo: {
     width: 112,
     height: 112,
     borderRadius: 56,
   },
-  avatarPlaceholder: {
+  photoPlaceholder: {
     backgroundColor: COLORS.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cameraBadge: {
+  editBadge: {
     position: 'absolute',
     bottom: 4,
     right: 4,
@@ -314,37 +318,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.bg,
   },
-  avatarHint: {
-    ...FONTS.caption,
-    color: COLORS.textTertiary,
-    marginTop: SPACING.sm,
-  },
-  photoActions: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginTop: SPACING.md,
-  },
-  photoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-  },
-  photoButtonText: {
-    ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
-  },
-  formSection: {
+  form: {
     paddingHorizontal: SPACING.md,
     gap: SPACING.md,
     paddingBottom: SPACING.xxl,
   },
-  fieldGroup: {
+  fieldRow: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
     gap: 6,
   },
   fieldLabel: {
@@ -353,15 +334,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  inputWrapper: {
+  fieldInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     gap: 10,
   },
   input: {
@@ -370,20 +345,26 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     padding: 0,
   },
-  inputDisabled: {
-    color: COLORS.textTertiary,
+  atSign: {
+    ...FONTS.body,
+    color: COLORS.primary,
+    fontWeight: '700',
   },
-  verifiedBadge: {
-    marginLeft: 'auto',
+  bioArea: {
+    gap: 4,
   },
-  fieldHint: {
+  bioInput: {
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  charCount: {
     ...FONTS.caption,
     color: COLORS.textTertiary,
+    textAlign: 'right',
   },
   divider: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.06)',
-    marginVertical: SPACING.sm,
   },
   infoCard: {
     marginTop: SPACING.sm,

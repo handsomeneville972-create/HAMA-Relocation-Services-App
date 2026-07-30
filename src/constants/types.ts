@@ -23,6 +23,14 @@ export interface User {
   /** ISO date of last login */
   lastLoginAt?: string;
 
+  // ===== Profile Info =====
+  /** Unique @handle username */
+  username?: string;
+  /** Short bio (max 80 chars) */
+  bio?: string;
+  /** External website URL */
+  website?: string;
+
   // ===== Business & Profile Info =====
   /** Business name (for landlords, sellers, service providers) */
   businessName?: string;
