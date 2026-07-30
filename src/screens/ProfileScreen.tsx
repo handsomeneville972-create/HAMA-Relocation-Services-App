@@ -27,9 +27,16 @@ const MENU_SECTIONS = [
   {
     title: 'Subscriptions',
     items: [
-      { icon: 'diamond-outline', label: 'My Plan', color: COLORS.primary, badge: 'Free', route: 'Subscriptions' },
+      { icon: 'diamond-outline', label: 'My Plan', color: COLORS.primary, badge: 'Free', route: 'WorkspacePlans' },
       { icon: 'card-outline', label: 'Payment Methods', color: COLORS.accent, route: 'PaymentMethods' },
       { icon: 'receipt-outline', label: 'Billing History', color: COLORS.textSecondary, route: 'BillingHistory' },
+    ],
+  },
+  {
+    title: 'Hosting',
+    items: [
+      { icon: 'add-circle-outline', label: 'List a Property', color: COLORS.primary, route: 'LandlordOnboarding' },
+      { icon: 'home-outline', label: 'Landlord Dashboard', color: COLORS.accent, route: 'LandlordDashboard' },
     ],
   },
   {

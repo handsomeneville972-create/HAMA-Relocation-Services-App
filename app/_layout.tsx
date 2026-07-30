@@ -253,6 +253,27 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="WorkspacePlans"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="LandlordOnboarding"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="LandlordDashboard"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
                     name="Legal"
                     options={{
                       headerShown: false,

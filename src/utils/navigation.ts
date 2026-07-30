@@ -20,6 +20,9 @@ const ROUTE_PATHS: Record<string, string> = {
   FounderDashboard: '/FounderDashboard',
   Announcements: '/Announcements',
   AdminCenter: '/AdminCenter',
+  LandlordOnboarding: '/LandlordOnboarding',
+  LandlordDashboard: '/LandlordDashboard',
+  WorkspacePlans: '/WorkspacePlans',
 };
 
 /**
