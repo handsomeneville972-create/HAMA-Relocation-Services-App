@@ -18,7 +18,7 @@ const MENU_SECTIONS = [
   {
     title: 'Account',
     items: [
-      { icon: 'person-outline', label: 'Edit Profile', color: COLORS.primary },
+      { icon: 'person-outline', label: 'Edit Profile', color: COLORS.primary, route: 'EditProfile' },
       { icon: 'location-outline', label: 'Saved Properties', color: COLORS.accent, badgeKey: 'savedProperties', route: 'Favorites' },
       { icon: 'heart-outline', label: 'Saved Products', color: COLORS.secondary, badgeKey: 'savedProducts', route: 'Favorites' },
       { icon: 'bookmark-outline', label: 'Saved Posts', color: COLORS.warning, badgeKey: 'savedPosts', route: 'Favorites' },

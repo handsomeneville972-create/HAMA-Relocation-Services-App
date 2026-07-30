@@ -260,6 +260,13 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="EditProfile"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
                     name="LandlordOnboarding"
                     options={{
                       headerShown: false,

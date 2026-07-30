@@ -23,6 +23,7 @@ const ROUTE_PATHS: Record<string, string> = {
   LandlordOnboarding: '/LandlordOnboarding',
   LandlordDashboard: '/LandlordDashboard',
   WorkspacePlans: '/WorkspacePlans',
+  EditProfile: '/EditProfile',
 };
 
 /**
