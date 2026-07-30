@@ -93,11 +93,11 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
       ]}
     >
       {/* ===== THUMBNAIL AREA (rounded, like YouTube) ===== */}
-      <View style={[styles.thumbnailContainer, { aspectRatio }]}>
+      <View style={styles.thumbnailContainer}>
         {imageUri ? (
           <Image
             source={typeof imageUri === 'number' ? imageUri : { uri: imageUri }}
-            style={styles.thumbnailImage}
+            style={[styles.thumbnailImage, { aspectRatio }]}
             resizeMode="cover"
           />
         ) : (
@@ -105,7 +105,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             colors={placeholderGradient || [COLORS.primary, COLORS.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.placeholderGradient}
+            style={[styles.placeholderGradient, { aspectRatio }]}
           >
             <Ionicons
               name={(placeholderIcon || 'image-outline') as any}
@@ -210,7 +210,6 @@ const styles = StyleSheet.create({
   thumbnailContainer: {
     width: '100%',
     position: 'relative',
-    overflow: 'hidden',
   },
   thumbnailImage: {
     width: '100%',
