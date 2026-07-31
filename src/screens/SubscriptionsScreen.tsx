@@ -138,12 +138,12 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             end={{ x: 1, y: 1 }}
             style={styles.freemiumBannerGradient}
           >
-            <Ionicons name="diamond" size={18} color={COLORS.primary} />
+            <Ionicons name="star" size={18} color={COLORS.primary} />
             <View style={styles.freemiumBannerTextContainer}>
               <Text style={styles.freemiumBannerTitle}>Early Access Benefit Active</Text>
               <Text style={styles.freemiumBannerText}>
                 You currently receive complimentary access to all premium features included in these plans.
-                Enjoy full functionality while our Founding Member Program remains available.
+                Enjoy full functionality while Early Access is active.
               </Text>
             </View>
           </LinearGradient>
@@ -272,7 +272,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
               <Ionicons name="close" size={24} color={COLORS.text} />
             </TouchableOpacity>
 
-            <Ionicons name="diamond-outline" size={40} color={COLORS.primary} />
+            <Ionicons name="star-outline" size={40} color={COLORS.primary} />
             <Text style={styles.paymentTitle}>
               Subscribe to {selectedPlan.tier}
             </Text>

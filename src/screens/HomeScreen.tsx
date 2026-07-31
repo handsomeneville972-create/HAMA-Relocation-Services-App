@@ -73,12 +73,40 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         {/* Hero Section */}
         <Animated.View style={[styles.heroContainer, { transform: [{ translateY: heroTranslateY }], opacity: heroOpacity }]}>
+          <View style={styles.heroImageContainer}>
+            <Image source={require('../../assets/header.png')} style={styles.heroImage} resizeMode="cover" />
+            {/* Top edge fade */}
+            <LinearGradient
+              colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0.6)', 'transparent']}
+              style={styles.heroEdgeTop}
+            />
+            {/* Bottom edge fade */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,1)']}
+              style={styles.heroEdgeBottom}
+            />
+            {/* Left edge fade */}
+            <LinearGradient
+              colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0.5)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.heroEdgeLeft}
+            />
+            {/* Right edge fade */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,1)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.heroEdgeRight}
+            />
+          </View>
+
           <LinearGradient
             colors={['#000000', '#0A0A0A', '#000000']}
             style={styles.heroGradient}
           >
             <View style={[styles.heroContent, { paddingTop: insets.top + SPACING.xl }]}>
-              {/* Logo & Notification */}
+              {/* Top Bar */}
               <View style={styles.topBar}>
                 <View style={styles.logoContainer}>
                   <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoIcon}>
@@ -96,35 +124,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
                   <View style={styles.notifDot} />
                 </TouchableOpacity>
-              </View>
-
-              {/* Hero 3D House Animation Placeholder */}
-              <View style={styles.hero3dContainer}>
-                <LinearGradient
-                  colors={['rgba(255,107,0,0.1)', 'transparent']}
-                  style={styles.hero3dBg}
-                />
-                <View style={styles.houseIcon}>
-                  <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.houseIconGradient}>
-                    <Ionicons name="home" size={48} color="#fff" />
-                  </LinearGradient>
-                </View>
-                {/* Floating particles */}
-                {[...Array(8)].map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.particle,
-                      {
-                        top: Math.random() * 200,
-                        left: Math.random() * width,
-                        opacity: 0.3 + Math.random() * 0.5,
-                        width: 3 + Math.random() * 4,
-                        height: 3 + Math.random() * 4,
-                      },
-                    ]}
-                  />
-                ))}
               </View>
 
               {/* Search Bar */}
@@ -155,12 +154,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Subscriptions')}>
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="diamond-outline" size={22} color={COLORS.warning} />
+                    <Ionicons name="star-outline" size={22} color={COLORS.warning} />
                   </View>
                   <Text style={styles.quickActionText}>Premium</Text>
                 </TouchableOpacity>
-
-
               </View>
             </View>
           </LinearGradient>
@@ -343,6 +340,45 @@ const styles = StyleSheet.create({
   heroContainer: {
     overflow: 'hidden',
   },
+  heroImageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.55,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroEdgeTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  heroEdgeBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  heroEdgeLeft: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 40,
+  },
+  heroEdgeRight: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 40,
+  },
   heroGradient: {
     minHeight: height * 0.55,
   },
@@ -402,38 +438,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: COLORS.secondary,
-  },
-  hero3dContainer: {
-    height: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-    position: 'relative',
-  },
-  hero3dBg: {
-    position: 'absolute',
-    top: 0,
-    left: -SPACING.md,
-    right: -SPACING.md,
-    height: '100%',
-    borderRadius: 30,
-  },
-  houseIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    overflow: 'hidden',
-    ...SHADOWS.glow,
-  },
-  houseIconGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  particle: {
-    position: 'absolute',
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 50,
   },
   searchBar: {
     flexDirection: 'row',

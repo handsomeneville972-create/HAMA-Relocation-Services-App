@@ -28,7 +28,7 @@ const MENU_SECTIONS = [
   {
     title: 'Subscriptions',
     items: [
-      { icon: 'diamond-outline', label: 'My Plan', color: COLORS.primary, badge: 'Free', route: 'WorkspacePlans' },
+      { icon: 'star-outline', label: 'My Plan', color: COLORS.primary, badge: 'Free', route: 'WorkspacePlans' },
       { icon: 'card-outline', label: 'Payment Methods', color: COLORS.accent, route: 'PaymentMethods' },
       { icon: 'receipt-outline', label: 'Billing History', color: COLORS.textSecondary, route: 'BillingHistory' },
     ],

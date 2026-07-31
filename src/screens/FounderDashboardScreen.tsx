@@ -16,7 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { FoundingMemberBadge } from '../components/FoundingMemberBadge';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useEarlyAccess } from '../contexts/EarlyAccessContext';
@@ -95,7 +94,6 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>Founder Dashboard</Text>
-          <FoundingMemberBadge variant="compact" memberNumber={currentUser.foundingMemberNumber} />
         </View>
         <Text style={styles.headerSubtitle}>Growth metrics, analytics, and revenue forecasting</Text>
       </LinearGradient>

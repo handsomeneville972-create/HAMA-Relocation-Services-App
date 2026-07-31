@@ -68,7 +68,7 @@ export const EarlyAccessBanner: React.FC = () => {
       >
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <Ionicons name="diamond" size={14} color={COLORS.primaryLight} />
+            <Ionicons name="rocket" size={14} color={COLORS.primaryLight} />
           </View>
           <View style={styles.scrollContainer}>
             <Animated.View

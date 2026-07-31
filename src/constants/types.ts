@@ -41,11 +41,7 @@ export interface User {
   /** User's country */
   country?: string;
 
-  // ===== Founding Member Program =====
-  /** Whether user is a Founding Member */
-  isFoundingMember?: boolean;
-  /** Auto-incrementing Founding Member number (e.g. #000001) */
-  foundingMemberNumber?: number;
+  // ===== Referral & Engagement =====
   /** Referral count for rewards tracking */
   referralCount?: number;
   /** Premium usage score (0-100) based on feature adoption */
@@ -462,7 +458,7 @@ export interface WaitlistEntry {
 // ============ REFERRAL TYPES ============
 
 /** Referral reward tiers */
-export type ReferralTier = 'early_access_plus' | 'founding_member_gold' | 'vip_founding_circle';
+export type ReferralTier = 'early_access_plus' | 'premium_gold' | 'vip_inner_circle';
 
 export interface ReferralTierInfo {
   key: ReferralTier;
@@ -474,8 +470,8 @@ export interface ReferralTierInfo {
 
 export const REFERRAL_TIERS: ReferralTierInfo[] = [
   { key: 'early_access_plus', label: 'Early Access Plus', requiredReferrals: 3, icon: 'diamond', description: 'Extended early access benefits' },
-  { key: 'founding_member_gold', label: 'Founding Member Gold', requiredReferrals: 5, icon: 'trophy', description: 'Gold status with priority support' },
-  { key: 'vip_founding_circle', label: 'VIP Founding Circle', requiredReferrals: 10, icon: 'star', description: 'Exclusive VIP circle access' },
+  { key: 'premium_gold', label: 'Premium Gold', requiredReferrals: 5, icon: 'trophy', description: 'Gold status with priority support' },
+  { key: 'vip_inner_circle', label: 'VIP Inner Circle', requiredReferrals: 10, icon: 'star', description: 'Exclusive VIP circle access' },
 ];
 
 /** Referral record */
@@ -694,7 +690,6 @@ export interface FeatureFlags {
   earlyAccessMode: boolean;
   subscriptionsEnabled: boolean;
   paymentsEnabled: boolean;
-  foundingMemberProgram: boolean;
 }
 
 /** Platform health status indicators */
@@ -751,7 +746,7 @@ export interface Announcement {
   excerpt: string;
   body?: string;
   category: 'updates' | 'features' | 'releases' | 'founder' | 'community';
-  targetAudience: 'all' | 'founding_members' | 'premium_users' | 'new_users';
+  targetAudience: 'all' | 'premium_users' | 'new_users';
   published: boolean;
   scheduledAt?: string;
   createdAt: string;

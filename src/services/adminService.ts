@@ -47,7 +47,6 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   earlyAccessMode: true,
   subscriptionsEnabled: false,
   paymentsEnabled: false,
-  foundingMemberProgram: true,
 };
 
 export const adminFeatureFlagService = {
@@ -103,13 +102,11 @@ export const adminUserService = {
   /** Filter users by criteria */
   filter: async (criteria: {
     role?: string;
-    isFoundingMember?: boolean;
     verified?: boolean;
     active?: boolean;
   }): Promise<User[]> => {
     let users = await adminUserService.getAll();
     if (criteria.role) users = users.filter(u => u.role === criteria.role);
-    if (criteria.isFoundingMember !== undefined) users = users.filter(u => u.isFoundingMember === criteria.isFoundingMember);
     if (criteria.verified !== undefined) users = users.filter(u => u.verified === criteria.verified);
     return users;
   },
@@ -233,7 +230,7 @@ export const adminActionService = {
 const MOCK_ANNOUNCEMENTS: Announcement[] = [
   { id: 'a1', title: 'Performance Improvements & Bug Fixes', excerpt: 'Optimized dashboard loading times by 40%', category: 'updates', targetAudience: 'all', published: true, createdAt: '2024-06-18T10:00:00Z', createdBy: 'Neo' },
   { id: 'a2', title: 'New AI Assistant Features', excerpt: 'Homie can now help with property comparisons and market analysis', category: 'features', targetAudience: 'all', published: true, createdAt: '2024-06-15T14:00:00Z', createdBy: 'Neo' },
-  { id: 'a3', title: 'Upcoming: Smart Inventory Automation', excerpt: 'Beta waitlist now open for automated inventory tracking', category: 'releases', targetAudience: 'founding_members', published: true, createdAt: '2024-06-12T09:00:00Z', createdBy: 'Neo' },
+  { id: 'a3', title: 'Upcoming: Smart Inventory Automation', excerpt: 'Beta waitlist now open for automated inventory tracking', category: 'releases', targetAudience: 'premium_users', published: true, createdAt: '2024-06-12T09:00:00Z', createdBy: 'Neo' },
 ];
 
 export const adminAnnouncementService = {
@@ -306,7 +303,7 @@ export const adminHealthService = {
     newRegistrations: number;
     returningUsers: number;
     businessesRegistered: number;
-    foundingMembers: number;
+    premiumMembers: number;
     waitlistMembers: number;
     referralSignups: number;
     featureRequestsSubmitted: number;
@@ -324,7 +321,7 @@ export const adminHealthService = {
       newRegistrations: 47,
       returningUsers: 211,
       businessesRegistered: 89,
-      foundingMembers: 1256,
+      premiumMembers: 1256,
       waitlistMembers: 0,
       referralSignups: 156,
       featureRequestsSubmitted: 0,

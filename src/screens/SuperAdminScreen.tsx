@@ -295,7 +295,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
         <MetricCard icon="trending-up" value={overview?.newRegistrations.toString() ?? '---'} label="New Today" color={COLORS.info} />
       </View>
       <View style={styles.metricsGrid}>
-        <MetricCard icon="diamond" value={overview?.foundingMembers.toLocaleString() ?? '---'} label="Founding Members" color={COLORS.warning} />
+        <MetricCard icon="star" value={overview?.premiumMembers.toLocaleString() ?? '---'} label="Premium Members" color={COLORS.warning} />
         <MetricCard icon="notifications" value={overview?.waitlistMembers.toLocaleString() ?? '---'} label="Waitlist" color={COLORS.secondary} />
         <MetricCard icon="headset" value={overview?.supportTicketsOpen.toString() ?? '---'} label="Open Tickets" color={COLORS.error} />
       </View>
@@ -386,11 +386,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
                 <View style={[styles.userBadge, { backgroundColor: COLORS.primary + '20' }]}>
                   <Text style={[styles.userBadgeText, { color: COLORS.primary }]}>{user.role.replace('_', ' ')}</Text>
                 </View>
-                {user.isFoundingMember && (
-                  <View style={[styles.userBadge, { backgroundColor: COLORS.warning + '20' }]}>
-                    <Text style={[styles.userBadgeText, { color: COLORS.warning }]}>Founding</Text>
-                  </View>
-                )}
                 {user.verified && (
                   <View style={[styles.userBadge, { backgroundColor: COLORS.accent + '20' }]}>
                     <Text style={[styles.userBadgeText, { color: COLORS.accent }]}>Verified</Text>
@@ -490,7 +485,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             <FlagToggle label="Early Access Mode" value={featureFlags.earlyAccessMode} onToggle={() => toggleFeatureFlag('earlyAccessMode')} color={COLORS.primary} />
             <FlagToggle label="Subscriptions Enabled" value={featureFlags.subscriptionsEnabled} onToggle={() => toggleFeatureFlag('subscriptionsEnabled')} color={COLORS.secondary} />
             <FlagToggle label="Payments Enabled" value={featureFlags.paymentsEnabled} onToggle={() => toggleFeatureFlag('paymentsEnabled')} color={COLORS.accent} />
-            <FlagToggle label="Founding Member Program" value={featureFlags.foundingMemberProgram} onToggle={() => toggleFeatureFlag('foundingMemberProgram')} color={COLORS.warning} />
           </View>
         )}
       </GlassCard>

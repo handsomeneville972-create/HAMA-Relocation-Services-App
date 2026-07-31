@@ -3,7 +3,7 @@
  *
  * Displayed when users click any upgrade/subscribe/pricing CTA during the
  * Early Access Program. Communicates that users receive complimentary
- * premium access as founding members.
+ * premium access as early access members.
  *
  * The experience should feel intentional, premium, and exciting — never
  * temporary or unfinished. NEVER mention missing payment integrations,
@@ -28,7 +28,7 @@ import { logEvent, trackUpgradeClick } from '../utils/analytics';
 import { navigateToRoute } from '../utils/navigation';
 
 export const EarlyAccessModal: React.FC = () => {
-  const { isPremiumModalVisible, hidePremiumModal, showWaitlist, isEarlyAccessActive, showPremiumModal } = useEarlyAccess();
+  const { isPremiumModalVisible, hidePremiumModal, isEarlyAccessActive, showPremiumModal } = useEarlyAccess();
 
   if (!isEarlyAccessActive || !EARLY_ACCESS_CONFIG.PREMIUM_MODAL.ENABLED) {
     return null;
@@ -44,12 +44,6 @@ export const EarlyAccessModal: React.FC = () => {
     logEvent('early_access_view_premium_features');
     hidePremiumModal();
     navigateToRoute('Subscriptions');
-  };
-
-  const handleBecomePrioritySubscriber = () => {
-    logEvent('early_access_become_priority_subscriber');
-    hidePremiumModal();
-    showWaitlist();
   };
 
   return (
@@ -165,15 +159,7 @@ export const EarlyAccessModal: React.FC = () => {
                 <Text style={styles.secondaryButtonText}>View Premium Features</Text>
               </TouchableOpacity>
 
-              {/* Optional Link - Become a Priority Subscriber */}
-              <TouchableOpacity
-                style={styles.foundingLink}
-                onPress={handleBecomePrioritySubscriber}
-              >
-                <Ionicons name="notifications" size={14} color={COLORS.primaryLight} />
-                <Text style={styles.foundingLinkText}>Become a Priority Subscriber</Text>
-                <Ionicons name="arrow-forward" size={14} color={COLORS.primaryLight} />
-              </TouchableOpacity>
+
             </ScrollView>
           </LinearGradient>
         </View>
@@ -323,15 +309,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  foundingLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-  },
-  foundingLinkText: {
-    color: COLORS.primaryLight,
-    fontSize: 13,
-    fontWeight: '600',
-  },
+
 });

@@ -2,7 +2,7 @@
  * HAMA™ Dashboard Welcome Card
  *
  * A prominent welcome card displayed on the home/dashboard screen during the
- * Early Access Program. Communicates founding member benefits and premium
+ * Early Access Program. Communicates premium benefits and premium
  * platform capabilities.
  */
 

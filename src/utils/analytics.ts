@@ -28,8 +28,6 @@ type AnalyticsEvent =
   | 'early_access_continue_exploring'
   | 'early_access_learn_more'
   | 'early_access_view_premium_features'
-  | 'early_access_become_founding_member'
-  | 'early_access_become_priority_subscriber'
   // Freemium Mode
   | 'freemium_badge_viewed'
   | 'freemium_upgrade_clicked'
@@ -53,8 +51,6 @@ type AnalyticsEvent =
   | 'user_session_start'
   | 'user_session_end'
   | 'feature_used'
-  // Profile
-  | 'founding_member_badge_viewed'
   // Waitlist
   | 'waitlist_modal_viewed'
   | 'waitlist_submitted'
@@ -130,13 +126,6 @@ export const trackPremiumFeatureEngaged = (feature: string): void => {
  */
 export const trackBannerDismissed = (): void => {
   logEvent('banner_dismissed');
-};
-
-/**
- * Track founding member activity.
- */
-export const trackFoundingMemberActivity = (action: string): void => {
-  logEvent('founding_member_badge_viewed', { action });
 };
 
 /**

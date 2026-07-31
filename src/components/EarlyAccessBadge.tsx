@@ -1,11 +1,11 @@
 /**
- * HAMA™ Founding Member Badge
+ * HAMA™ Early Access Badge
  *
  * Displayed beside user profile, dashboard header, pricing page,
  * premium features, and upgrade buttons.
  *
- * Shows "FOUNDING MEMBER" or "EARLY ACCESS MEMBER" to reinforce
- * exclusive founding member status across the platform.
+ * Shows "EARLY ACCESS" to reinforce
+ * exclusive early access status across the platform.
  */
 
 import React, { useEffect } from 'react';

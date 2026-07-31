@@ -26,7 +26,7 @@ const CATEGORIES: { key: AnnouncementCategory; label: string; icon: string }[] =
   { key: 'updates', label: 'Updates', icon: 'refresh' },
   { key: 'features', label: 'Features', icon: 'sparkles' },
   { key: 'releases', label: 'Releases', icon: 'rocket' },
-  { key: 'founder', label: 'Founder', icon: 'diamond' },
+  { key: 'founder', label: 'Founder', icon: 'megaphone' },
   { key: 'community', label: 'Community', icon: 'people' },
 ];
 
@@ -64,7 +64,7 @@ const MOCK_ANNOUNCEMENTS = [
     title: 'Message from the Founder',
     excerpt: 'Thank you for being part of our Founding Member community. Your feedback is shaping our roadmap.',
     date: '2 weeks ago',
-    icon: 'diamond',
+    icon: 'megaphone',
     color: COLORS.warning,
   },
   {
