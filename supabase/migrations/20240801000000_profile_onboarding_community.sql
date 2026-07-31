@@ -33,6 +33,24 @@ create policy "Users can insert own profile"
 -- 3. update_profile RPC (security definer — bypasses RLS,
 --    only updates the caller's own row)
 -- ------------------------------------------------------------
+-- Drop ALL existing update_profile overloads first — an older
+-- version may exist with a different argument list, which
+-- create or replace cannot replace.
+do $$
+declare
+  r record;
+begin
+  for r in
+    select p.oid::regprocedure as sig
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'update_profile'
+  loop
+    execute 'drop function ' || r.sig;
+  end loop;
+end;
+$$;
+
 create or replace function public.update_profile(
   p_display_name text default null,
   p_avatar_url text default null,
