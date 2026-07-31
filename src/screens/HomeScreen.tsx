@@ -103,9 +103,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Top Bar */}
               <View style={styles.topBar}>
                 <View style={styles.logoContainer}>
-                  <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoIcon}>
-                    <Text style={styles.logoText}>H</Text>
-                  </LinearGradient>
+                  <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
                   <View>
                     <View style={styles.logoNameRow}>
                       <Text style={styles.logoName}>HAMA™</Text>
@@ -121,7 +119,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
               {/* Search Bar */}
               <TouchableOpacity style={styles.searchBar} onPress={() => navigation.navigate('Search')}>
-                <Ionicons name="search" size={20} color={COLORS.textSecondary} />
+                <Ionicons name="search" size={20} color="rgba(255,255,255,0.7)" />
                 <Text style={styles.searchPlaceholder}>Search homes, products, services...</Text>
               </TouchableOpacity>
 
@@ -375,17 +373,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  logoIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
+  logoImage: {
+    width: 48,
+    height: 48,
   },
   logoNameRow: {
     flexDirection: 'row',
@@ -405,9 +395,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   notifDot: {
     position: 'absolute',
@@ -421,17 +413,17 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: 14,
     gap: 10,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.35)',
     marginBottom: SPACING.md,
   },
   searchPlaceholder: {
-    color: COLORS.textTertiary,
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 15,
     flex: 1,
   },
@@ -444,24 +436,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: RADIUS.md,
     paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   quickActionIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   quickActionText: {
-    color: COLORS.textSecondary,
+    color: '#fff',
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 
   section: {
