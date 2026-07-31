@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommunityPost as CommunityPostType } from '../constants/types';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
+import { likePost, unlikePost, bookmarkPost, unbookmarkPost, incrementPostShares } from '../services/communityService';
 
 interface CommunityPostCardProps {
   post: CommunityPostType;
@@ -11,22 +13,23 @@ interface CommunityPostCardProps {
 }
 
 export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPress }) => {
+  const { currentUserId } = useAuth();
   const [liked, setLiked] = useState(post.isLiked);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
   const [likeCount, setLikeCount] = useState(post.likes);
   const [bookmarkCount, setBookmarkCount] = useState(post.bookmarks);
+  const [shareCount, setShareCount] = useState(post.shares);
 
   const heartScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
   const particles = useRef(new Animated.Value(0)).current;
 
-  const handleLike = () => {
-    if (liked) {
-      setLiked(false);
-      setLikeCount(prev => prev - 1);
-    } else {
-      setLiked(true);
-      setLikeCount(prev => prev + 1);
+  const handleLike = async () => {
+    const nextLiked = !liked;
+    setLiked(nextLiked);
+    setLikeCount(prev => Math.max(0, prev + (nextLiked ? 1 : -1)));
+
+    if (nextLiked) {
       // Heart burst animation
       Animated.sequence([
         Animated.spring(heartScale, { toValue: 1.4, damping: 10, stiffness: 200, useNativeDriver: true }),
@@ -38,19 +41,48 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
         Animated.timing(particles, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]).start();
     }
+
+    if (!currentUserId) return;
+
+    const result = nextLiked
+      ? await likePost(post.id, currentUserId)
+      : await unlikePost(post.id, currentUserId);
+
+    if (result.error) {
+      // Revert on failure
+      setLiked(!nextLiked);
+      setLikeCount(prev => Math.max(0, prev + (nextLiked ? -1 : 1)));
+    }
   };
 
-  const handleBookmark = () => {
-    if (bookmarked) {
-      setBookmarked(false);
-      setBookmarkCount(prev => prev - 1);
-    } else {
-      setBookmarked(true);
-      setBookmarkCount(prev => prev + 1);
+  const handleBookmark = async () => {
+    const nextBookmarked = !bookmarked;
+    setBookmarked(nextBookmarked);
+    setBookmarkCount(prev => Math.max(0, prev + (nextBookmarked ? 1 : -1)));
+
+    if (nextBookmarked) {
       Animated.sequence([
         Animated.spring(bookmarkScale, { toValue: 1.3, damping: 10, stiffness: 200, useNativeDriver: true }),
         Animated.spring(bookmarkScale, { toValue: 1, damping: 15, stiffness: 150, useNativeDriver: true }),
       ]).start();
+    }
+
+    if (!currentUserId) return;
+
+    const result = nextBookmarked
+      ? await bookmarkPost(post.id, currentUserId)
+      : await unbookmarkPost(post.id, currentUserId);
+
+    if (result.error) {
+      setBookmarked(!nextBookmarked);
+      setBookmarkCount(prev => Math.max(0, prev + (nextBookmarked ? -1 : 1)));
+    }
+  };
+
+  const handleShare = async () => {
+    setShareCount(prev => prev + 1);
+    if (currentUserId) {
+      await incrementPostShares(post.id);
     }
   };
 
@@ -119,9 +151,9 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
                 <Ionicons name="chatbubble-outline" size={21} color={COLORS.textSecondary} />
                 <Text style={styles.actionText}>{post.comments}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
                 <Ionicons name="arrow-redo-outline" size={21} color={COLORS.textSecondary} />
-                <Text style={styles.actionText}>{post.shares}</Text>
+                <Text style={styles.actionText}>{shareCount}</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity onPress={handleBookmark} style={styles.actionButton}>

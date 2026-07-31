@@ -18,9 +18,10 @@ import { startPeriodicRefresh } from '../src/utils/exchangeRates';
  * AuthGuard — redirects users based on authentication state.
  * - Unauthenticated users are redirected to Login
  * - Authenticated users with unverified email see a verification prompt
+ * - Authenticated users who haven't completed onboarding go to CreateProfile
  */
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, isEmailVerified } = useAuth();
+  const { isAuthenticated, isLoading, isProfileReady, needsOnboarding } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
@@ -28,16 +29,26 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const isOnAuthScreen = segments[0] === 'Login' || segments[0] === 'ForgotPassword';
+    const isOnCreateProfile = segments[0] === 'CreateProfile';
     const isOnCallback = segments[0] === 'auth';
 
-    if (!isAuthenticated && !isOnAuthScreen && !isOnCallback) {
-      // Redirect to login
-      router.replace('/Login');
-    } else if (isAuthenticated && isOnAuthScreen) {
-      // Authenticated users don't need login
-      router.replace('/(tabs)');
+    if (!isAuthenticated) {
+      if (!isOnAuthScreen && !isOnCallback) {
+        // Redirect to login
+        router.replace('/Login');
+      }
+    } else if (isProfileReady && needsOnboarding) {
+      // New users must complete profile setup first
+      if (!isOnCreateProfile && !isOnCallback) {
+        router.replace('/CreateProfile');
+      }
+    } else if (isProfileReady) {
+      if (isOnAuthScreen || isOnCreateProfile) {
+        // Authenticated users don't need login or onboarding
+        router.replace('/(tabs)');
+      }
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, isProfileReady, needsOnboarding, segments, router]);
 
   return <>{children}</>;
 }
@@ -226,6 +237,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="Login"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="CreateProfile"
                     options={{
                       headerShown: false,
                       animation: 'slide_from_right',

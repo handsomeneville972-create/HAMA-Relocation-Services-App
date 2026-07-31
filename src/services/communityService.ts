@@ -8,14 +8,15 @@
 import { supabase } from '../utils/supabaseClient';
 import { executeQuery } from './supabaseService';
 import { MOCK_COMMUNITY_POSTS } from '../constants/data';
-import type { CommunityPost } from '../constants/types';
+import type { CommunityPost, PostComment } from '../constants/types';
 
 export async function getCommunityPosts(params?: {
   type?: string;
   userId?: string;
   limit?: number;
+  currentUserId?: string;
 }): Promise<{ data: CommunityPost[] | null; error: string | null }> {
-  return executeQuery<CommunityPost[]>(
+  const postsResult = await executeQuery<CommunityPost[]>(
     async () => {
       let query = supabase
         .from('community_posts')
@@ -39,10 +40,33 @@ export async function getCommunityPosts(params?: {
       ? MOCK_COMMUNITY_POSTS.filter(p => p.user.id === params.userId)
       : MOCK_COMMUNITY_POSTS,
   );
+
+  // Attach real like/bookmark state for the current user
+  if (params?.currentUserId && postsResult.data) {
+    const [likes, bookmarks] = await Promise.all([
+      supabase.from('community_post_likes').select('post_id').eq('user_id', params.currentUserId),
+      supabase.from('community_post_bookmarks').select('post_id').eq('user_id', params.currentUserId),
+    ]);
+    const likedIds = new Set((likes.data ?? []).map(r => r.post_id));
+    const bookmarkedIds = new Set((bookmarks.data ?? []).map(r => r.post_id));
+    return {
+      ...postsResult,
+      data: postsResult.data.map(p => ({
+        ...p,
+        isLiked: likedIds.has(p.id),
+        isBookmarked: bookmarkedIds.has(p.id),
+      })),
+    };
+  }
+
+  return postsResult;
 }
 
-export async function getPostById(id: string): Promise<{ data: CommunityPost | null; error: string | null }> {
-  return executeQuery<CommunityPost>(
+export async function getPostById(
+  id: string,
+  currentUserId?: string,
+): Promise<{ data: CommunityPost | null; error: string | null }> {
+  const result = await executeQuery<CommunityPost>(
     async () => {
       const { data, error } = await supabase
         .from('community_posts')
@@ -53,6 +77,23 @@ export async function getPostById(id: string): Promise<{ data: CommunityPost | n
     },
     MOCK_COMMUNITY_POSTS.find(p => p.id === id) ?? MOCK_COMMUNITY_POSTS[0],
   );
+
+  if (result.data && currentUserId) {
+    const [liked, bookmarked] = await Promise.all([
+      isPostLiked(id, currentUserId),
+      isPostBookmarked(id, currentUserId),
+    ]);
+    return {
+      ...result,
+      data: {
+        ...result.data,
+        isLiked: !!liked.data,
+        isBookmarked: !!bookmarked.data,
+      },
+    };
+  }
+
+  return result;
 }
 
 export async function incrementPostViews(
@@ -108,9 +149,6 @@ export async function likePost(
         .insert({ post_id: postId, user_id: userId })
         .select()
         .single();
-      if (!error) {
-        await supabase.rpc('increment_post_likes', { post_id: postId });
-      }
       return { data, error };
     },
     null,
@@ -153,6 +191,25 @@ export async function isPostLiked(
   return { data: !!result.data, error: result.error };
 }
 
+export async function isPostBookmarked(
+  postId: string,
+  userId: string,
+): Promise<{ data: boolean; error: string | null }> {
+  const result = await executeQuery(
+    async () => {
+      const { data, error } = await supabase
+        .from('community_post_bookmarks')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      return { data: !!data, error };
+    },
+    false,
+  );
+  return { data: !!result.data, error: result.error };
+}
+
 export async function bookmarkPost(
   postId: string,
   userId: string,
@@ -181,6 +238,67 @@ export async function unbookmarkPost(
         .delete()
         .eq('post_id', postId)
         .eq('user_id', userId);
+      return { data: null, error };
+    },
+    null,
+  );
+}
+
+export async function incrementPostShares(
+  postId: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc('increment_post_shares', { p_post_id: postId });
+  if (error) {
+    console.warn('[Supabase] Failed to increment post shares:', error.message);
+  }
+  return { error: error?.message ?? null };
+}
+
+// ---------- Comments ----------
+
+export async function getComments(
+  postId: string,
+): Promise<{ data: PostComment[] | null; error: string | null }> {
+  return executeQuery<PostComment[]>(
+    async () => {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .select('*, user:user_id(*)')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+      return { data: data as unknown as PostComment[] | null, error };
+    },
+    [],
+  );
+}
+
+export async function addComment(
+  postId: string,
+  userId: string,
+  content: string,
+): Promise<{ data: PostComment | null; error: string | null }> {
+  return executeQuery<PostComment | null>(
+    async () => {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .insert({ post_id: postId, user_id: userId, content })
+        .select('*, user:user_id(*)')
+        .single();
+      return { data: data as unknown as PostComment | null, error };
+    },
+    null,
+  );
+}
+
+export async function deleteComment(
+  commentId: string,
+): Promise<{ error: string | null }> {
+  return executeQuery<null>(
+    async () => {
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId);
       return { data: null, error };
     },
     null,

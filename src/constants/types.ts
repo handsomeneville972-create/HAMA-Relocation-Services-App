@@ -30,6 +30,8 @@ export interface User {
   bio?: string;
   /** External website URL */
   website?: string;
+  /** Whether the user has completed the first-login profile setup */
+  onboardingCompleted?: boolean;
 
   // ===== Business & Profile Info =====
   /** Business name (for landlords, sellers, service providers) */
@@ -242,6 +244,19 @@ export interface CommunityPost {
   isBookmarked: boolean;
   createdAt: string;
   tags: string[];
+}
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
 }
 
 // ============ PROPERTY TYPES ============

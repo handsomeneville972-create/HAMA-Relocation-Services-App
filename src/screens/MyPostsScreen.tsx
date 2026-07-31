@@ -40,7 +40,7 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
       setLoading(false);
       return;
     }
-    const { data } = await getCommunityPosts({ userId });
+    const { data } = await getCommunityPosts({ userId, currentUserId: userId });
     setPosts(data ?? []);
     setLoading(false);
     setRefreshing(false);

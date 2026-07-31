@@ -43,8 +43,14 @@ interface AuthContextType {
   isLoading: boolean;
   /** Whether the user's email has been verified */
   isEmailVerified: boolean;
+  /** Whether the profile fetch has resolved (true even if the row is missing) */
+  isProfileReady: boolean;
+  /** True when an authenticated user still has to complete the Create Profile step */
+  needsOnboarding: boolean;
   /** The Supabase session object */
   session: any | null;
+  /** Re-fetch the current user's profile from Supabase */
+  refreshProfile: () => Promise<void>;
   /** Update the current user's profile fields. Resolves to an error message on failure, or null on success. */
   updateProfile: (updates: Partial<User>) => Promise<string | null>;
   /** Switch to a different user (dev tool — will be removed in production) */
@@ -135,13 +141,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ---------- Real Profile Resolution (from Supabase) ----------
 
   const [profile, setProfile] = useState<User | null>(null);
+  const [isProfileReady, setIsProfileReady] = useState(false);
+
+  /** Authenticated users with a profile that hasn't completed onboarding */
+  const needsOnboarding =
+    isAuthenticated &&
+    isProfileReady &&
+    profile !== null &&
+    profile.onboardingCompleted !== true;
 
   // Fetch profile from Supabase whenever userId changes
   useEffect(() => {
     if (!currentUserId) {
       setProfile(null);
+      setIsProfileReady(false);
       return;
     }
+
+    setIsProfileReady(false);
 
     const fetchProfile = async () => {
       try {
@@ -150,6 +167,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .select('*')
           .eq('id', currentUserId)
           .maybeSingle();
+
+        if (error) throw error;
 
         if (data) {
           setProfile({
@@ -166,6 +185,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: data.role ?? 'seeker',
             verified: data.verification_level === 'full',
             verificationLevel: data.verification_level ?? 'unverified',
+            onboardingCompleted: data.onboarding_completed ?? true,
             joinDate: data.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
             lastLoginAt: session?.user?.last_sign_in_at ?? undefined,
           });
@@ -185,11 +205,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: 'seeker',
             verified: session?.user?.email_confirmed_at != null,
             verificationLevel: session?.user?.email_confirmed_at ? 'email' : 'unverified',
+            onboardingCompleted: true,
             joinDate: session?.user?.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
             lastLoginAt: session?.user?.last_sign_in_at ?? undefined,
           });
         }
-      } catch {
+      } catch (e) {
+        console.warn('[AuthContext] Profile fetch failed, using session fallback:', (e as Error)?.message);
         // Silent fail — use session fallback
         if (session?.user) {
           setProfile({
@@ -206,15 +228,68 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: 'seeker',
             verified: session.user.email_confirmed_at != null,
             verificationLevel: session.user.email_confirmed_at ? 'email' : 'unverified',
+            onboardingCompleted: true,
             joinDate: session.user.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
             lastLoginAt: session.user.last_sign_in_at ?? undefined,
           });
+        }
+      } finally {
+        if (currentUserId) {
+          setIsProfileReady(true);
         }
       }
     };
 
     fetchProfile();
   }, [currentUserId, session]);
+
+  // Re-fetch the profile row (used after edits so fresh values load)
+  const refreshProfile = useCallback(async () => {
+    if (!currentUserId) return;
+    setIsProfileReady(false);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+      if (!error && data) {
+        setProfile(prev => ({
+          ...(prev ?? ({
+            id: currentUserId,
+            name: data.display_name ?? '',
+            email: data.email ?? '',
+            emailVerified: false,
+            phoneVerified: false,
+            avatar: data.avatar_url ?? '',
+            role: 'seeker',
+            verified: false,
+            verificationLevel: 'unverified',
+            joinDate: '',
+          } as User)),
+          id: data.id,
+          name: data.display_name ?? prev?.name ?? '',
+          email: data.email ?? prev?.email ?? '',
+          phone: data.phone ?? prev?.phone,
+          phoneVerified: data.phone_verified ?? prev?.phoneVerified ?? false,
+          avatar: data.avatar_url ?? prev?.avatar ?? '',
+          username: data.username ?? prev?.username,
+          bio: data.bio ?? prev?.bio,
+          website: data.website ?? prev?.website,
+          role: data.role ?? prev?.role ?? 'seeker',
+          verified: data.verification_level === 'full',
+          verificationLevel: data.verification_level ?? prev?.verificationLevel ?? 'unverified',
+          onboardingCompleted: data.onboarding_completed ?? true,
+          joinDate: data.created_at?.split('T')[0] ?? prev?.joinDate ?? '',
+        }));
+      }
+    } catch (e) {
+      console.warn('[AuthContext] refreshProfile failed:', (e as Error)?.message);
+    } finally {
+      setIsProfileReady(true);
+    }
+  }, [currentUserId]);
 
   const getCurrentUser = useCallback((): User => {
     if (profile) return profile;
@@ -244,18 +319,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       // Preferred path: security-definer RPC (bypasses RLS, always works when applied)
-      const { error: rpcError } = await supabase.rpc('update_profile', {
+      const rpcParams: Record<string, any> = {
         p_display_name: updates.name,
         p_avatar_url: updates.avatar,
         p_username: updates.username,
         p_bio: updates.bio,
         p_website: updates.website,
-      });
+        p_phone: updates.phone,
+        p_phone_verified: updates.phoneVerified,
+        p_verification_level: updates.verificationLevel,
+      };
+      if (updates.onboardingCompleted !== undefined) {
+        rpcParams.p_onboarding_completed = updates.onboardingCompleted;
+      }
+      const { error: rpcError } = await supabase.rpc('update_profile', rpcParams);
 
       if (rpcError) {
         // Fallback: direct upsert (requires RLS INSERT + UPDATE policies)
         console.warn('[updateProfile] RPC failed, falling back to upsert:', rpcError.message);
-        const { error } = await supabase.from('profiles').upsert({
+        const upsertRow: Record<string, any> = {
           id: currentUserId,
           display_name: updates.name,
           avatar_url: updates.avatar,
@@ -266,7 +348,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           phone_verified: updates.phoneVerified,
           verification_level: updates.verificationLevel,
           updated_at: new Date().toISOString(),
-        });
+        };
+        if (updates.onboardingCompleted !== undefined) {
+          upsertRow.onboarding_completed = updates.onboardingCompleted;
+        }
+        const { error } = await supabase.from('profiles').upsert(upsertRow);
 
         if (error) {
           console.error('[updateProfile]', error.message);
@@ -368,6 +454,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setCurrentUserId(UNAUTHENTICATED_USER_ID);
       setSession(null);
+      setProfile(null);
+      setIsProfileReady(false);
       setIsEmailVerified(false);
       setIsLoading(false);
     }
@@ -426,6 +514,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setCurrentUserId(UNAUTHENTICATED_USER_ID);
       setSession(null);
+      setProfile(null);
+      setIsProfileReady(false);
       setIsEmailVerified(false);
       setIsLoading(false);
     }
@@ -494,7 +584,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAuthenticated,
         isLoading,
         isEmailVerified,
+        isProfileReady,
+        needsOnboarding,
         session,
+        refreshProfile,
         updateProfile,
         setCurrentUser,
         signIn,

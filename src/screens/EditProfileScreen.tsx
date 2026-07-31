@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { LiquidGlass, LiquidInput } from '../components/LiquidGlass';
 import { GlassCard } from '../components/GlassCard';
@@ -15,7 +16,7 @@ import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { currentUser, currentUserId, updateProfile } = useAuth();
+  const { currentUser, currentUserId, updateProfile, refreshProfile } = useAuth();
 
   const [displayName, setDisplayName] = useState(currentUser.name);
   const [username, setUsername] = useState(currentUser.username ?? '');
@@ -33,6 +34,17 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
       useNativeDriver: true,
     }).start();
   }, []);
+
+  // Reload the latest profile from Supabase when the screen gains focus
+  // so saved username/bio/website/avatar always reflect the database.
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshProfile();
+    }, [refreshProfile]),
+  );
 
   const pickImage = async (useCamera: boolean) => {
     const permission = useCamera

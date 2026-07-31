@@ -1,6 +1,8 @@
 import { supabase } from '../utils/supabaseClient';
+import { Platform } from 'react-native';
 
 const AVATARS_BUCKET = 'avatars';
+const isWeb = Platform.OS === 'web';
 
 export type UploadResult = { url: string } | { error: string };
 
@@ -14,24 +16,49 @@ export const uploadAvatar = async (
   uri: string,
 ): Promise<UploadResult> => {
   try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-
-    const mimeExt = (blob.type || '').split('/')[1]?.toLowerCase();
+    const mimeExt = (uri.split('?')[0].split('.').pop()?.toLowerCase() ?? '') === 'heic'
+      ? 'heic'
+      : '';
     const urlExt = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
     const knownExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-    const ext = knownExts.includes(urlExt) ? urlExt : knownExts.includes(mimeExt) ? mimeExt : 'jpg';
-    const fileName = `${Date.now()}.${ext}`;
+    const fallbackExt = knownExts.includes(urlExt) ? urlExt : 'jpg';
+    const fileName = `${Date.now()}.${fallbackExt}`;
     const filePath = `${userId}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from(AVATARS_BUCKET)
-      .upload(filePath, blob, {
-        contentType: blob.type || `image/${ext}`,
-        upsert: true,
-      });
+    const upload = async (body: any, contentType: string): Promise<string | null> => {
+      const { error } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .upload(filePath, body, {
+          contentType,
+          upsert: true,
+        });
+      return error?.message ?? null;
+    };
 
-    if (uploadError) return { error: uploadError.message };
+    let uploadError: string | null = null;
+
+    if (isWeb) {
+      // Web: fetch the blob URL and upload as a Blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      uploadError = await upload(blob, blob.type || `image/${fallbackExt}`);
+    } else {
+      // Native: FormData with {uri, name, type} — works with file:// URIs
+      const ext = knownExts.includes(mimeExt || urlExt) ? (mimeExt || urlExt) : 'jpg';
+      const type = `image/${ext}`;
+      const formData = new FormData();
+      formData.append('file', { uri, name: fileName, type } as any);
+      uploadError = await upload(formData, type);
+    }
+
+    if (uploadError) {
+      // Last resort: retry with the blob approach on native too
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      uploadError = await upload(blob, blob.type || `image/${fallbackExt}`);
+    }
+
+    if (uploadError) return { error: uploadError };
 
     const { data: publicUrlData } = supabase.storage
       .from(AVATARS_BUCKET)

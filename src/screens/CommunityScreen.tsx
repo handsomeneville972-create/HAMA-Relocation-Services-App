@@ -8,6 +8,7 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { getCommunityPosts } from '../services/communityService';
 import type { CommunityPost } from '../constants/types';
+import { useAuth } from '../contexts/AuthContext';
 
 type TabType = 'for-you' | 'trending' | 'following';
 
@@ -21,17 +22,18 @@ const TAB_WIDTH = (Dimensions.get('window').width - 32) / 3;
 
 export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { currentUserId } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const tabIndicator = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    getCommunityPosts().then(({ data }) => {
+    getCommunityPosts({ currentUserId }).then(({ data }) => {
       if (data) setPosts(data);
       setLoading(false);
     });
-  }, []);
+  }, [currentUserId]);
 
   const handleTabChange = (tab: TabType, index: number) => {
     setActiveTab(tab);
