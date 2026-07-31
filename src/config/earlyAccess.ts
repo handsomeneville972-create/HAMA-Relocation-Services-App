@@ -94,17 +94,6 @@ export const EARLY_ACCESS_CONFIG = {
     /** Show in settings */
     SHOW_IN_SETTINGS: true,
   },
-
-  /** Feature Request Portal config */
-  FEATURE_REQUEST: {
-    ENABLED: true,
-    MAX_VOTES_PER_USER: 5,
-    /** Show 'Suggest a Feature' button in these locations */
-    SHOW_IN_HOME: true,
-    SHOW_IN_PROFILE: true,
-    SHOW_IN_SETTINGS: true,
-    SHOW_IN_SUBSCRIPTIONS: true,
-  },
 } as const;
 
 /**

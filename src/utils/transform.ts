@@ -51,6 +51,7 @@ const FIELD_RENAMES: Record<string, string> = {
   comments_count: 'comments',
   shares_count: 'shares',
   bookmarks_count: 'bookmarks',
+  views_count: 'views',
 
   // Notifications — non-standard naming
   action_link: 'action',

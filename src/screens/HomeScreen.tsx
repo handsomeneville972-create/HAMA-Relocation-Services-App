@@ -8,7 +8,6 @@ import { GlassCard } from '../components/GlassCard';
 import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
 import { ReferralProgram } from '../components/ReferralProgram';
 import { EmailCaptureForm } from '../components/EmailCaptureForm';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
 import { HomieAssistant } from '../components/HomieAssistant';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getProducts } from '../services/productService';
@@ -21,7 +20,6 @@ const { width, height } = Dimensions.get('window');
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { showFeatureRequest } = useEarlyAccess();
   const scrollY = useRef(new Animated.Value(0)).current;
   const heroScale = useRef(new Animated.Value(1)).current;
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -262,27 +260,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               ))}
             </ScrollView>
           )}
-        </View>
-
-        {/* Suggest a Feature */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.suggestFeatureBanner} onPress={() => showFeatureRequest()}>
-            <LinearGradient
-              colors={['rgba(255, 184, 77, 0.08)', 'rgba(255, 255, 255, 0.05)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.suggestFeatureBannerGrad}
-            >
-              <View style={styles.suggestFeatureIconCircle}>
-                <Ionicons name="bulb-outline" size={22} color={COLORS.warning} />
-              </View>
-              <View style={styles.suggestFeatureTextContent}>
-                <Text style={styles.suggestFeatureTitle}>Suggest a Feature</Text>
-                <Text style={styles.suggestFeatureDesc}>Help shape the future of HAMA — share your ideas</Text>
-              </View>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.warning} />
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
 
         {/* Early Access: Email Capture + Referral */}
@@ -552,41 +529,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  // Suggest a Feature
-  suggestFeatureBanner: {
-    borderRadius: RADIUS.md,
-    overflow: 'hidden',
-  },
-  suggestFeatureBannerGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 184, 77, 0.2)',
-  },
-  suggestFeatureIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 184, 77, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  suggestFeatureTextContent: {
-    flex: 1,
-  },
-  suggestFeatureTitle: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  suggestFeatureDesc: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    marginTop: 1,
   },
   earlyAccessEngagement: {
     gap: 12,

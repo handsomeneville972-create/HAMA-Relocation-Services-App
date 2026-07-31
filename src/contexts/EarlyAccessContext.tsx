@@ -13,8 +13,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EARLY_ACCESS_CONFIG } from '../config/earlyAccess';
 import { logEvent, trackBannerDismissed } from '../utils/analytics';
-import type { ReferralStats, WaitlistEntry, PreferredPlan, FeatureRequest, FeatureRequestPriority, FeatureRequestCategory } from '../constants/types';
-import { waitlistService, referralService, emailCaptureService, featureRequestService } from '../services/earlyAccessService';
+import type { ReferralStats, WaitlistEntry, PreferredPlan } from '../constants/types';
+import { waitlistService, referralService, emailCaptureService } from '../services/earlyAccessService';
 
 // ---------- Constants ----------
 
@@ -69,30 +69,6 @@ interface EarlyAccessContextType {
   dismissEmailCapture: () => void;
   /** Subscribe to emails */
   subscribeToEmails: (email: string, name?: string, userId?: string) => Promise<void>;
-
-  // ----- Feature Request -----
-  /** Whether the feature request modal is visible */
-  isFeatureRequestVisible: boolean;
-  /** Show the feature request form */
-  showFeatureRequest: () => void;
-  /** Hide the feature request form */
-  hideFeatureRequest: () => void;
-  /** Submit a feature request */
-  submitFeatureRequest: (req: {
-    title: string;
-    description: string;
-    priority: FeatureRequestPriority;
-    category: FeatureRequestCategory;
-    userId?: string;
-    userName?: string;
-    userEmail?: string;
-  }) => Promise<FeatureRequest>;
-  /** All feature requests */
-  featureRequests: FeatureRequest[];
-  /** Vote for a feature request */
-  voteFeatureRequest: (requestId: string, userId: string) => Promise<void>;
-  /** Load feature requests */
-  loadFeatureRequests: () => Promise<void>;
 }
 
 // ---------- Context ----------
@@ -109,8 +85,6 @@ export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
   const [isEmailCaptureDismissed, setIsEmailCaptureDismissed] = useState(false);
   const [waitlistCount, setWaitlistCount] = useState(0);
-  const [isFeatureRequestVisible, setIsFeatureRequestVisible] = useState(false);
-  const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const isEarlyAccessActive = EARLY_ACCESS_CONFIG.EARLY_ACCESS_ACTIVE;
@@ -197,49 +171,6 @@ export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, []);
 
   // ===== Feature Request =====
-  const showFeatureRequest = useCallback(() => {
-    setIsFeatureRequestVisible(true);
-    logEvent('feature_request_portal_viewed');
-  }, []);
-
-  const hideFeatureRequest = useCallback(() => {
-    setIsFeatureRequestVisible(false);
-  }, []);
-
-  const loadFeatureRequests = useCallback(async () => {
-    try {
-      const requests = await featureRequestService.getByPopularity();
-      setFeatureRequests(requests);
-    } catch {
-      // Silent fail
-    }
-  }, []);
-
-  const submitFeatureRequest = useCallback(async (req: {
-    title: string;
-    description: string;
-    priority: FeatureRequestPriority;
-    category: FeatureRequestCategory;
-    userId?: string;
-    userName?: string;
-    userEmail?: string;
-  }): Promise<FeatureRequest> => {
-    const result = await featureRequestService.add(req);
-    setIsFeatureRequestVisible(false);
-    setFeatureRequests(prev => [result, ...prev]);
-    logEvent('feature_request_submitted', { category: req.category, priority: req.priority });
-    return result;
-  }, []);
-
-  const voteFeatureRequest = useCallback(async (requestId: string, userId: string) => {
-    const updated = await featureRequestService.vote(requestId, userId);
-    if (updated) {
-      setFeatureRequests(prev =>
-        prev.map(r => r.id === requestId ? { ...r, votes: updated.votes, voterIds: updated.voterIds } : r)
-      );
-      logEvent('feature_request_voted', { request_id: requestId });
-    }
-  }, []);
 
   // ===== Email Capture =====
   const dismissEmailCapture = useCallback(() => {
@@ -282,15 +213,6 @@ export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ childre
         isEmailCaptureDismissed: isInitialized ? isEmailCaptureDismissed : false,
         dismissEmailCapture,
         subscribeToEmails,
-
-        // Feature Request
-        isFeatureRequestVisible,
-        showFeatureRequest,
-        hideFeatureRequest,
-        submitFeatureRequest,
-        featureRequests,
-        voteFeatureRequest,
-        loadFeatureRequests,
       }}
     >
       {children}

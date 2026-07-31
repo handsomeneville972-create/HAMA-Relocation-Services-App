@@ -4,7 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommunityPostCard } from '../src/components/CommunityPost';
-import { getPostById } from '../src/services/communityService';
+import { getPostById, incrementPostViews } from '../src/services/communityService';
 import type { CommunityPost } from '../src/constants/types';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
 
@@ -17,7 +17,11 @@ export default function PostDetail() {
     const fetchPost = async () => {
       if (!postId) return;
       const { data } = await getPostById(postId as string);
-      if (data) setPost(data);
+      if (data) {
+        setPost(data);
+        incrementPostViews(data.id);
+        setPost(prev => (prev ? { ...prev, views: prev.views + 1 } : prev));
+      }
       setLoading(false);
     };
     fetchPost();

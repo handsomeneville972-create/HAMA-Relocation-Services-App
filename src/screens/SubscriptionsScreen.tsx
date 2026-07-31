@@ -33,7 +33,7 @@ type PaymentMethod = 'mpesa' | 'paystack' | 'stripe' | null;
 
 export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { showPremiumModal, showWaitlist, showFeatureRequest } = useEarlyAccess();
+  const { showPremiumModal, showWaitlist } = useEarlyAccess();
   const paymentEnabled = isSubscriptionPaymentEnabled();
   const [selectedUserType, setSelectedUserType] = useState<UserType>('seeker');
   const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
@@ -251,27 +251,6 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             )}
           </>
         )}
-          {/* Suggest a Feature */}
-        <View style={styles.suggestFeatureSection}>
-          <TouchableOpacity style={styles.suggestFeatureBanner} onPress={() => showFeatureRequest()}>
-            <LinearGradient
-              colors={['rgba(255, 107, 0, 0.08)', 'rgba(255, 255, 255, 0.05)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.suggestFeatureBannerGrad}
-            >
-              <View style={styles.suggestFeatureIcon}>
-                <Ionicons name="bulb-outline" size={22} color={COLORS.warning} />
-              </View>
-              <View style={styles.suggestFeatureText}>
-                <Text style={styles.suggestFeatureTitle}>Suggest a Feature</Text>
-                <Text style={styles.suggestFeatureDesc}>Help shape the future of HAMA — share your ideas</Text>
-              </View>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.warning} />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
         {/* Referral Program (full version) */}
         {!paymentEnabled && (
           <View style={styles.referralSection}>
@@ -770,45 +749,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.xl,
     marginTop: SPACING.md,
-  },
-  // Suggest a Feature
-  suggestFeatureSection: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  suggestFeatureBanner: {
-    borderRadius: RADIUS.md,
-    overflow: 'hidden',
-  },
-  suggestFeatureBannerGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 0, 0.2)',
-  },
-  suggestFeatureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 184, 77, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  suggestFeatureText: {
-    flex: 1,
-  },
-  suggestFeatureTitle: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  suggestFeatureDesc: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    marginTop: 1,
   },
   comparisonTitle: {
     ...FONTS.h3,

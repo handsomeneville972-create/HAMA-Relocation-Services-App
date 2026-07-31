@@ -35,7 +35,9 @@ export async function getCommunityPosts(params?: {
       const { data, error } = await query;
       return { data: data as unknown as CommunityPost[] | null, error };
     },
-    MOCK_COMMUNITY_POSTS,
+    params?.userId
+      ? MOCK_COMMUNITY_POSTS.filter(p => p.user.id === params.userId)
+      : MOCK_COMMUNITY_POSTS,
   );
 }
 
@@ -51,6 +53,16 @@ export async function getPostById(id: string): Promise<{ data: CommunityPost | n
     },
     MOCK_COMMUNITY_POSTS.find(p => p.id === id) ?? MOCK_COMMUNITY_POSTS[0],
   );
+}
+
+export async function incrementPostViews(
+  postId: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc('increment_post_views', { post_id: postId });
+  if (error) {
+    console.warn('[Supabase] Failed to increment post views:', error.message);
+  }
+  return { error: error?.message ?? null };
 }
 
 export async function createPost(post: {

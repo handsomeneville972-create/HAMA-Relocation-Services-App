@@ -1,16 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { EmailCaptureForm } from '../components/EmailCaptureForm';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCurrency } from '../hooks/useCurrency';
-import { ROLE_LABELS } from '../constants/labels';
-// Developer debug tool: mock users for role-switching during local testing
-import { MOCK_USERS } from '../constants/data';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 type SettingsItem = {
@@ -24,7 +20,7 @@ type SettingsItem = {
   onPress?: () => void;
 };
 
-const createSettingsSections = (showFeatureRequest: () => void, navigation?: any): { title: string; items: SettingsItem[] }[] => [
+const createSettingsSections = (navigation?: any): { title: string; items: SettingsItem[] }[] => [
   {
     title: 'Notifications',
     items: [
@@ -49,13 +45,11 @@ const createSettingsSections = (showFeatureRequest: () => void, navigation?: any
       { icon: 'moon-outline', label: 'Dark Mode', type: 'toggle', color: COLORS.primary, key: 'darkMode', value: true },
       { icon: 'language-outline', label: 'Language', type: 'link', color: COLORS.accent, detail: 'English' },
       { icon: 'cash-outline', label: 'Currency', type: 'link', color: COLORS.warning, detail: 'KSh' },
-      { icon: 'notifications-outline', label: 'Sound & Vibration', type: 'toggle', color: COLORS.secondary, key: 'sound' },
     ],
   },
   {
     title: 'Support',
     items: [
-      { icon: 'bulb-outline', label: 'Suggest a Feature', onPress: () => showFeatureRequest(), color: COLORS.warning },
       { icon: 'help-circle-outline', label: 'Help Center', type: 'link', color: COLORS.primary },
       { icon: 'chatbubble-ellipses-outline', label: 'Contact Support', type: 'link', color: COLORS.accent },
       { icon: 'document-text-outline', label: 'Terms of Service', type: 'link', color: COLORS.textSecondary, onPress: () => navigation?.navigate('Legal', { initialPage: 'terms' }) },
@@ -66,8 +60,7 @@ const createSettingsSections = (showFeatureRequest: () => void, navigation?: any
 
 export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { currentUserId, isAuthenticated, signOut, deleteAccount, exportData, signOutAllDevices } = useAuth();
-  const { showFeatureRequest } = useEarlyAccess();
+  const { isAuthenticated, signOut, deleteAccount, exportData, signOutAllDevices } = useAuth();
   const { currency } = useCurrency();
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     propertyAlerts: true,
@@ -77,18 +70,12 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     publicProfile: true,
     shareLocation: false,
     darkMode: true,
-    sound: true,
   });
   const [isExporting, setIsExporting] = useState(false);
 
   const toggleSwitch = (key: string) => {
     setToggles(prev => ({ ...prev, [key]: !prev[key] }));
   };
-
-  const handleUserSwitch = useCallback((userId: string) => {
-    // setCurrentUser no longer exposed in new auth context — kept for debug
-    Alert.alert('User Switched', `Switched to ${MOCK_USERS.find(u => u.id === userId)?.name ?? userId}`);
-  }, []);
 
   /** Confirm and delete account */
   const handleDeleteAccount = useCallback(() => {
@@ -144,7 +131,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {createSettingsSections(showFeatureRequest, navigation).map((section, si) => (
+        {createSettingsSections(navigation).map((section, si) => (
           <View key={si} style={styles.section}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <GlassCard noPadding>
@@ -254,46 +241,6 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Developer: User Switcher */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Developer</Text>
-          <GlassCard noPadding>
-            {MOCK_USERS.map((user, i) => {
-              const isActive = user.id === currentUserId;
-              return (
-                <TouchableOpacity
-                  key={user.id}
-                  style={[
-                    styles.userItem,
-                    i < MOCK_USERS.length - 1 && styles.settingBorder,
-                    isActive && styles.userItemActive,
-                  ]}
-                  onPress={() => handleUserSwitch(user.id)}
-                  disabled={isActive}
-                >
-                  <Image source={{ uri: user.avatar }} style={styles.userAvatar} />
-                  <View style={styles.userInfo}>
-                    <Text style={[styles.userName, isActive && styles.userNameActive]}>
-                      {user.name}
-                    </Text>
-                    <Text style={styles.userDetail}>
-                      {ROLE_LABELS[user.role]}{user.verified ? ' • Verified' : ''}
-                    </Text>
-                  </View>
-                  {isActive && (
-                    <View style={styles.activeIndicator}>
-                      <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </GlassCard>
-          <Text style={styles.devNote}>
-            Dev tool for testing different user roles.
-          </Text>
-        </View>
 
         {/* App Info */}
         <View style={styles.appInfo}>
@@ -406,53 +353,6 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontSize: 16,
     fontWeight: '600',
-  },
-  // Developer section
-  userItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    gap: 12,
-  },
-  userItemActive: {
-    backgroundColor: 'rgba(255, 107, 0, 0.08)',
-  },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  userNameActive: {
-    color: COLORS.primary,
-  },
-  userDetail: {
-    color: COLORS.textTertiary,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  activeIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 107, 0, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  devNote: {
-    color: COLORS.textTertiary,
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    fontStyle: 'italic',
   },
   appInfo: {
     alignItems: 'center',

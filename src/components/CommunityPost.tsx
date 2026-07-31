@@ -101,6 +101,10 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
           {/* Action Bar */}
           <View style={styles.actionBar}>
             <View style={styles.actionRow}>
+              <View style={styles.actionButton}>
+                <Ionicons name="eye-outline" size={20} color={COLORS.textTertiary} />
+                <Text style={styles.actionText}>{post.views}</Text>
+              </View>
               <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
                 <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                   <Ionicons

@@ -11,7 +11,6 @@ import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { EarlyAccessBanner } from '../src/components/EarlyAccessBanner';
 import { EarlyAccessModal } from '../src/components/EarlyAccessModal';
 import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
-import { FeatureRequestPortal } from '../src/components/FeatureRequestPortal';
 import { loadUserCurrency } from '../src/utils/currency';
 import { startPeriodicRefresh } from '../src/utils/exchangeRates';
 
@@ -77,7 +76,6 @@ function LayoutWithBanner({ children }: { children: React.ReactNode }) {
       {children}
       <EarlyAccessModal />
       <PriorityWaitlistForm />
-      <FeatureRequestPortal />
     </View>
   );
 }
@@ -261,6 +259,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="EditProfile"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="MyPosts"
                     options={{
                       headerShown: false,
                       animation: 'slide_from_right',

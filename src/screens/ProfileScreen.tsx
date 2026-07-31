@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +10,7 @@ import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfileBadges } from '../hooks/useUserData';
 import { useEarlyAccess } from '../contexts/EarlyAccessContext';
+import { getCommunityPosts } from '../services/communityService';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { navigateToRoute } from '../utils/navigation';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
@@ -44,6 +45,7 @@ const MENU_SECTIONS = [
     items: [
       { icon: 'chatbubble-outline', label: 'Messages', color: COLORS.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
       { icon: 'chatbubble-outline', label: 'My Reviews', color: COLORS.warning, badgeKey: 'myReviews' },
+      { icon: 'newspaper-outline', label: 'My Posts', color: COLORS.secondary, route: 'MyPosts' },
       { icon: 'time-outline', label: 'Booking History', color: COLORS.primary },
       { icon: 'cart-outline', label: 'Orders', color: COLORS.accent },
     ],
@@ -60,9 +62,23 @@ const MENU_SECTIONS = [
 
 export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { currentUser, isAuthenticated, isEmailVerified } = useAuth();
+  const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
-  const { showWaitlist, showFeatureRequest } = useEarlyAccess();
+  const { showWaitlist } = useEarlyAccess();
+  const [postCount, setPostCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const loadPostCount = async () => {
+      if (!currentUserId) return;
+      const { data } = await getCommunityPosts({ userId: currentUserId });
+      if (active && data) setPostCount(data.length);
+    };
+    loadPostCount();
+    return () => {
+      active = false;
+    };
+  }, [currentUserId]);
 
   // Get verification badge info
   const verificationInfo = VERIFICATION_LABELS[currentUser.verificationLevel] ?? VERIFICATION_LABELS.unverified;
@@ -111,6 +127,11 @@ export const ProfileScreen: React.FC = () => {
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{savedPropertiesCount}</Text>
               <Text style={styles.statLabel}>Saved</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{postCount}</Text>
+              <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
@@ -189,20 +210,6 @@ export const ProfileScreen: React.FC = () => {
         </View>
 
         {/* HAMA Footer */}
-        {/* Suggest a Feature */}
-      <View style={styles.suggestFeatureSection}>
-        <TouchableOpacity style={styles.suggestFeatureBtn} onPress={() => showFeatureRequest()}>
-          <View style={[styles.settingIcon, { backgroundColor: COLORS.warning + '20' }]}>
-            <Ionicons name="bulb-outline" size={20} color={COLORS.warning} />
-          </View>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Suggest a Feature</Text>
-            <Text style={styles.settingDetail}>Help shape the future of HAMA</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.footer}>
           <Text style={styles.footerBrand}>HAMA™</Text>
           <Text style={styles.footerVersion}>Version 2.1.0</Text>
@@ -310,21 +317,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: COLORS.glassBorder,
-  },
-  // Suggest a Feature
-  suggestFeatureSection: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  suggestFeatureBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    gap: 12,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
   },
   settingIcon: {
     width: 36,

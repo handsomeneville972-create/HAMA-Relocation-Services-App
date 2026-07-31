@@ -237,6 +237,7 @@ export interface CommunityPost {
   comments: number;
   shares: number;
   bookmarks: number;
+  views: number;
   isLiked: boolean;
   isBookmarked: boolean;
   createdAt: string;
