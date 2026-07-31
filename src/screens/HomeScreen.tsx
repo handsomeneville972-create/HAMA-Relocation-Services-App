@@ -168,7 +168,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {loading ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
               {Array.from({ length: 3 }).map((_, i) => (
-                <View key={i} style={{ width: 280 }}>
+                <View key={i} style={{ width: 300 }}>
                   <SkeletonLoader type="card" />
                 </View>
               ))}
@@ -481,15 +481,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   propertiesScroll: {
-    gap: 12,
+    gap: 8,
     paddingRight: SPACING.md,
   },
   propertyCard: {
-    width: 280,
+    width: 300,
   },
   propertyImage: {
     width: '100%',
-    height: 160,
+    height: 175,
     borderTopLeftRadius: RADIUS.lg,
     borderTopRightRadius: RADIUS.lg,
   },
@@ -526,12 +526,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   neighborhoodScroll: {
-    gap: 12,
+    gap: 8,
     paddingRight: SPACING.md,
   },
   neighborhoodCard: {
-    width: 200,
-    height: 140,
+    width: 220,
+    height: 160,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },
