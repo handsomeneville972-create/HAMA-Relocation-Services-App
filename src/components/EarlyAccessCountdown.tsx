@@ -126,7 +126,7 @@ export const EarlyAccessCountdown: React.FC<EarlyAccessCountdownProps> = ({
             <View style={styles.countdownHeader}>
               <Ionicons name="alarm-outline" size={20} color={COLORS.warning} />
               <Text style={styles.countdownTitle}>
-                {allZero ? "We've Launched! 🎉" : 'Subscriptions Launching In'}
+                {allZero ? "We've Launched!" : 'Subscriptions Launching In'}
               </Text>
             </View>
 

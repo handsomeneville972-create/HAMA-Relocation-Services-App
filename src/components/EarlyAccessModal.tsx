@@ -97,7 +97,7 @@ export const EarlyAccessModal: React.FC = () => {
               </LinearGradient>
 
               {/* Title */}
-              <Text style={styles.title}>🚀 Welcome to HAMA™ Early Access</Text>
+              <Text style={styles.title}>Welcome to HAMA™ Early Access</Text>
 
               {/* Message */}
               <Text style={styles.message}>

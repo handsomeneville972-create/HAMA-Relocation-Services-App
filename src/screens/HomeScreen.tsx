@@ -169,7 +169,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Properties Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🏠 Featured Properties</Text>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="home-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.sectionTitle}>Featured Properties</Text>
+            </View>
             <TouchableOpacity>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
@@ -206,7 +209,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Marketplace Products */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🛋️ Featured Products</Text>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="cart-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.sectionTitle}>Featured Products</Text>
+            </View>
             <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
@@ -236,7 +242,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Neighborhoods */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>📍 Explore Neighborhoods</Text>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="map-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.sectionTitle}>Explore Neighborhoods</Text>
+            </View>
             <TouchableOpacity>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
@@ -254,7 +263,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <Image source={{ uri: hood.image }} style={styles.neighborhoodImage} />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.9)']} style={styles.neighborhoodOverlay}>
                     <Text style={styles.neighborhoodName}>{hood.name}</Text>
-                    <Text style={styles.neighborhoodRating}>⭐ {hood.rating} • KSh {hood.avgRent.toLocaleString()}</Text>
+                    <View style={styles.neighborhoodRatingRow}>
+                      <Ionicons name="star" size={12} color="#FFB84D" />
+                      <Text style={styles.neighborhoodRating}>{hood.rating} • KSh {hood.avgRent.toLocaleString()}</Text>
+                    </View>
                   </LinearGradient>
                 </TouchableOpacity>
               ))}
@@ -265,7 +277,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Early Access: Email Capture + Referral */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🚀 Early Access Program</Text>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="rocket-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.sectionTitle}>Early Access Program</Text>
+            </View>
           </View>
           <View style={styles.earlyAccessEngagement}>
             <EmailCaptureForm compact message="Get product updates, new features, and early launch notifications." />
@@ -304,7 +319,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           <Text style={styles.footerHandle}>@hamanasi2026 / @hama_nasi_2026</Text>
-          <Text style={styles.footerTagline}>Need a house homie? We've got you! 🏠✨</Text>
+          <Text style={styles.footerTagline}>Need a house homie? We've got you!</Text>
         </View>
 
         {/* Bottom padding for Homie */}
@@ -480,6 +495,11 @@ const styles = StyleSheet.create({
     ...FONTS.h3,
     color: COLORS.text,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   seeAll: {
     color: COLORS.primaryLight,
     fontSize: 14,
@@ -562,6 +582,12 @@ const styles = StyleSheet.create({
   neighborhoodRating: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 12,
+    marginTop: 2,
+  },
+  neighborhoodRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     marginTop: 2,
   },
 

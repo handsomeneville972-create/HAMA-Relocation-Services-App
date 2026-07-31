@@ -86,7 +86,7 @@ export const EmailCaptureForm: React.FC<EmailCaptureFormProps> = ({
             <Ionicons name="mail-open" size={20} color="#fff" />
           </LinearGradient>
           <View style={styles.subscribedInfo}>
-            <Text style={styles.subscribedTitle}>Subscribed! 🎉</Text>
+            <Text style={styles.subscribedTitle}>Subscribed!</Text>
             <Text style={styles.subscribedDesc}>
               You'll receive updates at {email}
             </Text>

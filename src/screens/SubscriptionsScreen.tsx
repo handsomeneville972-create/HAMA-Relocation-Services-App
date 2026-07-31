@@ -90,7 +90,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
 
   /** Handle successful payment */
   const handlePaymentSuccess = useCallback(() => {
-    Alert.alert('Welcome!', 'Your subscription has been activated successfully! 🎉');
+    Alert.alert('Welcome!', 'Your subscription has been activated successfully!');
   }, []);
 
   return (

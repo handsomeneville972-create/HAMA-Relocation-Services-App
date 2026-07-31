@@ -39,7 +39,7 @@ const getPromptConfig = (user: any, daysSinceJoin: number, daysSinceActive: numb
     return {
       type: 'new_user',
       icon: 'rocket-outline',
-      title: 'Welcome to HAMA™! 🚀',
+      title: 'Welcome to HAMA™!',
       message: 'Complete your profile to unlock personalized recommendations and make the most of your Founding Member benefits.',
       actionLabel: 'Complete Profile',
       actionRoute: 'Settings',
@@ -53,7 +53,7 @@ const getPromptConfig = (user: any, daysSinceJoin: number, daysSinceActive: numb
     return {
       type: 'inactive_user',
       icon: 'heart-outline',
-      title: 'We miss you! 💙',
+      title: 'We miss you!',
       message: 'Explore what\'s new on HAMA™ — new features, tools, and updates are waiting for you.',
       actionLabel: 'See What\'s New',
       actionRoute: 'WhatsNew',
@@ -67,7 +67,7 @@ const getPromptConfig = (user: any, daysSinceJoin: number, daysSinceActive: numb
     return {
       type: 'power_user',
       icon: 'trophy-outline',
-      title: 'You\'re on fire! 🔥',
+      title: 'You\'re on fire!',
       message: 'You\'re among our top Founding Members. Your feedback shapes the future of HAMA™.',
       actionLabel: 'Share Feedback',
       color: COLORS.warning,

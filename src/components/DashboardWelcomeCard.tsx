@@ -54,7 +54,7 @@ export const DashboardWelcomeCard: React.FC = () => {
               <Ionicons name="rocket" size={24} color="#fff" />
             </LinearGradient>
             <View style={styles.headerText}>
-              <Text style={styles.title}>🚀 Welcome to HAMA™ Early Access</Text>
+              <Text style={styles.title}>Welcome to HAMA™ Early Access</Text>
               <EarlyAccessBadge variant="compact" style={{ alignSelf: 'flex-start' }} />
             </View>
           </View>

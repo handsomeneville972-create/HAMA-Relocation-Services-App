@@ -152,7 +152,10 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Properties */}
             {(activeTab === 'all' || activeTab === 'properties') && filteredProperties.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>🏠 Properties ({filteredProperties.length})</Text>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="home-outline" size={17} color={COLORS.primary} />
+                  <Text style={styles.sectionTitle}>Properties ({filteredProperties.length})</Text>
+                </View>
                 {filteredProperties.slice(0, 3).map(property => (
                   <TouchableOpacity key={property.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('PropertyDetail', { propertyId: property.id })}>
                     <GlassCard>
@@ -178,7 +181,10 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Products */}
             {(activeTab === 'all' || activeTab === 'products') && filteredProducts.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>🛋️ Products ({filteredProducts.length})</Text>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="cart-outline" size={17} color={COLORS.primary} />
+                  <Text style={styles.sectionTitle}>Products ({filteredProducts.length})</Text>
+                </View>
                 {filteredProducts.slice(0, 3).map(product => (
                   <TouchableOpacity key={product.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}>
                     <GlassCard>
@@ -204,7 +210,10 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Services */}
             {(activeTab === 'all' || activeTab === 'services') && filteredServices.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>🔧 Services ({filteredServices.length})</Text>
+                <View style={styles.sectionTitleRow}>
+                  <Ionicons name="construct-outline" size={17} color={COLORS.primary} />
+                  <Text style={styles.sectionTitle}>Services ({filteredServices.length})</Text>
+                </View>
                 {filteredServices.slice(0, 3).map(service => (
                   <TouchableOpacity key={service.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('ServiceDetail', { providerId: service.id })}>
                     <GlassCard>
@@ -327,6 +336,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...FONTS.h3,
     color: COLORS.text,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: SPACING.md,
   },
   // Recent Searches

@@ -29,8 +29,8 @@ export const COLORS = {
 
   // Text
   text: '#FFFFFF',
-  textSecondary: 'rgba(255, 255, 255, 0.7)',
-  textTertiary: 'rgba(255, 255, 255, 0.4)',
+  textSecondary: 'rgba(255, 255, 255, 0.8)',
+  textTertiary: 'rgba(255, 255, 255, 0.58)',
   textInverse: '#000000',
 
   // Borders

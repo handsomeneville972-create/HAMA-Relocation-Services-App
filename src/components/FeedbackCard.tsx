@@ -108,7 +108,10 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
 
         {/* What do you love? */}
         <View style={styles.fieldSection}>
-          <Text style={styles.sectionLabel}>What do you love? ✨</Text>
+          <View style={styles.sectionLabelRow}>
+            <Ionicons name="heart-outline" size={15} color={COLORS.secondary} />
+            <Text style={styles.sectionLabel}>What do you love?</Text>
+          </View>
           <TextInput
             style={styles.textInput}
             placeholder="Tell us what's working well..."
@@ -122,7 +125,10 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
 
         {/* What can we improve? */}
         <View style={styles.fieldSection}>
-          <Text style={styles.sectionLabel}>What can we improve? 🔧</Text>
+          <View style={styles.sectionLabelRow}>
+            <Ionicons name="construct-outline" size={15} color={COLORS.warning} />
+            <Text style={styles.sectionLabel}>What can we improve?</Text>
+          </View>
           <TextInput
             style={styles.textInput}
             placeholder="Share suggestions for improvement..."
@@ -136,7 +142,10 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
 
         {/* What feature should we build next? */}
         <View style={styles.fieldSection}>
-          <Text style={styles.sectionLabel}>What feature should we build next? 🚀</Text>
+          <View style={styles.sectionLabelRow}>
+            <Ionicons name="rocket-outline" size={15} color={COLORS.primary} />
+            <Text style={styles.sectionLabel}>What feature should we build next?</Text>
+          </View>
           <TextInput
             style={styles.textInput}
             placeholder="Describe your ideal feature..."
@@ -215,6 +224,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     alignSelf: 'flex-start',
+  },
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
   },
   starsRow: {
     flexDirection: 'row',

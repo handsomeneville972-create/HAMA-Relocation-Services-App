@@ -59,7 +59,7 @@ export const EARLY_ACCESS_CONFIG = {
   PREMIUM_MODAL: {
     ENABLED: true,
     /** Modal title */
-    TITLE: '🚀 Welcome to HAMA™ Early Access',
+    TITLE: 'Welcome to HAMA™ Early Access',
     /** Modal message */
     MESSAGE: 'As one of our Founding Members, you currently enjoy complimentary access to all premium features across the HAMA™ ecosystem.\n\nExplore advanced AI capabilities, business management tools, automation workflows, analytics, reporting systems, customer engagement tools, and future releases at no cost.\n\nYour feedback helps shape the future of HAMA™.\n\nThank you for joining us early.',
   },
@@ -71,7 +71,7 @@ export const EARLY_ACCESS_CONFIG = {
     /** Duration to wait before showing again after dismiss (ms) */
     DISMISS_DURATION: 24 * 60 * 60 * 1000, // 24 hours
     /** Banner text */
-    TEXT: '🚀 EARLY ACCESS ACTIVE • ALL PREMIUM FEATURES CURRENTLY INCLUDED • FOUNDING MEMBERS RECEIVE COMPLIMENTARY ACCESS • EXPLORE EVERYTHING • BUILD FASTER • GROW SMARTER • LIMITED-TIME OPPORTUNITY',
+    TEXT: 'EARLY ACCESS ACTIVE • ALL PREMIUM FEATURES CURRENTLY INCLUDED • FOUNDING MEMBERS RECEIVE COMPLIMENTARY ACCESS • EXPLORE EVERYTHING • BUILD FASTER • GROW SMARTER • LIMITED-TIME OPPORTUNITY',
   },
 
   /** Priority Subscriber Waitlist config */

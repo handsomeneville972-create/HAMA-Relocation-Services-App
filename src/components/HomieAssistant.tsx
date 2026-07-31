@@ -7,11 +7,11 @@ import { COLORS, RADIUS, SPACING, SHADOWS } from '../constants/theme';
 const { width } = Dimensions.get('window');
 
 const TIPS = [
-  "Hey, I'm Homie 👋. Let's find something perfect for your budget.",
-  "Looking for student housing? 🎓 I can help!",
-  "Need help moving? Hamisha Squad has your back! 🚚",
-  "Your dream home is just a search away! 🏠",
-  "I can help you budget for your new place! 💰",
+  "Hey, I'm Homie. Let's find something perfect for your budget.",
+  'Looking for student housing? I can help!',
+  'Need help moving? Hamisha Squad has your back!',
+  'Your dream home is just a search away!',
+  'I can help you budget for your new place!',
 ];
 
 interface HomieAssistantProps {

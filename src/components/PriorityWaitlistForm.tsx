@@ -131,7 +131,7 @@ export const PriorityWaitlistForm: React.FC = () => {
                   <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.successIcon}>
                     <Ionicons name="checkmark-circle" size={40} color="#fff" />
                   </LinearGradient>
-                  <Text style={styles.successTitle}>You're on the List! 🎉</Text>
+                  <Text style={styles.successTitle}>You're on the List!</Text>
                   <Text style={styles.successDesc}>
                     You'll be among the first to know when HAMA subscriptions launch. As a priority
                     subscriber, you'll receive exclusive early access pricing and updates.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/utils/supabaseClient';
 import { COLORS } from '../../src/constants/theme';
@@ -63,14 +64,14 @@ export default function AuthCallback() {
         )}
         {status === 'success' && (
           <>
-            <Text style={styles.checkmark}>✓</Text>
+            <Ionicons name="checkmark-circle" size={64} color={COLORS.success} />
             <Text style={styles.title}>Email Verified!</Text>
             <Text style={styles.message}>{message}</Text>
           </>
         )}
         {status === 'error' && (
           <>
-            <Text style={styles.errorIcon}>✗</Text>
+            <Ionicons name="close-circle" size={64} color={COLORS.error} />
             <Text style={styles.title}>Verification Failed</Text>
             <Text style={styles.message}>{message}</Text>
           </>
@@ -109,13 +110,5 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-  },
-  checkmark: {
-    fontSize: 48,
-    color: COLORS.success,
-  },
-  errorIcon: {
-    fontSize: 48,
-    color: COLORS.error,
   },
 });

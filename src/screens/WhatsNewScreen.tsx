@@ -39,7 +39,7 @@ const VERSION_HISTORY = [
     version: '1.0',
     date: 'April 2024',
     changes: [
-      { type: 'feature', text: '🚀 HAMA™ Platform Launch — Early Access Program begins' },
+      { type: 'feature', text: 'HAMA™ Platform Launch — Early Access Program begins' },
       { type: 'feature', text: 'Marketplace — buy and sell products' },
       { type: 'feature', text: 'Services — connect with service providers' },
       { type: 'feature', text: 'Properties — find your perfect home' },

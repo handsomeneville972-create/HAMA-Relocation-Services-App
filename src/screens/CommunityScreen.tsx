@@ -110,7 +110,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
           <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createPostGradient}>
             <View style={styles.createPostContent}>
               <View style={styles.createPostAvatar}>
-                <Text style={styles.avatarText}>👤</Text>
+                <Ionicons name="person" size={18} color={COLORS.textSecondary} />
               </View>
               <TouchableOpacity style={styles.createPostInput}>
                 <Text style={styles.createPostPlaceholder}>Share something with the community...</Text>
@@ -256,9 +256,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 18,
   },
   createPostInput: {
     flex: 1,

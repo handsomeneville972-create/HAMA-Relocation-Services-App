@@ -133,7 +133,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <View style={[styles.iconContainer, styles.successIcon]}>
                 <Ionicons name="checkmark-circle" size={64} color={COLORS.accent} />
               </View>
-              <Text style={styles.title}>Payment Successful! 🎉</Text>
+              <Text style={styles.title}>Payment Successful!</Text>
               <Text style={styles.subtitle}>
                 Your subscription has been activated
               </Text>

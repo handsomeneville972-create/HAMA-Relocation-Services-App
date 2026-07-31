@@ -414,12 +414,20 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryNumber}>{activeWorkspaces.has('house_seeker') ? '✓' : '-'}</Text>
+                {activeWorkspaces.has('house_seeker') ? (
+                  <Ionicons name="checkmark" size={20} color={COLORS.success} />
+                ) : (
+                  <Ionicons name="remove" size={20} color={COLORS.textSecondary} />
+                )}
                 <Text style={styles.summaryLabel}>House Seeker</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryNumber}>{activeWorkspaces.size > 1 ? '✓' : '-'}</Text>
+                {activeWorkspaces.size > 1 ? (
+                  <Ionicons name="checkmark" size={20} color={COLORS.success} />
+                ) : (
+                  <Ionicons name="remove" size={20} color={COLORS.textSecondary} />
+                )}
                 <Text style={styles.summaryLabel}>Additional</Text>
               </View>
             </View>

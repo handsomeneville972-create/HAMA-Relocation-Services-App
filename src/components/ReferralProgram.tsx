@@ -179,9 +179,12 @@ export const ReferralProgram: React.FC<ReferralProgramProps> = ({ compact = fals
                   {tier.label}
                 </Text>
                 <Text style={styles.tierDesc}>{tier.description}</Text>
-                <Text style={styles.tierRequirement}>
-                  {isUnlocked ? '✓ Unlocked' : `${tier.requiredReferrals} referrals needed`}
-                </Text>
+                <View style={styles.tierRequirement}>
+                  {isUnlocked && <Ionicons name="checkmark" size={13} color={COLORS.accent} />}
+                  <Text style={isUnlocked ? styles.tierUnlocked : styles.tierRequirementText}>
+                    {isUnlocked ? 'Unlocked' : `${tier.requiredReferrals} referrals needed`}
+                  </Text>
+                </View>
               </View>
               {isNext && (
                 <View style={styles.nextBadge}>
@@ -396,9 +399,21 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   tierRequirement: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     color: COLORS.textTertiary,
     fontSize: 11,
     marginTop: 2,
+  },
+  tierRequirementText: {
+    color: COLORS.textTertiary,
+    fontSize: 11,
+  },
+  tierUnlocked: {
+    color: COLORS.accent,
+    fontSize: 11,
+    fontWeight: '600',
   },
   nextBadge: {
     backgroundColor: COLORS.primary + '20',
