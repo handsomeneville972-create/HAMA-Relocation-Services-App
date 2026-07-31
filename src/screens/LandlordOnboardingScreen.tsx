@@ -47,7 +47,7 @@ interface LandlordProfile {
   accountName: string;
 }
 
-const STEPS: { key: OnboardingStep; label: string; icon: string }[] = [
+const STEPS: { key: OnboardingStep; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: 'personal', label: 'Personal', icon: 'person-outline' },
   { key: 'identity', label: 'Identity', icon: 'shield-checkmark-outline' },
   { key: 'business', label: 'Business', icon: 'business-outline' },

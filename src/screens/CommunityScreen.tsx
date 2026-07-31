@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,6 +44,13 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       useNativeDriver: true,
     }).start();
   };
+
+  const visiblePosts = useMemo(() => {
+    if (activeTab === 'trending') {
+      return [...posts].sort((a, b) => b.likes - a.likes);
+    }
+    return posts;
+  }, [posts, activeTab]);
 
   return (
     <View style={styles.container}>
@@ -132,8 +139,22 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             Array.from({ length: 4 }).map((_, i) => (
               <SkeletonLoader key={i} type="post" />
             ))
+          ) : activeTab === 'following' ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="people-outline" size={40} color={COLORS.textTertiary} />
+              <Text style={styles.emptyTitle}>You're not following anyone yet</Text>
+              <Text style={styles.emptyText}>
+                Follow community members to see their posts here. For now, check out the For You and Trending tabs!
+              </Text>
+            </View>
+          ) : visiblePosts.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="newspaper-outline" size={40} color={COLORS.textTertiary} />
+              <Text style={styles.emptyTitle}>No posts yet</Text>
+              <Text style={styles.emptyText}>Be the first to share something with the community!</Text>
+            </View>
           ) : (
-            posts.map((post) => (
+            visiblePosts.map((post) => (
               <CommunityPostCard
                 key={post.id}
                 post={post}
@@ -268,5 +289,22 @@ const styles = StyleSheet.create({
   },
   postsContainer: {
     paddingHorizontal: SPACING.md,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: SPACING.xxl,
+    gap: SPACING.sm,
+  },
+  emptyTitle: {
+    ...FONTS.h3,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  emptyText: {
+    ...FONTS.caption,
+    color: COLORS.textTertiary,
+    textAlign: 'center',
+    maxWidth: 260,
+    lineHeight: 18,
   },
 });

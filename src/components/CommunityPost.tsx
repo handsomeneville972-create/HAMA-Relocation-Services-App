@@ -164,6 +164,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
                   color={bookmarked ? COLORS.primary : COLORS.textSecondary}
                 />
               </Animated.View>
+              <Text style={[styles.actionText, bookmarked && styles.bookmarkedText]}>{bookmarkCount}</Text>
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -282,5 +283,8 @@ const styles = StyleSheet.create({
   },
   likedText: {
     color: COLORS.secondary,
+  },
+  bookmarkedText: {
+    color: COLORS.primary,
   },
 });

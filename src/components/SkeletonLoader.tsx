@@ -6,12 +6,13 @@ import { COLORS, RADIUS, SPACING } from '../constants/theme';
 const { width } = Dimensions.get('window');
 
 interface SkeletonLoaderProps {
-  type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat';
+  type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat' | 'text' | 'liquid-card';
   count?: number;
   width?: number;
+  style?: any;
 }
 
-export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', count = 1, width }) => {
+export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', count = 1, width, style }) => {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -51,6 +52,10 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', c
 
   const renderSkeleton = () => {
     switch (type) {
+      case 'text':
+        return <ShimmerBlock style={[styles.textLine, style]} />;
+      case 'liquid-card':
+        return <ShimmerBlock style={[styles.liquidCard, style]} />;
       case 'card':
         return (
           <View style={styles.card}>
@@ -245,6 +250,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgCard,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
+  },
+  textLine: {
+    height: 16,
+    width: '100%',
+  },
+  liquidCard: {
+    minHeight: 100,
+    width: '100%',
+    borderRadius: RADIUS.lg,
   },
   shimmer: {
     ...StyleSheet.absoluteFillObject,
