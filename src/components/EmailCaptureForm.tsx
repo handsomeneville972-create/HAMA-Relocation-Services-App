@@ -48,12 +48,12 @@ export const EmailCaptureForm: React.FC<EmailCaptureFormProps> = ({
   const [subscribing, setSubscribing] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  if (!EARLY_ACCESS_CONFIG.EMAIL_CAPTURE.ENABLED || isEmailCaptureDismissed) return null;
-
   // Track view once
   React.useEffect(() => {
     trackEmailCaptureViewed();
   }, []);
+
+  if (!EARLY_ACCESS_CONFIG.EMAIL_CAPTURE.ENABLED || isEmailCaptureDismissed) return null;
 
   const handleSubscribe = async () => {
     if (!email.trim() || !email.includes('@')) {
