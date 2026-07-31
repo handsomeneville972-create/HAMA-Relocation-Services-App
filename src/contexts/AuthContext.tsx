@@ -243,22 +243,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUserId) return 'Not authenticated';
 
     try {
-      const { error } = await supabase.from('profiles').upsert({
-        id: currentUserId,
-        display_name: updates.name,
-        avatar_url: updates.avatar,
-        username: updates.username,
-        bio: updates.bio,
-        website: updates.website,
-        phone: updates.phone,
-        phone_verified: updates.phoneVerified,
-        verification_level: updates.verificationLevel,
-        updated_at: new Date().toISOString(),
+      // Preferred path: security-definer RPC (bypasses RLS, always works when applied)
+      const { error: rpcError } = await supabase.rpc('update_profile', {
+        p_display_name: updates.name,
+        p_avatar_url: updates.avatar,
+        p_username: updates.username,
+        p_bio: updates.bio,
+        p_website: updates.website,
       });
 
-      if (error) {
-        console.error('[updateProfile]', error.message);
-        return error.message;
+      if (rpcError) {
+        // Fallback: direct upsert (requires RLS INSERT + UPDATE policies)
+        console.warn('[updateProfile] RPC failed, falling back to upsert:', rpcError.message);
+        const { error } = await supabase.from('profiles').upsert({
+          id: currentUserId,
+          display_name: updates.name,
+          avatar_url: updates.avatar,
+          username: updates.username,
+          bio: updates.bio,
+          website: updates.website,
+          phone: updates.phone,
+          phone_verified: updates.phoneVerified,
+          verification_level: updates.verificationLevel,
+          updated_at: new Date().toISOString(),
+        });
+
+        if (error) {
+          console.error('[updateProfile]', error.message);
+          return error.message;
+        }
       }
 
       // Optimistically update local state
