@@ -2,10 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { EarlyAccessBadge } from './EarlyAccessBadge';
 import { SubscriptionPlan } from '../constants/types';
 import { formatPrice } from '../utils/currency';
-import { isSubscriptionPaymentEnabled } from '../config/earlyAccess';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 interface PricingCardProps {
@@ -62,13 +60,6 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan, onSelect, compac
               </View>
             ))}
           </View>
-
-          {/* Early Access Badge on upgrade CTA */}
-          {!isSubscriptionPaymentEnabled() && plan.price > 0 && (
-            <View style={styles.freemiumBadgeRow}>
-              <EarlyAccessBadge variant="compact" />
-            </View>
-          )}
 
           <TouchableOpacity
             style={[styles.ctaButton, isHighlighted && styles.highlightedCta]}

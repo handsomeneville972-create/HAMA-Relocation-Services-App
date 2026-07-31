@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
 import { MOCK_BILLING_HISTORY } from '../constants/data';
 import { formatPrice } from '../utils/currency';
 import { isSubscriptionPaymentEnabled } from '../config/earlyAccess';
@@ -392,7 +391,6 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
           </TouchableOpacity>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>Billing History</Text>
-            <EarlyAccessBadge variant="compact" />
           </View>
           <View style={styles.headerSpacer} />
         </View>

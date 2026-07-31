@@ -5,9 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { GlassCard } from '../components/GlassCard';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
-import { ReferralProgram } from '../components/ReferralProgram';
-import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { HomieAssistant } from '../components/HomieAssistant';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getProducts } from '../services/productService';
@@ -73,37 +70,34 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         {/* Hero Section */}
         <Animated.View style={[styles.heroContainer, { transform: [{ translateY: heroTranslateY }], opacity: heroOpacity }]}>
-          <View style={styles.heroImageContainer}>
-            <Image source={require('../../assets/header.png')} style={styles.heroImage} resizeMode="cover" />
-            {/* Top edge fade */}
-            <LinearGradient
-              colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0.6)', 'transparent']}
-              style={styles.heroEdgeTop}
-            />
-            {/* Bottom edge fade */}
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,1)']}
-              style={styles.heroEdgeBottom}
-            />
-            {/* Left edge fade */}
-            <LinearGradient
-              colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0.5)', 'transparent']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.heroEdgeLeft}
-            />
-            {/* Right edge fade */}
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,1)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.heroEdgeRight}
-            />
-          </View>
-
+          {/* Background Image */}
+          <Image source={require('../../assets/header.png')} style={styles.heroImage} resizeMode="cover" />
+          {/* Edge fades for blurred-edge effect */}
           <LinearGradient
-            colors={['#000000', '#0A0A0A', '#000000']}
-            style={styles.heroGradient}
+            colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.3)', 'transparent']}
+            style={styles.heroEdgeTop}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.95)']}
+            style={styles.heroEdgeBottom}
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.heroEdgeLeft}
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.7)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.heroEdgeRight}
+          />
+
+          {/* Content overlay */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+            style={styles.heroContentOverlay}
           >
             <View style={[styles.heroContent, { paddingTop: insets.top + SPACING.xl }]}>
               {/* Top Bar */}
@@ -115,7 +109,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <View>
                     <View style={styles.logoNameRow}>
                       <Text style={styles.logoName}>HAMA™</Text>
-                      <EarlyAccessBadge variant="compact" />
                     </View>
                     <Text style={styles.logoSlogan}>Need a house homie? We've got you!</Text>
                   </View>
@@ -271,20 +264,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           )}
         </View>
 
-        {/* Early Access: Email Capture + Referral */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Ionicons name="rocket-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>Early Access Program</Text>
-            </View>
-          </View>
-          <View style={styles.earlyAccessEngagement}>
-            <EmailCaptureForm compact message="Get product updates, new features, and early launch notifications." />
-            <ReferralProgram compact />
-          </View>
-        </View>
-
         {/* Footer - Social Links */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Follow us</Text>
@@ -339,15 +318,15 @@ const styles = StyleSheet.create({
   },
   heroContainer: {
     overflow: 'hidden',
+    height: height * 0.55,
+    position: 'relative',
   },
-  heroImageContainer: {
+  heroImage: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.55,
-  },
-  heroImage: {
+    bottom: 0,
     width: '100%',
     height: '100%',
   },
@@ -379,8 +358,8 @@ const styles = StyleSheet.create({
     right: 0,
     width: 40,
   },
-  heroGradient: {
-    minHeight: height * 0.55,
+  heroContentOverlay: {
+    flex: 1,
   },
   heroContent: {
     paddingHorizontal: SPACING.md,
@@ -553,9 +532,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  earlyAccessEngagement: {
-    gap: 12,
   },
   neighborhoodScroll: {
     gap: 12,

@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
 import { ReferralProgram } from '../components/ReferralProgram';
 import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useAuth } from '../contexts/AuthContext';
@@ -105,7 +104,7 @@ export const ProfileScreen: React.FC = () => {
                   <Text style={styles.roleText}>{ROLE_LABELS[currentUser.role]}</Text>
                 </View>
 
-                {/*                  Verification Badge */}
+                {/* Verification Badge */}
                 {isAuthenticated && (
                   <View style={[styles.verifyBadge, { backgroundColor: verificationInfo.color + '20' }]}>
                     <Ionicons name={verificationInfo.icon as any} size={12} color={verificationInfo.color} />
@@ -114,12 +113,8 @@ export const ProfileScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
-
-                {/* Early Access Badge */}
-                <EarlyAccessBadge variant="compact" />
               </View>
-
-              </View>
+            </View>
           </View>
 
           {/* Stats */}

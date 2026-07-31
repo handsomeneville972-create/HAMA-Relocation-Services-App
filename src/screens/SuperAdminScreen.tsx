@@ -23,7 +23,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
@@ -482,7 +481,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <GlassCard>
         {featureFlags && (
           <View style={styles.flagsContainer}>
-            <FlagToggle label="Early Access Mode" value={featureFlags.earlyAccessMode} onToggle={() => toggleFeatureFlag('earlyAccessMode')} color={COLORS.primary} />
             <FlagToggle label="Subscriptions Enabled" value={featureFlags.subscriptionsEnabled} onToggle={() => toggleFeatureFlag('subscriptionsEnabled')} color={COLORS.secondary} />
             <FlagToggle label="Payments Enabled" value={featureFlags.paymentsEnabled} onToggle={() => toggleFeatureFlag('paymentsEnabled')} color={COLORS.accent} />
           </View>
@@ -957,7 +955,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
           </TouchableOpacity>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>Admin Center</Text>
-            <EarlyAccessBadge variant="compact" text="SUPER ADMIN" />
           </View>
         </View>
         <Text style={styles.headerSubtitle}>Enterprise operations & platform management</Text>

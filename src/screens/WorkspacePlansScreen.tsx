@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { LiquidGlass } from '../components/LiquidGlass';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { useEarlyAccess } from '../contexts/EarlyAccessContext';

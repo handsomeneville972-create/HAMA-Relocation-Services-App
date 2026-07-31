@@ -8,8 +8,6 @@ import { COLORS } from '../src/constants/theme';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { EarlyAccessProvider } from '../src/contexts/EarlyAccessContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { EarlyAccessBanner } from '../src/components/EarlyAccessBanner';
-import { EarlyAccessModal } from '../src/components/EarlyAccessModal';
 import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
 import { loadUserCurrency } from '../src/utils/currency';
 import { startPeriodicRefresh } from '../src/utils/exchangeRates';
@@ -83,9 +81,7 @@ function SessionMonitor() {
 function LayoutWithBanner({ children }: { children: React.ReactNode }) {
   return (
     <View style={{ flex: 1 }}>
-      <EarlyAccessBanner />
       {children}
-      <EarlyAccessModal />
       <PriorityWaitlistForm />
     </View>
   );

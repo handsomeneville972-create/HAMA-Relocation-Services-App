@@ -7,8 +7,6 @@ import { PricingCard } from '../components/PricingCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { PaymentModal } from '../components/PaymentModal';
 import { PaystackWebView } from '../components/PaystackWebView';
-import { EarlyAccessBadge } from '../components/EarlyAccessBadge';
-import { EarlyAccessCountdown } from '../components/EarlyAccessCountdown';
 import { ReferralProgram } from '../components/ReferralProgram';
 import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useMpesaPayment } from '../hooks/useMpesaPayment';
@@ -102,7 +100,6 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>Subscriptions</Text>
-          <EarlyAccessBadge variant="pill" />
         </View>
         <Text style={styles.headerSubtitle}>Choose the plan that fits your needs</Text>
       </LinearGradient>
@@ -127,32 +124,6 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </View>
-
-      {/* Early Access Benefit Active banner */}
-      {!paymentEnabled && (
-        <View style={styles.freemiumBanner}>
-          <LinearGradient
-            colors={['rgba(255, 107, 0, 0.08)', 'rgba(255, 255, 255, 0.05)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.freemiumBannerGradient}
-          >
-            <Ionicons name="star" size={18} color={COLORS.primary} />
-            <View style={styles.freemiumBannerTextContainer}>
-              <Text style={styles.freemiumBannerTitle}>Early Access Benefit Active</Text>
-              <Text style={styles.freemiumBannerText}>
-                You currently receive complimentary access to all premium features included in these plans.
-                Enjoy full functionality while Early Access is active.
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>
-      )}
-
-      {/* Countdown placeholder */}
-      <View style={styles.countdownContainer}>
-        <EarlyAccessCountdown />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>

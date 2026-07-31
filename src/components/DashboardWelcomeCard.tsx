@@ -1,9 +1,8 @@
 /**
  * HAMA™ Dashboard Welcome Card
  *
- * A prominent welcome card displayed on the home/dashboard screen during the
- * Early Access Program. Communicates premium benefits and premium
- * platform capabilities.
+ * A prominent welcome card displayed on the home/dashboard screen.
+ * Communicates platform capabilities.
  */
 
 import React from 'react';
@@ -11,17 +10,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from './GlassCard';
-import { EarlyAccessBadge } from './EarlyAccessBadge';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useEarlyAccess } from '../contexts/EarlyAccessContext';
-import { EARLY_ACCESS_CONFIG } from '../config/earlyAccess';
 
 const { width } = Dimensions.get('window');
 
 export const DashboardWelcomeCard: React.FC = () => {
   const { isWelcomeCardDismissed, dismissWelcomeCard, isEarlyAccessActive } = useEarlyAccess();
 
-  if (!isEarlyAccessActive || !EARLY_ACCESS_CONFIG.DASHBOARD_WELCOME_CARD.ENABLED || isWelcomeCardDismissed) {
+  if (!isEarlyAccessActive || isWelcomeCardDismissed) {
     return null;
   }
 
@@ -54,8 +51,7 @@ export const DashboardWelcomeCard: React.FC = () => {
               <Ionicons name="rocket" size={24} color="#fff" />
             </LinearGradient>
             <View style={styles.headerText}>
-              <Text style={styles.title}>Welcome to HAMA™ Early Access</Text>
-              <EarlyAccessBadge variant="compact" style={{ alignSelf: 'flex-start' }} />
+              <Text style={styles.title}>Welcome to HAMA™</Text>
             </View>
           </View>
 
