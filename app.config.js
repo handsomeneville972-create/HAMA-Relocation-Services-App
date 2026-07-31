@@ -40,6 +40,14 @@ export default {
       'expo-router',
       'expo-secure-store',
       'expo-font',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Allow HAMA to access your photos so you can set a profile picture.',
+          cameraPermission: 'Allow HAMA to access your camera so you can take a profile picture.',
+          microphonePermission: false,
+        },
+      ],
     ],
     extra: {
       supabaseUrl: SUPABASE_URL,

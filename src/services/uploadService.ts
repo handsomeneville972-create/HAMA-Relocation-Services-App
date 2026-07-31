@@ -1,70 +1,93 @@
-import { supabase } from '../utils/supabaseClient';
+import { supabase, SUPABASE_URL } from '../utils/supabaseClient';
 import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 const AVATARS_BUCKET = 'avatars';
 const isWeb = Platform.OS === 'web';
 
-export type UploadResult = { url: string } | { error: string };
+export type UploadResult = { url: string; fileName: string } | { error: string };
+
+const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+const getPublicUrl = (filePath: string): string => {
+  const { data } = supabase.storage.from(AVATARS_BUCKET).getPublicUrl(filePath);
+  return data.publicUrl;
+};
 
 /**
  * Upload a profile avatar image to Supabase Storage.
  * Stores at: avatars/{userId}/{timestamp}.{ext}
- * Returns the public URL on success.
+ *
+ * Web:        fetch(uri) -> Blob -> supabase.storage.upload
+ * Native:     supabase-js FormData (documented RN pattern) first;
+ *             on failure, falls back to a direct PUT via
+ *             expo-file-system, which avoids React Native's
+ *             FormData/multipart boundary issues entirely.
  */
 export const uploadAvatar = async (
   userId: string,
   uri: string,
 ): Promise<UploadResult> => {
   try {
-    const mimeExt = (uri.split('?')[0].split('.').pop()?.toLowerCase() ?? '') === 'heic'
-      ? 'heic'
-      : '';
-    const urlExt = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
-    const knownExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-    const fallbackExt = knownExts.includes(urlExt) ? urlExt : 'jpg';
-    const fileName = `${Date.now()}.${fallbackExt}`;
+    const urlPath = uri.split('?')[0];
+    const urlExt = urlPath.split('.').pop()?.toLowerCase() ?? '';
+    const ext = KNOWN_EXTS.includes(urlExt) ? urlExt : 'jpg';
+    const fileName = `${Date.now()}.${ext}`;
     const filePath = `${userId}/${fileName}`;
-
-    const upload = async (body: any, contentType: string): Promise<string | null> => {
-      const { error } = await supabase.storage
-        .from(AVATARS_BUCKET)
-        .upload(filePath, body, {
-          contentType,
-          upsert: true,
-        });
-      return error?.message ?? null;
-    };
-
-    let uploadError: string | null = null;
+    const type = `image/${ext}`;
 
     if (isWeb) {
-      // Web: fetch the blob URL and upload as a Blob
       const response = await fetch(uri);
       const blob = await response.blob();
-      uploadError = await upload(blob, blob.type || `image/${fallbackExt}`);
-    } else {
-      // Native: FormData with {uri, name, type} — works with file:// URIs
-      const ext = knownExts.includes(mimeExt || urlExt) ? (mimeExt || urlExt) : 'jpg';
-      const type = `image/${ext}`;
-      const formData = new FormData();
-      formData.append('file', { uri, name: fileName, type } as any);
-      uploadError = await upload(formData, type);
+      const { error } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .upload(filePath, blob, {
+          contentType: blob.type || type,
+          upsert: true,
+        });
+      if (error) return { error: error.message };
+      return { url: getPublicUrl(filePath), fileName };
     }
 
-    if (uploadError) {
-      // Last resort: retry with the blob approach on native too
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      uploadError = await upload(blob, blob.type || `image/${fallbackExt}`);
-    }
-
-    if (uploadError) return { error: uploadError };
-
-    const { data: publicUrlData } = supabase.storage
+    // Native attempt 1: supabase-js with React Native FormData
+    const formData = new FormData();
+    formData.append('file', { uri, name: fileName, type } as any);
+    const { error: firstError } = await supabase.storage
       .from(AVATARS_BUCKET)
-      .getPublicUrl(filePath);
+      .upload(filePath, formData as any, {
+        contentType: type,
+        upsert: true,
+      });
 
-    return { url: publicUrlData.publicUrl };
+    if (!firstError) {
+      return { url: getPublicUrl(filePath), fileName };
+    }
+
+    // Native attempt 2: direct PUT via expo-file-system
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) {
+      return { error: firstError.message };
+    }
+
+    const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${AVATARS_BUCKET}/${filePath}`;
+    const uploadResult = await FileSystem.uploadAsync(uploadUrl, uri, {
+      httpMethod: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': type,
+        'x-upsert': 'true',
+      },
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    });
+
+    if (uploadResult.status >= 200 && uploadResult.status < 300) {
+      return { url: getPublicUrl(filePath), fileName };
+    }
+
+    return {
+      error: `${firstError.message} (fallback: ${uploadResult.status} ${uploadResult.body})`,
+    };
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Upload failed' };
   }
@@ -72,17 +95,25 @@ export const uploadAvatar = async (
 
 /**
  * Delete a user's previous avatar file(s) from storage.
- * Called before uploading a new one to clean up old files.
+ * Call after a new avatar is saved; pass the new file's name via
+ * `keepFileName` so the just-uploaded file is never removed.
  */
-export const deleteUserAvatars = async (userId: string): Promise<void> => {
+export const deleteUserAvatars = async (
+  userId: string,
+  keepFileName?: string,
+): Promise<void> => {
   try {
     const { data: files } = await supabase.storage
       .from(AVATARS_BUCKET)
       .list(userId);
 
     if (files && files.length > 0) {
-      const paths = files.map((f) => `${userId}/${f.name}`);
-      await supabase.storage.from(AVATARS_BUCKET).remove(paths);
+      const paths = files
+        .filter((f) => f.name !== keepFileName)
+        .map((f) => `${userId}/${f.name}`);
+      if (paths.length > 0) {
+        await supabase.storage.from(AVATARS_BUCKET).remove(paths);
+      }
     }
   } catch {
     // Silent fail — old files remain but won't cause issues

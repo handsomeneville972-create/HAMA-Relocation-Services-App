@@ -298,6 +298,12 @@ $$;
 
 grant execute on function public.increment_post_views to authenticated;
 
+-- ------------------------------------------------------------
+-- 8. USERNAME UNIQUENESS (case-insensitive; NULLs allowed)
+-- ------------------------------------------------------------
+create unique index if not exists profiles_username_key
+  on public.profiles (lower(username)) where username is not null;
+
 -- ============================================================
 -- VERIFY — run this after the script. Expected: all columns
 -- show, update_profile appears, 'avatars' bucket shows,

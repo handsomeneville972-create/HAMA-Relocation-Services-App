@@ -84,6 +84,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
 
     try {
       let avatarUrl = currentUser.avatar;
+      let newAvatarFileName: string | undefined;
 
       if (avatarUri) {
         const result = await uploadAvatar(currentUserId, avatarUri);
@@ -93,7 +94,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
           return;
         }
         avatarUrl = result.url;
-        deleteUserAvatars(currentUserId);
+        newAvatarFileName = result.fileName;
       }
 
       const err = await updateProfile({
@@ -109,6 +110,12 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
         return;
       }
 
+      // Remove old avatar files (never the one just uploaded)
+      if (newAvatarFileName) {
+        await deleteUserAvatars(currentUserId, newAvatarFileName);
+      }
+
+      await refreshProfile();
       navigation.goBack();
     } finally {
       setIsSaving(false);

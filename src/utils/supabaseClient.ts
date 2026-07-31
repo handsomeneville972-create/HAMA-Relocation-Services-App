@@ -23,6 +23,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+export const SUPABASE_URL = supabaseUrl;
+
 const isWeb = Platform.OS === 'web';
 
 /**
