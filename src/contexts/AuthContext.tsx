@@ -45,8 +45,8 @@ interface AuthContextType {
   isEmailVerified: boolean;
   /** The Supabase session object */
   session: any | null;
-  /** Update the current user's profile fields */
-  updateProfile: (updates: Partial<User>) => void;
+  /** Update the current user's profile fields. Resolves to an error message on failure, or null on success. */
+  updateProfile: (updates: Partial<User>) => Promise<string | null>;
   /** Switch to a different user (dev tool — will be removed in production) */
   setCurrentUser: (userId: string) => void;
   /** Sign in with email and password via Supabase Auth */
@@ -239,8 +239,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [currentUserId, session, profile]);
 
-  const updateProfile = useCallback(async (updates: Partial<User>) => {
-    if (!currentUserId) return;
+  const updateProfile = useCallback(async (updates: Partial<User>): Promise<string | null> => {
+    if (!currentUserId) return 'Not authenticated';
 
     try {
       const { error } = await supabase.from('profiles').upsert({
@@ -256,13 +256,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updated_at: new Date().toISOString(),
       });
 
-      if (!error) {
-        // Optimistically update local state
-        setProfile(prev => prev ? { ...prev, ...updates } : prev);
-        logProfileUpdate(currentUserId);
+      if (error) {
+        console.error('[updateProfile]', error.message);
+        return error.message;
       }
-    } catch {
-      // Silent fail
+
+      // Optimistically update local state
+      setProfile(prev => prev ? { ...prev, ...updates } : prev);
+      logProfileUpdate(currentUserId);
+      return null;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to update profile';
+      console.error('[updateProfile]', msg);
+      return msg;
     }
   }, [currentUserId]);
 

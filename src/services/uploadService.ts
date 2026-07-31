@@ -17,14 +17,17 @@ export const uploadAvatar = async (
     const response = await fetch(uri);
     const blob = await response.blob();
 
-    const ext = uri.split('.').pop()?.split('?')[0] ?? 'jpg';
+    const mimeExt = (blob.type || '').split('/')[1]?.toLowerCase();
+    const urlExt = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
+    const knownExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    const ext = knownExts.includes(urlExt) ? urlExt : knownExts.includes(mimeExt) ? mimeExt : 'jpg';
     const fileName = `${Date.now()}.${ext}`;
     const filePath = `${userId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from(AVATARS_BUCKET)
       .upload(filePath, blob, {
-        contentType: blob.type || 'image/jpeg',
+        contentType: blob.type || `image/${ext}`,
         upsert: true,
       });
 

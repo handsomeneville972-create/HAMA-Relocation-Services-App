@@ -84,13 +84,18 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
         deleteUserAvatars(currentUserId);
       }
 
-      await updateProfile({
+      const err = await updateProfile({
         name: displayName.trim() || currentUser.name,
         avatar: avatarUrl,
         username: username.trim() || undefined,
         bio: bio.trim() || undefined,
         website: website.trim() || undefined,
       });
+
+      if (err) {
+        Alert.alert('Save Failed', err);
+        return;
+      }
 
       navigation.goBack();
     } finally {
