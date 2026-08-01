@@ -18,7 +18,6 @@ type AnalyticsEventCategory =
   | 'navigation'
   | 'freemium'
   | 'waitlist'
-  | 'referral'
   | 'email_capture'
   | 'feature_request';
 
@@ -55,10 +54,6 @@ type AnalyticsEvent =
   | 'waitlist_modal_viewed'
   | 'waitlist_submitted'
   | 'waitlist_cancelled'
-  // Referral
-  | 'referral_link_copied'
-  | 'referral_shared'
-  | 'referral_tier_viewed'
   // Email Capture
   | 'email_capture_viewed'
   | 'email_capture_subscribed'
@@ -171,23 +166,6 @@ export const trackWaitlistSubmitted = (plan: string): void => {
 /** Track waitlist cancellation */
 export const trackWaitlistCancelled = (): void => {
   logEvent('waitlist_cancelled');
-};
-
-// ---------- Referral Analytics ----------
-
-/** Track referral link copied */
-export const trackReferralLinkCopied = (): void => {
-  logEvent('referral_link_copied');
-};
-
-/** Track referral shared */
-export const trackReferralShared = (method: string): void => {
-  logEvent('referral_shared', { method });
-};
-
-/** Track referral tier viewed */
-export const trackReferralTierViewed = (tier: string): void => {
-  logEvent('referral_tier_viewed', { tier });
 };
 
 // ---------- Email Capture Analytics ----------

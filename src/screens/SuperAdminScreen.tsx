@@ -73,7 +73,6 @@ const MOCK_ANALYTICS = {
   userChurn: 4.2,
   avgSessionDuration: '12m 34s',
   registrationTrend: [12, 18, 25, 30, 28, 35, 47],
-  referralGrowth: 15.2,
   waitlistGrowth: 23.5,
   featureAdoption: {
     aiAssistant: 72,
@@ -96,14 +95,6 @@ const MOCK_BUSINESSES = [
   { id: 'b3', name: 'Home Essentials', owner: 'David Ochieng', industry: 'Home Goods', country: 'Kenya', employees: 5, registrationDate: '2024-04-10', activity: 'medium', verified: false },
   { id: 'b4', name: 'QuickFix Plumbers', owner: 'Peter Kamau', industry: 'Services', country: 'Kenya', employees: 15, registrationDate: '2024-02-01', activity: 'high', verified: true },
   { id: 'b5', name: 'Elite Cleaners', owner: 'Grace Wanjiku', industry: 'Cleaning Services', country: 'Kenya', employees: 25, registrationDate: '2023-11-05', activity: 'medium', verified: true },
-];
-
-// Mock referral data
-const MOCK_REFERRERS = [
-  { name: 'James Mwangi', referrals: 8, signups: 5, reward: 'Founding Member Gold' },
-  { name: 'Grace Wanjiku', referrals: 12, signups: 8, reward: 'VIP Founding Circle' },
-  { name: 'Faith Njeri', referrals: 4, signups: 3, reward: 'Early Access Plus' },
-  { name: 'Peter Kamau', referrals: 2, signups: 1, reward: 'None' },
 ];
 
 interface SuperAdminScreenProps {
@@ -496,7 +487,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             <FlagToggle label="Analytics" value={featureFlags.analytics} onToggle={() => toggleFeatureFlag('analytics')} color={COLORS.secondary} />
             <FlagToggle label="Inventory" value={featureFlags.inventory} onToggle={() => toggleFeatureFlag('inventory')} color={COLORS.warning} />
             <FlagToggle label="CRM" value={featureFlags.crm} onToggle={() => toggleFeatureFlag('crm')} color={COLORS.info} />
-            <FlagToggle label="Referral System" value={featureFlags.referralSystem} onToggle={() => toggleFeatureFlag('referralSystem')} color={COLORS.primaryLight} />
             <FlagToggle label="Waitlist" value={featureFlags.waitlist} onToggle={() => toggleFeatureFlag('waitlist')} color={COLORS.secondary} />
             <FlagToggle label="Beta Features" value={featureFlags.betaFeatures} onToggle={() => toggleFeatureFlag('betaFeatures')} color={COLORS.accent} />
           </View>
@@ -534,34 +524,6 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
           <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
           <Text style={styles.addPlanText}>Add New Plan</Text>
         </TouchableOpacity>
-      </GlassCard>
-
-      {/* Referral Management */}
-      <Text style={styles.sectionTitle}>Referral Management</Text>
-      <GlassCard>
-        <View style={styles.metricsGrid}>
-          <MetricCard icon="people" value={MOCK_REFERRERS.reduce((s, r) => s + r.referrals, 0).toString()} label="Total Referrals" color={COLORS.primary} />
-          <MetricCard icon="checkmark-circle" value={MOCK_REFERRERS.reduce((s, r) => s + r.signups, 0).toString()} label="Signups" color={COLORS.accent} />
-          <MetricCard icon="trending-up" value="15.2%" label="Growth Rate" color={COLORS.info} />
-        </View>
-
-        <Text style={styles.cardTitle}>Top Referrers</Text>
-        {MOCK_REFERRERS.map((ref, i) => (
-          <View key={i} style={styles.referrerRow}>
-            <View style={styles.referrerRank}>
-              <Text style={styles.referrerRankText}>{i + 1}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.userName}>{ref.name}</Text>
-              <Text style={styles.userEmail}>{ref.referrals} referrals • {ref.signups} signups</Text>
-            </View>
-            <View style={[styles.userBadge, { backgroundColor: ref.reward !== 'None' ? COLORS.warning + '20' : COLORS.textTertiary + '20' }]}>
-              <Text style={[styles.userBadgeText, { color: ref.reward !== 'None' ? COLORS.warning : COLORS.textTertiary }]}>
-                {ref.reward}
-              </Text>
-            </View>
-          </View>
-        ))}
       </GlassCard>
     </>
   );
@@ -1086,11 +1048,6 @@ const styles = StyleSheet.create({
   planEditBtn: { padding: 4, marginLeft: 4 },
   addPlanBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', padding: 10, marginTop: 8, borderWidth: 1, borderColor: COLORS.primary + '40', borderRadius: RADIUS.md, borderStyle: 'dashed' },
   addPlanText: { color: COLORS.primary, fontSize: 13, fontWeight: '600' },
-
-  // Referrer rows
-  referrerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
-  referrerRank: { width: 24, height: 24, borderRadius: 12, backgroundColor: COLORS.primary + '20', justifyContent: 'center', alignItems: 'center' },
-  referrerRankText: { color: COLORS.primary, fontSize: 12, fontWeight: '700' },
 
   // Analytics
   trendChart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, marginTop: SPACING.md },

@@ -71,12 +71,6 @@ export const EARLY_ACCESS_CONFIG = {
     MAX_ENTRIES: 10000,
   },
 
-  /** Referral Program config */
-  REFERRAL: {
-    ENABLED: true,
-    BASE_URL: 'https://hama.app/ref',
-  },
-
   /** Email Capture config */
   EMAIL_CAPTURE: {
     ENABLED: true,

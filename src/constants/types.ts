@@ -41,9 +41,7 @@ export interface User {
   /** User's country */
   country?: string;
 
-  // ===== Referral & Engagement =====
-  /** Referral count for rewards tracking */
-  referralCount?: number;
+  // ===== Engagement =====
   /** Premium usage score (0-100) based on feature adoption */
   premiumUsageScore?: number;
   /** Subscription interest level */
@@ -455,47 +453,6 @@ export interface WaitlistEntry {
   userId?: string;
 }
 
-// ============ REFERRAL TYPES ============
-
-/** Referral reward tiers */
-export type ReferralTier = 'early_access_plus' | 'premium_gold' | 'vip_inner_circle';
-
-export interface ReferralTierInfo {
-  key: ReferralTier;
-  label: string;
-  requiredReferrals: number;
-  icon: string;
-  description: string;
-}
-
-export const REFERRAL_TIERS: ReferralTierInfo[] = [
-  { key: 'early_access_plus', label: 'Early Access Plus', requiredReferrals: 3, icon: 'diamond', description: 'Extended early access benefits' },
-  { key: 'premium_gold', label: 'Premium Gold', requiredReferrals: 5, icon: 'trophy', description: 'Gold status with priority support' },
-  { key: 'vip_inner_circle', label: 'VIP Inner Circle', requiredReferrals: 10, icon: 'star', description: 'Exclusive VIP circle access' },
-];
-
-/** Referral record */
-export interface Referral {
-  id: string;
-  referrerUserId: string;
-  referredUserId?: string;
-  referredEmail?: string;
-  referredName?: string;
-  status: 'pending' | 'joined' | 'rewarded';
-  createdAt: string;
-  joinedAt?: string;
-}
-
-/** Referral stats for a user */
-export interface ReferralStats {
-  totalReferrals: number;
-  successfulSignups: number;
-  currentTier: ReferralTier | null;
-  nextTier: ReferralTierInfo | null;
-  referralCode: string;
-  referralLink: string;
-}
-
 // ============ EMAIL CAPTURE TYPES ============
 
 export interface EmailSubscription {
@@ -684,7 +641,6 @@ export interface FeatureFlags {
   analytics: boolean;
   inventory: boolean;
   crm: boolean;
-  referralSystem: boolean;
   waitlist: boolean;
   betaFeatures: boolean;
   earlyAccessMode: boolean;

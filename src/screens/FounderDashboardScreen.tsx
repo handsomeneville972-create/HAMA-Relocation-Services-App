@@ -33,7 +33,6 @@ const MOCK_ANALYTICS = {
   newRegistrations: 47,
   dailyGrowthRate: 3.8,
   weeklyGrowthRate: 21.5,
-  referralGrowth: 15.2,
   avgSessionDuration: '12m 34s',
   featureUsage: 68,
   retentionRate: 87,
@@ -112,7 +111,6 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
         <View style={styles.metricsGrid}>
           <MetricCard icon="trending-up" value={`${analytics.dailyGrowthRate}%`} label="Daily Growth" color={COLORS.accent} />
           <MetricCard icon="trending-up" value={`${analytics.weeklyGrowthRate}%`} label="Weekly Growth" color={COLORS.primary} />
-          <MetricCard icon="share" value={`${analytics.referralGrowth}%`} label="Referral Growth" color={COLORS.secondary} />
         </View>
 
         {/* Engagement Section */}

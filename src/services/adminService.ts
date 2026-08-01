@@ -41,7 +41,6 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   analytics: true,
   inventory: true,
   crm: true,
-  referralSystem: true,
   waitlist: true,
   betaFeatures: true,
   earlyAccessMode: true,

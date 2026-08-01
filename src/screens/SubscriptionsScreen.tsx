@@ -7,8 +7,6 @@ import { PricingCard } from '../components/PricingCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { PaymentModal } from '../components/PaymentModal';
 import { PaystackWebView } from '../components/PaystackWebView';
-import { ReferralProgram } from '../components/ReferralProgram';
-import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useMpesaPayment } from '../hooks/useMpesaPayment';
 import { usePaystackPayment } from '../hooks/usePaystackPayment';
 import { useStripePayment } from '../hooks/useStripePayment';
@@ -31,7 +29,7 @@ type PaymentMethod = 'mpesa' | 'paystack' | 'stripe' | null;
 
 export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { showPremiumModal, showWaitlist } = useEarlyAccess();
+  const { showPremiumModal } = useEarlyAccess();
   const paymentEnabled = isSubscriptionPaymentEnabled();
   const [selectedUserType, setSelectedUserType] = useState<UserType>('seeker');
   const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
@@ -176,33 +174,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             {plans.length > 0 && (
               <View style={styles.featureComparison}>
                 <Text style={styles.comparisonTitle}>Compare Plans</Text>
-                {/* Join Priority Access + Referral Program */}
-            {!paymentEnabled && (                <View style={styles.engagementSection}>
-                <TouchableOpacity
-                  style={styles.priorityAccessBtn}
-                  onPress={showWaitlist}
-                >
-                  <LinearGradient
-                    colors={[COLORS.primary, COLORS.secondary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.priorityAccessGrad}
-                  >
-                    <Ionicons name="notifications" size={22} color="#fff" />
-                    <View style={styles.priorityAccessText}>
-                      <Text style={styles.priorityAccessTitle}>Join Priority Access List</Text>
-                      <Text style={styles.priorityAccessDesc}>Be first to know about new features and updates</Text>
-                    </View>
-                    <Ionicons name="arrow-forward" size={20} color="#fff" />
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <EmailCaptureForm compact message="Stay updated on new features, platform expansions, and exclusive early releases." />
-              </View>
-            )}
-
-            {/* Feature Comparison */}
-            {plans[0]?.features?.map((feature, index) => (
+                {plans[0]?.features?.map((feature, index) => (
                   <View key={index} style={styles.comparisonRow}>
                     <Text style={styles.comparisonFeature}>{feature}</Text>
                     <View style={styles.comparisonChecks}>
@@ -221,12 +193,6 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
               </View>
             )}
           </>
-        )}
-        {/* Referral Program (full version) */}
-        {!paymentEnabled && (
-          <View style={styles.referralSection}>
-            <ReferralProgram />
-          </View>
         )}
 
         <View style={{ height: 40 }} />
@@ -685,41 +651,6 @@ const styles = StyleSheet.create({
   countdownContainer: {
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
-  },
-  // Engagement & Waitlist
-  engagementSection: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
-    gap: 12,
-  },
-  priorityAccessBtn: {
-    borderRadius: RADIUS.lg,
-    overflow: 'hidden',
-    ...SHADOWS.glow,
-  },
-  priorityAccessGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: SPACING.lg,
-  },
-  priorityAccessText: {
-    flex: 1,
-  },
-  priorityAccessTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  priorityAccessDesc: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  referralSection: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.xl,
-    marginTop: SPACING.md,
   },
   comparisonTitle: {
     ...FONTS.h3,

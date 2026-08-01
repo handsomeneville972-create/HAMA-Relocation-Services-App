@@ -4,11 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { ReferralProgram } from '../components/ReferralProgram';
-import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfileBadges } from '../hooks/useUserData';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
 import { getCommunityPosts } from '../services/communityService';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { navigateToRoute } from '../utils/navigation';
@@ -61,7 +58,6 @@ export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
-  const { showWaitlist } = useEarlyAccess();
   const [postCount, setPostCount] = useState(0);
 
   useEffect(() => {
@@ -138,29 +134,6 @@ export const ProfileScreen: React.FC = () => {
             </View>
           </View>
         </LinearGradient>
-
-        {/* Early Access: Join Priority Access + Referral Program */}
-        <View style={styles.engagementContainer}>
-          <TouchableOpacity style={styles.priorityAccessBtn} onPress={showWaitlist}>
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.priorityAccessBtnGrad}
-            >
-              <Ionicons name="notifications" size={22} color="#fff" />
-              <View style={styles.priorityAccessBtnText}>
-                <Text style={styles.priorityAccessBtnTitle}>Priority Access List</Text>
-                <Text style={styles.priorityAccessBtnDesc}>Be first to know when subscriptions launch</Text>
-              </View>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <ReferralProgram />
-
-          <EmailCaptureForm compact message="Get product updates, new features, and exclusive launch announcements." />
-        </View>
 
         {/* Menu Sections */}
         <View style={styles.menuContainer}>
@@ -329,37 +302,6 @@ const styles = StyleSheet.create({
     color: COLORS.textTertiary,
     fontSize: 8,
     marginTop: 1,
-  },
-  // Engagement section
-  engagementContainer: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.lg,
-    gap: 12,
-    marginTop: SPACING.sm,
-  },
-  priorityAccessBtn: {
-    borderRadius: RADIUS.lg,
-    overflow: 'hidden',
-    ...SHADOWS.glow,
-  },
-  priorityAccessBtnGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: SPACING.lg,
-  },
-  priorityAccessBtnText: {
-    flex: 1,
-  },
-  priorityAccessBtnTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  priorityAccessBtnDesc: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 2,
   },
   menuContainer: {
     paddingHorizontal: SPACING.md,

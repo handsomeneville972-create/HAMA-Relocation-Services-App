@@ -9,8 +9,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logEvent } from '../utils/analytics';
-import type { ReferralStats, WaitlistEntry, PreferredPlan } from '../constants/types';
-import { waitlistService, referralService, emailCaptureService } from '../services/earlyAccessService';
+import type { WaitlistEntry, PreferredPlan } from '../constants/types';
+import { waitlistService, emailCaptureService } from '../services/earlyAccessService';
 
 // ---------- Constants ----------
 
@@ -42,11 +42,6 @@ interface EarlyAccessContextType {
   submitWaitlist: (entry: Omit<WaitlistEntry, 'id' | 'createdAt' | 'intent'>) => Promise<WaitlistEntry>;
   waitlistCount: number;
 
-  // ----- Referral -----
-  referralStats: ReferralStats | null;
-  loadReferralStats: (userId: string) => Promise<void>;
-  recordReferral: (referredEmail: string, referredName?: string) => Promise<void>;
-
   // ----- Email Capture -----
   isEmailCaptureDismissed: boolean;
   dismissEmailCapture: () => void;
@@ -60,7 +55,6 @@ const EarlyAccessContext = createContext<EarlyAccessContextType | null>(null);
 // ---------- Provider ----------
 
 export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
   const [isEmailCaptureDismissed, setIsEmailCaptureDismissed] = useState(false);
   const [waitlistCount, setWaitlistCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -108,14 +102,6 @@ export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ childre
     return result;
   }, []);
 
-  // ===== Referral =====
-  const loadReferralStats = useCallback(async (userId: string) => {
-    const stats = await referralService.getStats(userId);
-    setReferralStats(stats);
-  }, []);
-
-  const recordReferral = useCallback(async (referredEmail: string, referredName?: string) => {}, []);
-
   // ===== Email Capture =====
   const dismissEmailCapture = useCallback(() => {
     setIsEmailCaptureDismissed(true);
@@ -145,9 +131,6 @@ export const EarlyAccessProvider: React.FC<{ children: ReactNode }> = ({ childre
         hideWaitlist,
         submitWaitlist,
         waitlistCount,
-        referralStats,
-        loadReferralStats,
-        recordReferral,
         isEmailCaptureDismissed: isInitialized ? isEmailCaptureDismissed : false,
         dismissEmailCapture,
         subscribeToEmails,
