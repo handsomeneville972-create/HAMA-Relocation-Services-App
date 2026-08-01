@@ -258,15 +258,6 @@ const HIGHLIGHTS = [
   },
 ];
 
-/** Team/Community members */
-const TEAM = [
-  { title: 'James Mwangi', description: 'Founder & CEO', icon: 'person-outline', gradient: ['#FF6B00', '#FF8A33'] as const },
-  { title: 'Sarah Akinyi', description: 'Head of Operations', icon: 'person-outline', gradient: ['#FFFFFF', 'rgba(255,255,255,0.6)'] as const },
-  { title: 'Peter Kamau', description: 'Lead Engineer', icon: 'person-outline', gradient: ['#00D4AA', '#00D4AA'] as const },
-  { title: 'Grace Wanjiku', description: 'Community Manager', icon: 'person-outline', gradient: ['#FFB84D', '#FFB366'] as const },
-  { title: 'David Ochieng', description: 'Product Designer', icon: 'person-outline', gradient: ['#FF6B00', '#FF8A33'] as const },
-  { title: 'Faith Njeri', description: 'Marketing Lead', icon: 'person-outline', gradient: ['#FF6B00', '#FF8A33'] as const },
-];
 
 /** Join the HAMA Community — real moments from our community */
 const COMMUNITY = [
@@ -610,25 +601,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </GlassCard>
               ))}
             </View>
-          </View>
-        </AnimatedSection>
-
-        {/* ===== SECTION: MEET THE TEAM (YouTube-thumbnail grid) ===== */}
-        <AnimatedSection index={8}>
-          <View style={styles.section}>
-            <SectionHeader title="Meet the Team" subtitle="The people behind HAMA" />
-            <ThumbnailGrid>
-              {TEAM.map((member, i) => (
-                <ThumbnailCard
-                  key={i}
-                  title={member.title}
-                  description={member.description}
-                  placeholderGradient={member.gradient}
-                  placeholderIcon={member.icon}
-                  width={GRID_CARD_WIDTH}
-                />
-              ))}
-            </ThumbnailGrid>
           </View>
         </AnimatedSection>
 
