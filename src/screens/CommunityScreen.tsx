@@ -8,6 +8,7 @@ import { CommunityPostCard } from '../components/CommunityPost';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { getCommunityPosts } from '../services/communityService';
+import { getLocalPosts } from '../utils/localPosts';
 import type { CommunityPost } from '../constants/types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,7 +33,8 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
   useEffect(() => {
     getCommunityPosts({ currentUserId }).then(({ data }) => {
-      if (data) setPosts(data);
+      const local = getLocalPosts();
+      setPosts([...local, ...(data ?? [])]);
       setLoading(false);
     });
   }, [currentUserId]);

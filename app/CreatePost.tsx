@@ -23,12 +23,19 @@ import {
   Platform,
   PermissionsAndroid,
   Image,
+  Linking,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
+import { publishLocalPost } from '../src/utils/localPosts';
+import { useAuth } from '../src/contexts/AuthContext';
+import type { CommunityPost, User } from '../src/constants/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -124,6 +131,7 @@ const FadeInView: React.FC<{ children: React.ReactNode; delay?: number; style?: 
 
 export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { currentUser } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState<PostFormData>({
@@ -167,6 +175,10 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   // Media state
   const [selectedMedia, setSelectedMedia] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+
+  // Share sheet state
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Permission request functions
   const requestCameraPermission = useCallback(async () => {
@@ -296,7 +308,65 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     setTimeout(() => {
       setPublishing(false);
       setPublished(true);
+      publishedPostRef.current = buildPost();
     }, 2000);
+  };
+
+  // The post created at publish time (used by View Post and Share).
+  const publishedPostRef = useRef<CommunityPost | null>(null);
+
+  const buildPost = useCallback((): CommunityPost => {
+    const isVideo = formData.type === 'video' || formData.type === 'short';
+    return {
+      id: `local-${Date.now()}`,
+      user: currentUser,
+      type: isVideo ? 'video' : 'photo',
+      content: [formData.title, formData.description].filter(Boolean).join('\n\n'),
+      image: !isVideo && selectedMedia ? selectedMedia.uri : undefined,
+      video: isVideo && selectedMedia ? selectedMedia.uri : undefined,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      bookmarks: 0,
+      views: 1,
+      isLiked: false,
+      isBookmarked: false,
+      createdAt: new Date().toISOString(),
+      tags: formData.tags,
+    };
+  }, [currentUser, formData, selectedMedia]);
+
+  const handleViewPost = () => {
+    const post = publishedPostRef.current ?? buildPost();
+    publishLocalPost(post);
+    router.push('/(tabs)/Community');
+  };
+
+  const getPostLink = () => {
+    const post = publishedPostRef.current ?? buildPost();
+    return `https://hama.co.ke/post/${post.id}`;
+  };
+
+  const shareViaUrl = (url: string) => {
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Unable to open app', 'The app could not be opened. Try another option or copy the link instead.');
+    });
+  };
+
+  const shareToInstagram = async () => {
+    await Clipboard.setStringAsync(getPostLink());
+    try {
+      await Linking.openURL('instagram://share?story_url=');
+      Alert.alert('Instagram', 'Your link has been copied. Paste it in your Instagram post.');
+    } catch {
+      Alert.alert('Instagram not installed', 'Your link has been copied. Paste it in your Instagram post.');
+    }
+  };
+
+  const copyLink = async () => {
+    await Clipboard.setStringAsync(getPostLink());
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   // ============================================================
@@ -322,24 +392,72 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
             <Text style={styles.successDesc}>It's now live in the HAMA community.</Text>
           </FadeInView>
           <FadeInView delay={500} style={styles.successActions}>
-            <TouchableOpacity style={styles.successBtn} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={styles.successBtn} onPress={handleViewPost}>
               <Ionicons name="eye-outline" size={18} color={COLORS.primary} />
               <Text style={styles.successBtnText}>View Post</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.successBtnOutline}>
+            <TouchableOpacity style={styles.successBtnOutline} onPress={() => setShowShareSheet(true)}>
               <Ionicons name="share-outline" size={18} color={COLORS.textSecondary} />
               <Text style={styles.successBtnOutlineText}>Share</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.successBtnOutline} onPress={() => { setPublished(false); setFormData(prev => ({ ...prev, title: '', description: '', tags: [] })); }}>
-              <Ionicons name="add-outline" size={18} color={COLORS.textSecondary} />
-              <Text style={styles.successBtnOutlineText}>Create Another</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.successBtnOutline} onPress={() => navigation.goBack()}>
-              <Ionicons name="home-outline" size={18} color={COLORS.textSecondary} />
-              <Text style={styles.successBtnOutlineText}>Home</Text>
-            </TouchableOpacity>
           </FadeInView>
         </View>
+
+        {/* Share sheet */}
+        <Modal visible={showShareSheet} transparent animationType="slide" onRequestClose={() => setShowShareSheet(false)}>
+          <View style={styles.shareSheetBackdrop}>
+            <Pressable style={styles.shareSheetBackdropHit} onPress={() => setShowShareSheet(false)} />
+            <View style={[styles.shareSheet, { paddingBottom: insets.bottom + 16 }]}>
+              <View style={styles.shareSheetHandle} />
+              <Text style={styles.shareSheetTitle}>Share your post</Text>
+              <Text style={styles.shareSheetSub}>Share your post with friends on social media or copy the link.</Text>
+              <View style={styles.shareAppsRow}>
+                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://wa.me/?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#25D366' }]}>
+                    <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>WhatsApp</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getPostLink())}`)}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#1877F2' }]}>
+                    <Ionicons name="logo-facebook" size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>Facebook</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#0D0D0D', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }]}>
+                    <Ionicons name="logo-twitter" size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>X (Twitter)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareApp} onPress={shareToInstagram}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#C13584' }]}>
+                    <Ionicons name="logo-instagram" size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>Instagram</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://t.me/share/url?url=${encodeURIComponent(getPostLink())}&text=${encodeURIComponent(formData.title)}`)}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#229ED9' }]}>
+                    <Ionicons name="paper-plane" size={22} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>Telegram</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`mailto:?subject=${encodeURIComponent(formData.title)}&body=${encodeURIComponent(`${formData.title}\n\n${formData.description}\n\n${getPostLink()}`)}`)}>
+                  <View style={[styles.shareAppIcon, { backgroundColor: '#34C759' }]}>
+                    <Ionicons name="mail" size={24} color="#fff" />
+                  </View>
+                  <Text style={styles.shareAppLabel}>Email</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={styles.shareCopyBtn} onPress={copyLink}>
+                <Ionicons name={linkCopied ? 'checkmark-circle' : 'link-outline'} size={20} color={linkCopied ? '#00D4AA' : COLORS.primary} />
+                <Text style={[styles.shareCopyText, linkCopied && { color: '#00D4AA' }]}>
+                  {linkCopied ? 'Link copied!' : 'Copy Link'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -995,6 +1113,36 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   successBtnOutlineText: { color: COLORS.textSecondary, fontSize: 15, fontWeight: '600' },
+
+  // Share sheet
+  shareSheetBackdrop: { flex: 1, justifyContent: 'flex-end' },
+  shareSheetBackdropHit: { flex: 1 },
+  shareSheet: {
+    backgroundColor: '#161618',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: 12,
+  },
+  shareSheetHandle: {
+    width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'center', marginBottom: SPACING.lg,
+  },
+  shareSheetTitle: { color: '#fff', fontSize: 19, fontWeight: '800', textAlign: 'center' },
+  shareSheetSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', marginTop: 4, marginBottom: SPACING.lg },
+  shareAppsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: SPACING.md, marginBottom: SPACING.lg },
+  shareApp: { width: '30%', alignItems: 'center', gap: 6 },
+  shareAppIcon: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  shareAppLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: '600' },
+  shareCopyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#1C1C1E', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#2C2C2E',
+    paddingVertical: 14,
+  },
+  shareCopyText: { color: COLORS.primary, fontSize: 14, fontWeight: '700' },
 
   // Modal
   modalOverlay: {
