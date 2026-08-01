@@ -48,8 +48,6 @@ const MENU_SECTIONS = [
     title: 'Settings',
     items: [
       { icon: 'settings-outline', label: 'Settings', color: COLORS.secondary, route: 'Settings' },
-      { icon: 'help-circle-outline', label: 'Help & Support', color: COLORS.primary },
-      { icon: 'information-circle-outline', label: 'About HAMA', color: COLORS.textSecondary, route: 'About' },
     ],
   },
 ];

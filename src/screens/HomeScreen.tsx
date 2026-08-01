@@ -265,7 +265,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Professional Footer */}
         <View style={styles.footerContainer}>
           {/* Background Image */}
-          <Image source={require('../../assets/footer-bg.png')} style={styles.footerBg} resizeMode="cover" />
+          <Image source={require('../../assets/footer-bg.jpg')} style={styles.footerBg} resizeMode="cover" />
           {/* Dark overlay */}
           <LinearGradient
             colors={['rgba(0,0,0,0.82)', 'rgba(0,0,0,0.90)']}
@@ -308,7 +308,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Company Column */}
               <View style={styles.footerColumn}>
                 <Text style={styles.footerColumnTitle}>Company</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('About')}><Text style={styles.footerLink}>About Us</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('About')}><Text style={styles.footerLink}>About HAMA</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/careers')}><Text style={styles.footerLink}>Careers</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/press')}><Text style={styles.footerLink}>Press</Text></TouchableOpacity>
@@ -318,7 +318,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               {/* Support Column */}
               <View style={styles.footerColumn}>
                 <Text style={styles.footerColumnTitle}>Support</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help Center</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help & Support</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/faqs')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
