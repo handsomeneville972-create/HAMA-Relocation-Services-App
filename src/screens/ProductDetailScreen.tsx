@@ -67,7 +67,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
           </TouchableOpacity>
           {/* Image gallery dots */}
           <View style={styles.galleryDots}>
-            {product.images.map((_, i) => (
+            {(product.images ?? []).map((_, i) => (
               <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
             ))}
           </View>
@@ -94,7 +94,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
 
           {/* Seller Info */}
           <TouchableOpacity style={styles.sellerSection}>
-            <Image source={{ uri: product.seller.logo }} style={styles.sellerLogo} />
+            <Image source={{ uri: product.seller?.logo ?? 'https://i.pravatar.cc/100?u=seller' }} style={styles.sellerLogo} />
             <View style={styles.sellerInfo}>
               <Text style={styles.sellerName}>{product.seller.name}</Text>
               <View style={styles.sellerRating}>

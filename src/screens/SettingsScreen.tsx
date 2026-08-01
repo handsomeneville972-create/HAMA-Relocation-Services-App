@@ -123,7 +123,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={19} color={COLORS.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={styles.headerSpacer} />
@@ -131,6 +131,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.scaledContent}>
         {createSettingsSections(navigation).map((section, si) => (
           <View key={si} style={styles.section}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -149,7 +150,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                   activeOpacity={(item as any).onPress || isCurrency ? 0.7 : 1}
                 >
                   <View style={[styles.settingIcon, { backgroundColor: item.color + '20' }]}>
-                    <Ionicons name={item.icon as any} size={20} color={item.color} />
+                    <Ionicons name={item.icon as any} size={16} color={item.color} />
                   </View>
                   <View style={styles.settingInfo}>
                     <Text style={styles.settingLabel}>{item.label}</Text>
@@ -165,7 +166,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                       thumbColor={toggles[(item as any).key] ? COLORS.primary : COLORS.textTertiary}
                     />
                   ) : (
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                    <Ionicons name="chevron-forward" size={14} color={COLORS.textTertiary} />
                   )}
                 </TouchableOpacity>
               )})}
@@ -185,13 +186,13 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                 disabled={isExporting}
               >
                 <View style={[styles.settingIcon, { backgroundColor: COLORS.primary + '20' }]}>
-                  <Ionicons name="download-outline" size={20} color={COLORS.primary} />
+                  <Ionicons name="download-outline" size={16} color={COLORS.primary} />
                 </View>
                 <View style={styles.settingInfo}>
                   <Text style={styles.settingLabel}>Export My Data</Text>
                   <Text style={styles.settingDetail}>Download all your personal data</Text>
                 </View>
-                <Ionicons name={isExporting ? 'hourglass-outline' : 'chevron-forward'} size={18} color={COLORS.textTertiary} />
+                <Ionicons name={isExporting ? 'hourglass-outline' : 'chevron-forward'} size={14} color={COLORS.textTertiary} />
               </TouchableOpacity>
 
               {/* Sign Out All Devices */}
@@ -200,13 +201,13 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                 onPress={handleSignOutAll}
               >
                 <View style={[styles.settingIcon, { backgroundColor: COLORS.warning + '20' }]}>
-                  <Ionicons name="phone-portrait-outline" size={20} color={COLORS.warning} />
+                  <Ionicons name="phone-portrait-outline" size={16} color={COLORS.warning} />
                 </View>
                 <View style={styles.settingInfo}>
                   <Text style={styles.settingLabel}>Sign Out All Devices</Text>
                   <Text style={styles.settingDetail}>Revoke all active sessions</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                <Ionicons name="chevron-forward" size={14} color={COLORS.textTertiary} />
               </TouchableOpacity>
 
               {/* Delete Account */}
@@ -215,13 +216,13 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                 onPress={handleDeleteAccount}
               >
                 <View style={[styles.settingIcon, { backgroundColor: COLORS.error + '20' }]}>
-                  <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+                  <Ionicons name="trash-outline" size={16} color={COLORS.error} />
                 </View>
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingLabel, { color: COLORS.error }]}>Delete Account</Text>
                   <Text style={styles.settingDetail}>Permanently remove your account and data</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                <Ionicons name="chevron-forward" size={14} color={COLORS.textTertiary} />
               </TouchableOpacity>
             </GlassCard>
           </View>
@@ -236,7 +237,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         {isAuthenticated && (
           <View style={styles.signOutSection}>
             <TouchableOpacity style={styles.signOutButton} onPress={() => signOut()}>
-              <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
+              <Ionicons name="log-out-outline" size={16} color={COLORS.error} />
               <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
@@ -252,7 +253,7 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           <Text style={styles.appTagline}>Need a house homie? We've got you!</Text>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 32 }} />
       </ScrollView>
     </View>
   );
@@ -264,60 +265,62 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   header: {
-    paddingBottom: SPACING.md,
+    paddingBottom: 13,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
+    paddingHorizontal: 13,
+    paddingTop: 6,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: COLORS.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    ...FONTS.h1,
+    fontSize: 22,
+    fontWeight: '700' as const,
+    lineHeight: 29,
     color: COLORS.text,
   },
   headerSpacer: {
-    width: 40,
+    width: 32,
   },
   scrollContent: {
-    paddingTop: SPACING.md,
+    paddingTop: 13,
   },
   section: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.lg,
+    paddingHorizontal: 13,
+    marginBottom: 19,
   },
   sectionTitle: {
     color: COLORS.textTertiary,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '600' as const,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: SPACING.sm,
-    marginLeft: SPACING.xs,
+    marginBottom: 6,
+    marginLeft: 3,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.md,
-    gap: 12,
+    padding: 13,
+    gap: 10,
   },
   settingBorder: {
     borderBottomWidth: 1,
     borderBottomColor: COLORS.glassBorder,
   },
   settingIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 29,
+    height: 29,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -326,63 +329,64 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     color: COLORS.text,
-    fontSize: 15,
+    fontSize: 12,
   },
   settingDetail: {
     color: COLORS.textTertiary,
-    fontSize: 12,
+    fontSize: 10,
     marginTop: 2,
   },
   // Sign Out
   signOutSection: {
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.lg,
+    paddingHorizontal: 13,
+    marginBottom: 19,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: 'rgba(255, 77, 106, 0.1)',
     borderRadius: RADIUS.full,
-    paddingVertical: 14,
+    paddingVertical: 11,
     borderWidth: 1,
     borderColor: 'rgba(255, 77, 106, 0.25)',
   },
   signOutText: {
     color: COLORS.error,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '600' as const,
   },
   appInfo: {
     alignItems: 'center',
-    paddingVertical: SPACING.xl,
-    gap: 4,
+    paddingVertical: 26,
+    gap: 3,
   },
   appIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: 6,
   },
   appIconText: {
     color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 19,
+    fontWeight: '800' as const,
   },
   appName: {
-    ...FONTS.h3,
+    fontSize: 14,
+    fontWeight: '800' as const,
+    lineHeight: 19,
     color: COLORS.text,
-    fontWeight: '800',
   },
   appVersion: {
     color: COLORS.textTertiary,
-    fontSize: 13,
+    fontSize: 10,
   },
   appTagline: {
     color: COLORS.textTertiary,
-    fontSize: 12,
+    fontSize: 10,
   },
 });

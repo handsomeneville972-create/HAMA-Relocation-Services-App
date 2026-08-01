@@ -57,10 +57,7 @@ async function loadPersistedCurrency(): Promise<CurrencyCode | null> {
  * Falls back to 'KSh' if nothing is saved or storage is unavailable.
  */
 export async function loadUserCurrency(): Promise<CurrencyCode> {
-  const saved = await loadPersistedCurrency();
-  if (saved && CURRENCIES[saved]) {
-    _userCurrency = saved;
-  }
+  _userCurrency = 'KSh';
   return _userCurrency;
 }
 
