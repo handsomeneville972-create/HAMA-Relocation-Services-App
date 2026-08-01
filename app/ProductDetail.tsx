@@ -6,7 +6,10 @@ export default function ProductDetail() {
   const { productId } = useLocalSearchParams();
   const navigation = {
     goBack: () => router.back(),
-    navigate: (route: string) => { if (route === 'Inbox') router.push('/Inbox'); },
+    navigate: (route: string) => {
+      if (route === 'Inbox') router.push('/Inbox');
+      else if (route === 'Cart') router.push('/Cart');
+    },
   };
 
   return (

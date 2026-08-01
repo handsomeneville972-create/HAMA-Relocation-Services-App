@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
 import { getProductById } from '../services/productService';
+import { useCart } from '../contexts/CartContext';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -16,13 +17,15 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const scrollY = useRef(new Animated.Value(0)).current;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const { addItem, inCart, cartQuantity, trackView } = useCart();
 
   useEffect(() => {
     getProductById(productId).then(({ data }) => {
       if (data) setProduct(data);
       setLoading(false);
     });
-  }, [productId]);
+    trackView(productId);
+  }, [productId, trackView]);
 
   if (!product) {
     return (
@@ -145,9 +148,15 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
             <Ionicons name="chatbubble-outline" size={20} color={COLORS.text} />
             <Text style={styles.contactButtonText}>Contact Seller</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buyButton}>
+          <TouchableOpacity
+            style={styles.buyButton}
+            onPress={() => {
+              addItem(product.id, 1);
+              navigation.navigate('Cart');
+            }}
+          >
             <LinearGradient colors={[COLORS.primary, COLORS.primaryLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyGradient}>
-              <Text style={styles.buyText}>Add to Cart</Text>
+              <Text style={styles.buyText}>{inCart(product.id) ? `In Cart · ${cartQuantity(product.id)}` : 'Add to Cart'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </LinearGradient>

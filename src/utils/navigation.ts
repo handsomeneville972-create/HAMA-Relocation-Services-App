@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 const ROUTE_PATHS: Record<string, string> = {
   About: '/About',
   Favorites: '/Favorites',
+  Cart: '/Cart',
   Inbox: '/Inbox',
   Login: '/Login',
   Subscriptions: '/Subscriptions',

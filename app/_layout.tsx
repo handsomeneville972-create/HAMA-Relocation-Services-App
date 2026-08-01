@@ -7,6 +7,7 @@ import { View, StyleSheet, AppState, AppStateStatus } from 'react-native';
 import { COLORS } from '../src/constants/theme';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { EarlyAccessProvider } from '../src/contexts/EarlyAccessContext';
+import { CartProvider } from '../src/contexts/CartContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
 import { loadUserCurrency } from '../src/utils/currency';
@@ -104,11 +105,12 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <EarlyAccessProvider>
           <AuthProvider>
-            <AuthGuard>
-              <SessionMonitor />
-              <StatusBar style="light" />
-              <LayoutWithBanner>
-                <Stack
+            <CartProvider>
+              <AuthGuard>
+                <SessionMonitor />
+                <StatusBar style="light" />
+                <LayoutWithBanner>
+                  <Stack
                   screenOptions={{
                     headerShown: false,
                     contentStyle: { backgroundColor: COLORS.bg },
@@ -334,9 +336,17 @@ export default function RootLayout() {
                       animation: 'slide_from_right',
                     }}
                   />
+                  <Stack.Screen
+                    name="Cart"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
                 </Stack>
               </LayoutWithBanner>
             </AuthGuard>
+          </CartProvider>
           </AuthProvider>
         </EarlyAccessProvider>
       </SafeAreaProvider>

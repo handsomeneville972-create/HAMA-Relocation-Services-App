@@ -20,10 +20,14 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -160,7 +164,101 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 
   const activeType = POST_TYPES.find(t => t.key === formData.type)!;
 
-  // Simulate upload
+  // Media state
+  const [selectedMedia, setSelectedMedia] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+
+  // Permission request functions
+  const requestCameraPermission = useCallback(async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    return status === 'granted';
+  }, []);
+
+  const requestMediaLibraryPermission = useCallback(async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    return status === 'granted';
+  }, []);
+
+  // Pick media functions
+  const pickFromGallery = useCallback(async () => {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Required', 'Please enable media library access in Settings to select files.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: formData.type === 'image' ? ImagePicker.MediaTypeOptions.Images : 
+                   formData.type === 'short' ? ImagePicker.MediaTypeOptions.Videos :
+                   ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: formData.type === 'short' ? [9, 16] : [16, 9],
+      quality: 1,
+      videoMaxDuration: formData.type === 'short' ? 90 : 3600,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelectedMedia(result.assets[0]);
+      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setUploadProgress(0);
+      simulateUpload();
+    }
+  }, [formData.type, requestMediaLibraryPermission]);
+
+  const pickFromCamera = useCallback(async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Required', 'Please enable camera access in Settings to take photos/videos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: formData.type === 'image' ? ImagePicker.MediaTypeOptions.Images : 
+                   formData.type === 'short' ? ImagePicker.MediaTypeOptions.Videos :
+                   ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: formData.type === 'short' ? [9, 16] : [16, 9],
+      quality: 1,
+      videoMaxDuration: formData.type === 'short' ? 90 : 3600,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelectedMedia(result.assets[0]);
+      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setUploadProgress(0);
+      simulateUpload();
+    }
+  }, [formData.type, requestCameraPermission]);
+
+  const pickFromFiles = useCallback(async () => {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Required', 'Please enable file access in Settings to pick files.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelectedMedia(result.assets[0]);
+      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setUploadProgress(0);
+      simulateUpload();
+    }
+  }, [requestMediaLibraryPermission]);
+
+  const clearMedia = useCallback(() => {
+    setSelectedMedia(null);
+    setMediaType(null);
+    setUploadProgress(0);
+  }, []);
+
   const simulateUpload = useCallback(() => {
     setUploading(true);
     setUploadProgress(0);
@@ -307,7 +405,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.uploadArea} onPress={simulateUpload} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.uploadArea} onPress={pickFromGallery} activeOpacity={0.8}>
               {uploading ? (
                 <View style={styles.uploadProgressWrap}>
                   <View style={styles.uploadProgressCircle}>
@@ -318,11 +416,37 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                     <Animated.View style={[styles.progressBarFill, { width: progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
                   </View>
                   <View style={styles.uploadActions}>
-                    <TouchableOpacity style={styles.uploadActionBtn}>
-                      <Ionicons name="pause" size={16} color={COLORS.textSecondary} />
-                    </TouchableOpacity>
                     <TouchableOpacity style={styles.uploadActionBtn} onPress={() => { setUploading(false); setUploadProgress(0); }}>
                       <Ionicons name="close" size={16} color={COLORS.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : selectedMedia ? (
+                <View style={styles.mediaPreviewWrap}>
+                  <View style={styles.mediaPreview}>
+                    {mediaType === 'video' ? (
+                      <View style={styles.videoPreview}>
+                        <Ionicons name="play-circle" size={52} color="#fff" />
+                        <Text style={styles.mediaPreviewMeta}>{selectedMedia.duration ? `${Math.round(selectedMedia.duration)}s` : 'Video'}</Text>
+                      </View>
+                    ) : (
+                      <Image source={{ uri: selectedMedia.uri }} style={styles.mediaPreviewImage} />
+                    )}
+                    <View style={styles.mediaPreviewBadge}>
+                      <Ionicons name={mediaType === 'video' ? 'videocam' : 'image'} size={12} color="#fff" />
+                      <Text style={styles.mediaPreviewBadgeText}>{mediaType === 'video' ? 'Video' : 'Image'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.uploadTitle} numberOfLines={1}>{selectedMedia.fileName ?? 'Selected media'}</Text>
+                  <Text style={styles.uploadSubtitle}>{(selectedMedia.fileSize ? (selectedMedia.fileSize / (1024 * 1024)).toFixed(1) : 0) + ' MB · ready to upload'}</Text>
+                  <View style={styles.uploadSourcesRow}>
+                    <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromGallery}>
+                      <Ionicons name="images-outline" size={16} color={COLORS.textSecondary} />
+                      <Text style={styles.uploadSourceText}>Replace</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.uploadSourceBtn, { borderColor: COLORS.error, borderWidth: 1 }]} onPress={clearMedia}>
+                      <Ionicons name="trash-outline" size={16} color={COLORS.error} />
+                      <Text style={[styles.uploadSourceText, { color: COLORS.error }]}>Remove</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -332,17 +456,17 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                     <Ionicons name="cloud-upload-outline" size={36} color={COLORS.primary} />
                   </View>
                   <Text style={styles.uploadTitle}>Drag & drop a {activeType.label.toLowerCase()} to upload</Text>
-                  <Text style={styles.uploadSubtitle}>Your {activeType.label.toLowerCase()} will be private until you publish it.</Text>
+                  <Text style={styles.uploadSubtitle}>Tap to browse or choose a source — your {activeType.label.toLowerCase()} stays private until you publish.</Text>
                   <View style={styles.uploadSourcesRow}>
-                    <TouchableOpacity style={styles.uploadSourceBtn}>
+                    <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromGallery}>
                       <Ionicons name="images-outline" size={16} color={COLORS.textSecondary} />
                       <Text style={styles.uploadSourceText}>Gallery</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.uploadSourceBtn}>
+                    <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromCamera}>
                       <Ionicons name="camera-outline" size={16} color={COLORS.textSecondary} />
                       <Text style={styles.uploadSourceText}>Camera</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.uploadSourceBtn}>
+                    <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromFiles}>
                       <Ionicons name="folder-open-outline" size={16} color={COLORS.textSecondary} />
                       <Text style={styles.uploadSourceText}>Files</Text>
                     </TouchableOpacity>
@@ -757,6 +881,18 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
   },
   waitlistBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  // Media preview
+  mediaPreviewWrap: { width: '100%', alignItems: 'center' },
+  mediaPreview: { width: '100%', height: 180, borderRadius: RADIUS.md, overflow: 'hidden', backgroundColor: '#141414', marginBottom: 12, position: 'relative' },
+  mediaPreviewImage: { width: '100%', height: '100%' },
+  videoPreview: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
+  mediaPreviewMeta: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 8, fontWeight: '600' },
+  mediaPreviewBadge: {
+    position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: RADIUS.full, paddingHorizontal: 8, paddingVertical: 4,
+  },
+  mediaPreviewBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   // Inputs
   inputGroup: { marginBottom: SPACING.lg },

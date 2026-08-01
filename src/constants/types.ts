@@ -172,6 +172,34 @@ export interface Seller {
   products: Product[];
 }
 
+// ============ CART TYPES ============
+
+export interface CartItem {
+  productId: string;
+  quantity: number;
+  selected: boolean;
+  savedForLater: boolean;
+  addedAt: string;
+}
+
+export interface CartCoupon {
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minSubtotal: number;
+  description: string;
+}
+
+export interface CartTotals {
+  subtotal: number;
+  savings: number;
+  delivery: number;
+  tax: number;
+  discount: number;
+  total: number;
+  itemCount: number;
+}
+
 // ============ HOME SERVICES TYPES ============
 
 export type ServiceCategory = 
@@ -732,6 +760,7 @@ export type RootStackParamList = {
   Inbox: undefined;
   Search: undefined;
   Favorites: undefined;
+  Cart: undefined;
   Settings: undefined;
   CurrencyPicker: undefined;
   PaymentMethods: undefined;

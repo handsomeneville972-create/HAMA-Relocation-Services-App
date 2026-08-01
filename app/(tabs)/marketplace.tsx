@@ -7,6 +7,7 @@ export default function MarketplaceTab() {
     navigate: (route: string, params?: any) => {
       if (route === 'ProductDetail') router.push({ pathname: '/ProductDetail', params });
       else if (route === 'Storefront') router.push({ pathname: '/Storefront', params });
+      else if (route === 'Cart') router.push('/Cart');
     },
   };
 

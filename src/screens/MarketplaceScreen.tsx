@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { useCart } from '../contexts/CartContext';
 import { PRODUCT_CATEGORIES } from '../constants/data';
 import { getProducts, getSellers } from '../services/productService';
 import { softSanitize } from '../utils/sanitize';
@@ -19,6 +20,7 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [products, setProducts] = useState<Product[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
+  const { totalQuantity } = useCart();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,8 +52,13 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
           <Text style={styles.headerSubtitle}>Find everything for your home</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.cartButton}>
+          <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('Cart')}>
             <Ionicons name="cart-outline" size={22} color={COLORS.text} />
+            {totalQuantity > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{totalQuantity > 99 ? '99+' : totalQuantity}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -193,6 +200,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#000',
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#fff',
   },
   searchContainer: {
     paddingHorizontal: SPACING.md,
