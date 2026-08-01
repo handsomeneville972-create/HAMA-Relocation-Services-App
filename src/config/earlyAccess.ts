@@ -46,14 +46,6 @@ export const EARLY_ACCESS_CONFIG = {
     TEXT: 'EARLY ACCESS' as const,
   },
 
-  /** Early Access badges (enabled — shows badges across the platform) */
-  FOUNDING_MEMBER_BADGE: {
-    ENABLED: true,
-    /** Badge text variants */
-    TEXT: 'EARLY ACCESS' as const,
-    ALT_TEXT: 'EARLY ACCESS MEMBER' as const,
-  },
-
   /** Premium modal display */
   PREMIUM_MODAL: {
     ENABLED: true,

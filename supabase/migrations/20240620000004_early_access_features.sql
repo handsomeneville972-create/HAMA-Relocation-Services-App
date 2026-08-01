@@ -360,8 +360,8 @@ as $$
     stats.total,
     stats.joined_count + stats.rewarded_count,
     case
-      when stats.joined_count + stats.rewarded_count >= 10 then 'vip_founding_circle'
-      when stats.joined_count + stats.rewarded_count >= 5 then 'founding_member_gold'
+      when stats.joined_count + stats.rewarded_count >= 10 then 'vip_inner_circle'
+      when stats.joined_count + stats.rewarded_count >= 5 then 'champion_referrer'
       when stats.joined_count + stats.rewarded_count >= 3 then 'early_access_plus'
       else null
     end::text,

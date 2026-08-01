@@ -312,7 +312,7 @@ insert into public.community_posts (id, user_id, type, content, image_url, video
    'My experience moving from Kisumu to Nairobi for work. The Hamisha Squad made it so easy! Here''s everything you need to know about relocating. 🚚',
    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600', null, 423, 67, 89, 145),
   ('10000000-0000-4000-8000-000000000005', 'a0000000-0000-4000-8000-000000000006', 'review',
-   'Just reviewed my neighborhood in Kilimani. Overall rating: 4.5/5 - Great security, excellent amenities, and fantastic restaurants nearby! ⭐',
+   'Just reviewed my neighborhood in Kilimani. Overall rating: 4.5/5 - Great security, excellent amenities, and fantastic restaurants nearby!',
    'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600', null, 178, 45, 23, 67),
   ('10000000-0000-4000-8000-000000000006', 'a0000000-0000-4000-8000-000000000004', 'advice',
    'Student housing tips: 5 things I wish I knew before renting near the university. Save money and avoid common mistakes! 🎓',
@@ -409,9 +409,9 @@ insert into public.notifications (user_id, type, title, message, icon, read, act
   ('a0000000-0000-4000-8000-000000000001', 'property', '🏠 New Property Match', 'A new property matching your budget was listed in Kilimani.', 'home', false, null),
   ('a0000000-0000-4000-8000-000000000001', 'marketplace', '🛋️ New Arrivals', 'New furniture has arrived near your location from Urban Nest.', 'shopping-bag', false, null),
   ('a0000000-0000-4000-8000-000000000002', 'discount', '🚚 Hamisha Squad Discount', 'Hamisha Squad discounts available this week! Save 15% on relocation.', 'truck', false, null),
-  ('a0000000-0000-4000-8000-000000000001', 'message', '⭐ Landlord Response', 'A landlord replied to your inquiry about the Westlands apartment.', 'message-square', false, null),
+   ('a0000000-0000-4000-8000-000000000001', 'message', 'Landlord Response', 'A landlord replied to your inquiry about the Westlands apartment.', 'message-square', false, null),
   ('a0000000-0000-4000-8000-000000000005', 'student', '🎓 Student Housing Available', 'Student housing near your university is now available from KSh 8,000.', 'graduation-cap', true, null),
-  ('a0000000-0000-4000-8000-000000000004', 'review', '⭐ New Review', 'Someone reviewed your property "Modern 2-Bedroom Apartment".', 'star', true, null),
+   ('a0000000-0000-4000-8000-000000000004', 'review', 'New Review', 'Someone reviewed your property "Modern 2-Bedroom Apartment".', 'star', true, null),
   ('a0000000-0000-4000-8000-000000000001', 'follow', '👋 New Follower', 'Sarah Akinyi started following your store Urban Nest Furniture.', 'user-plus', true, null),
   ('a0000000-0000-4000-8000-000000000003', 'booking', '✅ Service Booked', 'Your booking with QuickFix Plumbers has been confirmed for tomorrow.', 'calendar-check', true, null)
 on conflict do nothing;
