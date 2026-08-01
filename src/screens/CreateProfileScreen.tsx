@@ -143,9 +143,9 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
-        <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoCircle}>
-          <Text style={styles.logoText}>H</Text>
-        </LinearGradient>
+        <View style={styles.logoCircle}>
+          <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
+        </View>
         <Text style={styles.headerTitle}>Create your profile</Text>
         <Text style={styles.headerSubtitle}>Choose a photo and username so people know it's you.</Text>
       </LinearGradient>
@@ -255,18 +255,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
     ...SHADOWS.glow,
     marginBottom: SPACING.sm,
   },
-  logoText: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: '#fff',
+  logoImage: {
+    width: 56,
+    height: 56,
   },
   headerTitle: {
     ...FONTS.h2,

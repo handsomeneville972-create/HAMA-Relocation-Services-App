@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
   ImageBackground,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -84,9 +85,9 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         <View style={[styles.topSection, { paddingTop: insets.top + 16 }]}>
           <FadeInView delay={100} duration={600}>
-            <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoCircle}>
-              <Text style={styles.logoText}>H</Text>
-            </LinearGradient>
+            <View style={styles.logoCircle}>
+              <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
+            </View>
           </FadeInView>
           <BlurText text="HAMA" variant="h1" delay={300} duration={800} />
           <BlurText text="Find. Move. Settle." variant="caption" delay={600} duration={800} color={COLORS.textSecondary} />
@@ -245,17 +246,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
     ...SHADOWS.glow,
   },
-  logoText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
+  logoImage: {
+    width: 56,
+    height: 56,
   },
   bottomSheet: {
     flex: 1,
