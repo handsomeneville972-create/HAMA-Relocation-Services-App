@@ -19,9 +19,7 @@ const MENU_SECTIONS = [
     title: 'Account',
     items: [
       { icon: 'person-outline', label: 'Edit Profile', color: COLORS.primary, route: 'EditProfile' },
-      { icon: 'location-outline', label: 'Saved Properties', color: COLORS.accent, badgeKey: 'savedProperties', route: 'Favorites' },
-      { icon: 'heart-outline', label: 'Saved Products', color: COLORS.secondary, badgeKey: 'savedProducts', route: 'Favorites' },
-      { icon: 'bookmark-outline', label: 'Saved Posts', color: COLORS.warning, badgeKey: 'savedPosts', route: 'Favorites' },
+      { icon: 'bookmark-outline', label: 'Saved', color: COLORS.accent, route: 'Favorites' },
     ],
   },
   {
@@ -187,7 +185,7 @@ export const ProfileScreen: React.FC = () => {
                       }}
                     >
                       <View style={[styles.menuIconContainer, { backgroundColor: item.color + '20' }]}>
-                        <Ionicons name={item.icon as any} size={20} color={item.color} />
+                        <Ionicons name={item.icon as any} size={14} color={item.color} />
                       </View>
                       <Text style={styles.menuItemLabel}>{item.label}</Text>
                       {badgeText && (
@@ -195,7 +193,7 @@ export const ProfileScreen: React.FC = () => {
                           <Text style={[styles.menuBadgeText, { color: item.color }]}>{badgeText}</Text>
                         </View>
                       )}
-                      <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                      <Ionicons name="chevron-forward" size={13} color={COLORS.textTertiary} />
                     </TouchableOpacity>
                   );
                 })}
@@ -314,9 +312,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.glassBorder,
   },
   settingIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 25,
+    height: 25,
+    borderRadius: 7,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -325,12 +323,12 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     color: COLORS.text,
-    fontSize: 15,
+    fontSize: 11,
   },
   settingDetail: {
     color: COLORS.textTertiary,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 8,
+    marginTop: 1,
   },
   // Engagement section
   engagementContainer: {
@@ -372,7 +370,7 @@ const styles = StyleSheet.create({
   },
   menuSectionTitle: {
     color: COLORS.textTertiary,
-    fontSize: 13,
+    fontSize: 9,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -382,32 +380,32 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.md,
-    gap: 12,
+    padding: SPACING.sm,
+    gap: 8,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: COLORS.glassBorder,
   },
   menuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 25,
+    height: 25,
+    borderRadius: 7,
     justifyContent: 'center',
     alignItems: 'center',
   },
   menuItemLabel: {
     flex: 1,
     color: COLORS.text,
-    fontSize: 15,
+    fontSize: 11,
   },
   menuBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     borderRadius: RADIUS.sm,
   },
   menuBadgeText: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: '600',
   },
   footer: {
