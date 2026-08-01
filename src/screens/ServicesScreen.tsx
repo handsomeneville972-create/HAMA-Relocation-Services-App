@@ -65,17 +65,19 @@ export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           </View>
         ) : (
           <View style={styles.featuredBanner}>
-            <LinearGradient colors={['rgba(0,212,170,0.15)', 'rgba(0,212,170,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerGradient}>
-              <View style={styles.bannerContent}>
-                <View style={styles.bannerText}>
-                  <Text style={styles.bannerTitle}>Need a pro?</Text>
-                  <Text style={styles.bannerSubtitle}>Verified service providers ready to help</Text>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('ServiceProviderOnboarding')}>
+              <LinearGradient colors={['rgba(255,107,0,0.22)', 'rgba(255,107,0,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerGradient}>
+                <View style={styles.bannerContent}>
+                  <View style={styles.bannerText}>
+                    <Text style={styles.bannerTitle}>Grow your business with HAMA</Text>
+                    <Text style={styles.bannerSubtitle}>Become a verified service provider — get found, get booked, get paid</Text>
+                  </View>
+                  <View style={styles.bannerIcon}>
+                    <Ionicons name="storefront" size={34} color={COLORS.primary} />
+                  </View>
                 </View>
-                <View style={styles.bannerIcon}>
-                  <Ionicons name="construct" size={36} color={COLORS.accent} />
-                </View>
-              </View>
-            </LinearGradient>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -119,7 +121,7 @@ export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               <ServiceCard
                 key={provider.id}
                 provider={provider}
-                onPress={() => navigation.navigate('ServiceDetail', { providerId: provider.id })}
+                onPress={() => navigation.navigate('ServiceProviderProfile', { providerId: provider.id })}
               />
             ))
           )}

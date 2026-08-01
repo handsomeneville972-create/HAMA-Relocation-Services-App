@@ -8,6 +8,7 @@ import { COLORS } from '../src/constants/theme';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { EarlyAccessProvider } from '../src/contexts/EarlyAccessContext';
 import { CartProvider } from '../src/contexts/CartContext';
+import { ProviderProvider } from '../src/contexts/ProviderContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
 import { loadUserCurrency } from '../src/utils/currency';
@@ -106,6 +107,7 @@ export default function RootLayout() {
         <EarlyAccessProvider>
           <AuthProvider>
             <CartProvider>
+            <ProviderProvider>
               <AuthGuard>
                 <SessionMonitor />
                 <StatusBar style="light" />
@@ -343,9 +345,31 @@ export default function RootLayout() {
                       animation: 'slide_from_right',
                     }}
                   />
+                  <Stack.Screen
+                    name="ServiceProviderOnboarding"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="ServiceProviderProfile"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="SellerDashboard"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
                 </Stack>
               </LayoutWithBanner>
             </AuthGuard>
+            </ProviderProvider>
           </CartProvider>
           </AuthProvider>
         </EarlyAccessProvider>

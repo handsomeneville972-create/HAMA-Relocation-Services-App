@@ -200,6 +200,233 @@ export interface CartTotals {
   itemCount: number;
 }
 
+// ============ SERVICE PROVIDER PROFILE TYPES ============
+
+export type ProviderPlanTier = 'House Seeker' | 'Standard' | 'Premium';
+
+export interface ProviderService {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  priceUnit: 'per job' | 'per hour' | 'per day' | 'per session' | 'quote';
+  duration: string;
+  warranty: string;
+  emergencyAvailable: boolean;
+  active: boolean;
+}
+
+export interface ProviderDayHours {
+  day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
+export interface ProviderPackage {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
+}
+
+export interface ProviderPortfolioItem {
+  id: string;
+  type: 'photo' | 'video';
+  uri: string;
+  title: string;
+  description: string;
+}
+
+export interface ProviderCertification {
+  id: string;
+  name: string;
+  issuer: string;
+  year: number;
+  verified: boolean;
+}
+
+export interface ProviderDocument {
+  id: string;
+  name: string;
+  uri: string;
+  status: 'pending' | 'verified' | 'rejected';
+}
+
+export interface ProviderSocialLink {
+  platform: string;
+  handle: string;
+}
+
+export interface ProviderBankAccount {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+}
+
+export interface ProviderReview {
+  id: string;
+  customerName: string;
+  avatar: string;
+  rating: number;
+  text: string;
+  date: string;
+  service: string;
+  media?: string[];
+  reply?: { text: string; date: string };
+}
+
+export interface ProviderTeamMember {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+}
+
+export interface ProviderProfile {
+  id: string;
+  businessName: string;
+  logo: string;
+  coverImage: string;
+  description: string;
+  yearsInBusiness: number;
+  teamSize: number;
+  phone: string;
+  email: string;
+  website: string;
+  socialMedia: ProviderSocialLink[];
+  address: string;
+  county: string;
+  town: string;
+  gps: { lat: number; lng: number } | null;
+  category: ServiceCategory;
+  subcategory: ServiceSubcategory;
+  services: ProviderService[];
+  serviceAreas: { counties: string[]; towns: string[]; neighborhoods: string[]; radiusKm: number };
+  businessHours: ProviderDayHours[];
+  open247: boolean;
+  callOutFee: number;
+  consultationFee: number;
+  packages: ProviderPackage[];
+  portfolio: ProviderPortfolioItem[];
+  certifications: ProviderCertification[];
+  documents: ProviderDocument[];
+  paymentMethods: string[];
+  mpesaNumber: string;
+  bankAccount: ProviderBankAccount | null;
+  branding: { accentColor: string; tagline: string; promoVideo: string | null };
+  languages: string[];
+  isEmergencyProvider: boolean;
+  warranty: string;
+  team: ProviderTeamMember[];
+  reviews: ProviderReview[];
+  faqs: { id: string; question: string; answer: string }[];
+  promotions: { id: string; title: string; discount: string; active: boolean }[];
+  status: 'draft' | 'pending_review' | 'active';
+  plan: ProviderPlanTier;
+  subscriptionExpiry: string | null;
+  completedSteps: string[];
+  keywords: string[];
+  searchScore: number;
+  onboardingComplete: boolean;
+  responseTime: string;
+  rating: number;
+  reviewCount: number;
+  completedJobs: number;
+  totalRevenue: number;
+  walletBalance: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProviderStepValidation {
+  valid: boolean;
+  message?: string;
+}
+
+export interface ProfileCompletionBreakdown {
+  total: number;
+  sections: { key: string; label: string; done: number; total: number }[];
+}
+
+export interface RankedProvider {
+  profile: ProviderProfile;
+  score: number;
+  breakdown: {
+    categoryRelevance: number;
+    locationProximity: number;
+    serviceMatching: number;
+    ratings: number;
+    reviewQuality: number;
+    verification: number;
+    profileCompleteness: number;
+    responseTime: number;
+    recentActivity: number;
+    subscriptionBoost: number;
+  };
+}
+
+export interface KpiMetric {
+  key: string;
+  label: string;
+  value: number;
+  change: number;
+  format?: 'number' | 'currency' | 'percent' | 'rating';
+}
+
+export interface EngagementSeries {
+  label: string;
+  profileViews: number;
+  impressions: number;
+  clicks: number;
+  calls: number;
+  chats: number;
+  whatsapp: number;
+}
+
+export interface QuoteRequest {
+  id: string;
+  customerName: string;
+  avatar: string;
+  service: string;
+  budget: number;
+  location: string;
+  status: 'new' | 'quoted' | 'accepted' | 'declined';
+  date: string;
+  notes: string;
+}
+
+export interface JobItem {
+  id: string;
+  customerName: string;
+  avatar: string;
+  service: string;
+  status: 'new' | 'in_progress' | 'completed';
+  amount: number;
+  date: string;
+  location: string;
+}
+
+export interface CustomerRecord {
+  id: string;
+  name: string;
+  avatar: string;
+  phone: string;
+  totalSpent: number;
+  bookings: number;
+  lastService: string;
+  lastVisit: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  type: 'payout' | 'payment' | 'fee';
+  amount: number;
+  description: string;
+  date: string;
+}
+
 // ============ HOME SERVICES TYPES ============
 
 export type ServiceCategory = 
@@ -764,4 +991,7 @@ export type RootStackParamList = {
   Settings: undefined;
   CurrencyPicker: undefined;
   PaymentMethods: undefined;
+  ServiceProviderOnboarding: { plan: ProviderPlanTier } | undefined;
+  ServiceProviderProfile: { providerId?: string };
+  SellerDashboard: undefined;
 };

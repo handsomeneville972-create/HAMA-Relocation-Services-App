@@ -215,7 +215,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <Text style={styles.sectionTitle}>Services ({filteredServices.length})</Text>
                 </View>
                 {filteredServices.slice(0, 3).map(service => (
-                  <TouchableOpacity key={service.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('ServiceDetail', { providerId: service.id })}>
+                  <TouchableOpacity key={service.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('ServiceProviderProfile', { providerId: service.id })}>
                     <GlassCard>
                       <View style={styles.resultRow}>
                         <Image source={{ uri: service.logo }} style={styles.resultImage} />

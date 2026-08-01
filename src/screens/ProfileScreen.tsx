@@ -35,6 +35,14 @@ const MENU_SECTIONS = [
     ],
   },
   {
+    title: 'Service Provider',
+    items: [
+      { icon: 'storefront-outline', label: 'Become a Service Provider', color: COLORS.primary, route: 'ServiceProviderOnboarding' },
+      { icon: 'analytics-outline', label: 'Seller Dashboard', color: COLORS.accent, route: 'SellerDashboard' },
+      { icon: 'ribbon-outline', label: 'View My Public Profile', color: COLORS.textSecondary, route: 'ServiceProviderProfile' },
+    ],
+  },
+  {
     title: 'Activity',
     items: [
       { icon: 'chatbubble-outline', label: 'Messages', color: COLORS.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
