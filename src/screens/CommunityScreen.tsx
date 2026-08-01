@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensi
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { CommunityPostCard } from '../components/CommunityPost';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
@@ -22,6 +23,7 @@ const TAB_WIDTH = (Dimensions.get('window').width - 32) / 3;
 
 export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { currentUserId } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -62,7 +64,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="search-outline" size={22} color={COLORS.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('CreatePost')}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/CreatePost')}>
               <Ionicons name="add-circle" size={26} color={COLORS.primary} />
               <View style={styles.comingSoonBadge}>
                 <Text style={styles.comingSoonText}>Soon</Text>

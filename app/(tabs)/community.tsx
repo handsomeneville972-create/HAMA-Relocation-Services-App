@@ -6,6 +6,7 @@ export default function CommunityTab() {
   const navigation = {
     navigate: (route: string, params?: any) => {
       if (route === 'PostDetail') router.push({ pathname: '/PostDetail', params });
+      else if (route === 'CreatePost') router.push('/CreatePost');
     },
   };
 
