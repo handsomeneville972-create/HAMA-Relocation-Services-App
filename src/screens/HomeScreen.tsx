@@ -268,7 +268,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <Image source={require('../../assets/footer-bg.png')} style={styles.footerBg} resizeMode="cover" />
           {/* Dark overlay */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.92)']}
+            colors={['rgba(0,0,0,0.82)', 'rgba(0,0,0,0.90)']}
             style={styles.footerOverlay}
           />
 
@@ -305,16 +305,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Explore Column */}
-              <View style={styles.footerColumn}>
-                <Text style={styles.footerColumnTitle}>Explore</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Rentals</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Relocation</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}><Text style={styles.footerLink}>Marketplace</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Services</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Short Lets</Text></TouchableOpacity>
-              </View>
-
               {/* Company Column */}
               <View style={styles.footerColumn}>
                 <Text style={styles.footerColumnTitle}>Company</Text>
@@ -333,6 +323,16 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/privacy')}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
+              </View>
+
+              {/* Explore Column */}
+              <View style={styles.footerColumn}>
+                <Text style={styles.footerColumnTitle}>Explore</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Rentals</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Relocation</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}><Text style={styles.footerLink}>Marketplace</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Services</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Short Lets</Text></TouchableOpacity>
               </View>
 
               {/* Stay Updated */}
