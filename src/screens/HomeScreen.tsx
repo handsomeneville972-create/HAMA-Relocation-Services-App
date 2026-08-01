@@ -112,7 +112,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   </View>
                 </View>
                 <TouchableOpacity style={styles.notifButton} onPress={() => navigation.navigate('Notifications')}>
-                  <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
+                  <Ionicons name="notifications" size={22} color={COLORS.text} />
                   <View style={styles.notifDot} />
                 </TouchableOpacity>
               </View>
@@ -127,25 +127,25 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.quickActions}>
                 <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Marketplace')}>
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="cart-outline" size={22} color={COLORS.primary} />
+                    <Ionicons name="cart" size={22} color={COLORS.primary} />
                   </View>
                   <Text style={styles.quickActionText}>Marketplace</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Services')}>
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="construct-outline" size={22} color={COLORS.accent} />
+                    <Ionicons name="construct" size={22} color={COLORS.accent} />
                   </View>
                   <Text style={styles.quickActionText}>Services</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Community')}>
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="people-outline" size={22} color={COLORS.secondary} />
+                    <Ionicons name="people" size={22} color={COLORS.secondary} />
                   </View>
                   <Text style={styles.quickActionText}>Community</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Subscriptions')}>
                   <View style={styles.quickActionIcon}>
-                    <Ionicons name="star-outline" size={22} color={COLORS.warning} />
+                    <Ionicons name="star" size={22} color={COLORS.warning} />
                   </View>
                   <Text style={styles.quickActionText}>Premium</Text>
                 </TouchableOpacity>
