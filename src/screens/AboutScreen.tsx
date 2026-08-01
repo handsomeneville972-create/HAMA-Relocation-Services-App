@@ -17,6 +17,9 @@ import {
   Animated,
   Dimensions,
   TouchableOpacity,
+  Linking,
+  Image,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -641,16 +644,104 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </AnimatedSection>
 
         {/* ===== FOOTER ===== */}
-        <AnimatedSection index={10}>
-          <View style={styles.footer}>
-            <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.footerIcon}>
-              <Text style={styles.footerIconText}>H</Text>
-            </LinearGradient>
-            <Text style={styles.footerBrand}>HAMA™</Text>
-            <Text style={styles.footerTagline}>Need a house homie? We've got you!</Text>
-            <Text style={styles.footerMotto}>Find. Move. Belong.</Text>
+        <View style={styles.footerContainer}>
+          <Image source={require('../../assets/footer-bg.png')} style={styles.footerBg} resizeMode="cover" />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.82)', 'rgba(0,0,0,0.90)']}
+            style={styles.footerOverlay}
+          />
+
+          <View style={styles.footerContent}>
+            <View style={styles.footerColumns}>
+              {/* Logo + Description + Socials */}
+              <View style={styles.footerBrand}>
+                <Image source={require('../../assets/hama-logo.png')} style={styles.footerLogo} resizeMode="contain" />
+                <Text style={styles.footerBrandName}>HAMA™</Text>
+                <Text style={styles.footerDescription}>
+                  Your all-in-one platform for finding rental homes, easy relocation, and home essentials—making every move simple.
+                </Text>
+                <View style={styles.footerSocials}>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.facebook.com/hamanasi2026')} activeOpacity={0.7}>
+                    <Ionicons name="logo-facebook" size={18} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.instagram.com/hamanasi2026/')} activeOpacity={0.7}>
+                    <Ionicons name="logo-instagram" size={18} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://x.com/hamanasi2026')} activeOpacity={0.7}>
+                    <Ionicons name="logo-twitter" size={18} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.tiktok.com/@hama_nasi_2026')} activeOpacity={0.7}>
+                    <Ionicons name="logo-tiktok" size={18} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.youtube.com/channel/UCR6Px4BchUW3z143ntOLx7w')} activeOpacity={0.7}>
+                    <Ionicons name="logo-youtube" size={18} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://linkedin.com/company/hama')} activeOpacity={0.7}>
+                    <Ionicons name="logo-linkedin" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Company Column */}
+              <View style={styles.footerColumn}>
+                <Text style={styles.footerColumnTitle}>Company</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('About')}><Text style={styles.footerLink}>About Us</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/careers')}><Text style={styles.footerLink}>Careers</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/press')}><Text style={styles.footerLink}>Press</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('mailto:support@hama.com')}><Text style={styles.footerLink}>Contact Us</Text></TouchableOpacity>
+              </View>
+
+              {/* Support Column */}
+              <View style={styles.footerColumn}>
+                <Text style={styles.footerColumnTitle}>Support</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help Center</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/faqs')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/privacy')}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
+              </View>
+
+              {/* Explore Column */}
+              <View style={styles.footerColumn}>
+                <Text style={styles.footerColumnTitle}>Explore</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Rentals</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Relocation</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}><Text style={styles.footerLink}>Marketplace</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Services')}><Text style={styles.footerLink}>Services</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.footerLink}>Short Lets</Text></TouchableOpacity>
+              </View>
+
+              {/* Stay Updated */}
+              <View style={styles.footerColumn}>
+                <Text style={styles.footerColumnTitle}>Stay Updated</Text>
+                <Text style={styles.footerStayText}>Subscribe to get the latest homes, deals and tips.</Text>
+                <View style={styles.footerEmailRow}>
+                  <TextInput
+                    style={styles.footerEmailInput}
+                    placeholder="Enter your email"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity style={styles.footerEmailBtn}>
+                    <Ionicons name="send" size={16} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Bottom Bar */}
+            <View style={styles.footerBottomBar}>
+              <Text style={styles.footerCopyright}>© 2026 HAMA. All rights reserved.</Text>
+              <Text style={styles.footerTaglineBottom}>
+                <Text style={styles.footerTaglineBold}>Built for you.</Text>{' '}
+                <Text style={styles.footerTaglineBold}>Built for today.</Text>{' '}
+                <Text style={styles.footerTaglineBold}>Built for home.</Text>
+              </Text>
+            </View>
           </View>
-        </AnimatedSection>
+        </View>
 
         <View style={{ height: 50 }} />
       </Animated.ScrollView>
@@ -803,18 +894,142 @@ const styles = StyleSheet.create({
     color: '#fff', fontSize: 16, fontWeight: '700',
   },
   // ---- Footer ----
-  footer: {
-    alignItems: 'center', paddingVertical: SPACING.xxl, gap: 8,
+  footerContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    marginTop: SPACING.lg,
   },
-  footerIcon: {
-    width: 48, height: 48, borderRadius: 14,
-    justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm,
+  footerBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
-  footerIconText: { color: '#fff', fontSize: 24, fontWeight: '800' },
-  footerBrand: { ...FONTS.h1, color: COLORS.text, fontWeight: '800' },
-  footerTagline: { ...FONTS.body, color: COLORS.textSecondary, textAlign: 'center' },
-  footerMotto: {
-    ...FONTS.h3, color: COLORS.primaryLight, marginTop: SPACING.sm,
-    letterSpacing: 4, textTransform: 'uppercase',
+  footerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  footerContent: {
+    position: 'relative',
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.xl + SPACING.md,
+    paddingBottom: SPACING.lg,
+  },
+  footerColumns: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  footerBrand: {
+    width: 200,
+    gap: 6,
+  },
+  footerLogo: {
+    width: 40,
+    height: 40,
+  },
+  footerBrandName: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  footerDescription: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  footerSocials: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  footerSocialBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerColumn: {
+    gap: 8,
+    minWidth: 100,
+  },
+  footerColumnTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  footerLink: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    lineHeight: 22,
+  },
+  footerStayText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  footerEmailRow: {
+    flexDirection: 'row',
+    gap: 0,
+    marginTop: 4,
+  },
+  footerEmailInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#fff',
+    fontSize: 13,
+  },
+  footerEmailBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: -1,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  footerBottomBar: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: SPACING.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  footerCopyright: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+  },
+  footerTaglineBottom: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  footerTaglineBold: {
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
 });
