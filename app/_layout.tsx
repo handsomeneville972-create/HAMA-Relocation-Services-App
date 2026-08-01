@@ -147,6 +147,13 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="CreatePost"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
                     name="Subscriptions"
                     options={{
                       headerShown: false,

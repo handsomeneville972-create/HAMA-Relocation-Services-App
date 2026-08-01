@@ -62,8 +62,11 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="search-outline" size={22} color={COLORS.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('CreatePost')}>
               <Ionicons name="add-circle" size={26} color={COLORS.primary} />
+              <View style={styles.comingSoonBadge}>
+                <Text style={styles.comingSoonText}>Soon</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -105,32 +108,14 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Create Post */}
-        <View style={styles.createPost}>
-          <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.createPostGradient}>
-            <View style={styles.createPostContent}>
-              <View style={styles.createPostAvatar}>
-                <Ionicons name="person" size={18} color={COLORS.textSecondary} />
-              </View>
-              <TouchableOpacity style={styles.createPostInput}>
-                <Text style={styles.createPostPlaceholder}>Share something with the community...</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.createPostActions}>
-              <TouchableOpacity style={styles.createAction}>
-                <Ionicons name="image-outline" size={20} color={COLORS.accent} />
-                <Text style={styles.createActionText}>Photo</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.createAction}>
-                <Ionicons name="videocam-outline" size={20} color={COLORS.secondary} />
-                <Text style={styles.createActionText}>Video</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.createAction}>
-                <Ionicons name="document-text-outline" size={20} color={COLORS.warning} />
-                <Text style={styles.createActionText}>Tip</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
+        {/* Ad Banner — Coming Soon */}
+        <View style={styles.adBanner}>
+          <View style={styles.adBannerContent}>
+            <Ionicons name="megaphone-outline" size={18} color={COLORS.primary} />
+            <Text style={styles.adBannerLabel}>Advertisement</Text>
+          </View>
+          <Text style={styles.adBannerTitle}>Coming Soon</Text>
+          <Text style={styles.adBannerDesc}>Ad spaces in the community feed will be available soon.</Text>
         </View>
 
         {/* Posts */}
@@ -201,6 +186,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  comingSoonBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: COLORS.primary,
+    borderRadius: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  comingSoonText: {
+    color: '#fff',
+    fontSize: 7,
+    fontWeight: '700',
+  },
   tabBar: {
     flexDirection: 'row',
     paddingHorizontal: SPACING.md,
@@ -233,56 +232,39 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: COLORS.primary,
   },
-  createPost: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-  },
-  createPostGradient: {
-    borderRadius: RADIUS.lg,
+  adBanner: {
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
+    backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
+    borderRadius: RADIUS.lg,
     padding: SPACING.md,
   },
-  createPostContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: SPACING.sm,
-  },
-  createPostAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.bgCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  createPostInput: {
-    flex: 1,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  createPostPlaceholder: {
-    color: COLORS.textTertiary,
-    fontSize: 14,
-  },
-  createPostActions: {
-    flexDirection: 'row',
-    gap: 16,
-    paddingTop: SPACING.sm,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
-  },
-  createAction: {
+  adBannerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 6,
   },
-  createActionText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
+  adBannerLabel: {
+    color: COLORS.textTertiary,
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  adBannerTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  adBannerDesc: {
+    color: COLORS.textTertiary,
+    fontSize: 12,
+    lineHeight: 16,
   },
   postsContainer: {
     paddingHorizontal: SPACING.md,
