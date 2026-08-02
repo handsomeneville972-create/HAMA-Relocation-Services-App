@@ -699,7 +699,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/faqs')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/privacy')}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy' as never)}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
               </View>
 
               {/* Explore Column */}

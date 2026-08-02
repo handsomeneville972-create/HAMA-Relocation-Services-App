@@ -994,4 +994,5 @@ export type RootStackParamList = {
   ServiceProviderOnboarding: { plan: ProviderPlanTier } | undefined;
   ServiceProviderProfile: { providerId?: string };
   SellerDashboard: undefined;
+  PrivacyPolicy: undefined;
 };

@@ -26,6 +26,7 @@ const ROUTE_PATHS: Record<string, string> = {
   ServiceProviderOnboarding: '/ServiceProviderOnboarding',
   ServiceProviderProfile: '/ServiceProviderProfile',
   SellerDashboard: '/SellerDashboard',
+  PrivacyPolicy: '/PrivacyPolicy',
   WorkspacePlans: '/WorkspacePlans',
   EditProfile: '/EditProfile',
   MyPosts: '/MyPosts',

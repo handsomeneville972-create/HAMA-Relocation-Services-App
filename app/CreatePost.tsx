@@ -370,99 +370,6 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   };
 
   // ============================================================
-  // SUCCESS SCREEN
-  // ============================================================
-
-  if (published) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Published</Text>
-          </View>
-        </LinearGradient>
-        <View style={styles.successContainer}>
-          <FadeInView delay={200}>
-            <View style={styles.successIconWrap}>
-              <LinearGradient colors={[COLORS.primary, '#FF8A33']} style={styles.successIconGrad}>
-                <Ionicons name="checkmark" size={48} color="#fff" />
-              </LinearGradient>
-            </View>
-            <Text style={styles.successTitle}>Your post has been published!</Text>
-            <Text style={styles.successDesc}>It's now live in the HAMA community.</Text>
-          </FadeInView>
-          <FadeInView delay={500} style={styles.successActions}>
-            <TouchableOpacity style={styles.successBtn} onPress={handleViewPost}>
-              <Ionicons name="eye-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.successBtnText}>View Post</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.successBtnOutline} onPress={() => setShowShareSheet(true)}>
-              <Ionicons name="share-outline" size={18} color={COLORS.textSecondary} />
-              <Text style={styles.successBtnOutlineText}>Share</Text>
-            </TouchableOpacity>
-          </FadeInView>
-        </View>
-
-        {/* Share sheet */}
-        <Modal visible={showShareSheet} transparent animationType="slide" onRequestClose={() => setShowShareSheet(false)}>
-          <View style={styles.shareSheetBackdrop}>
-            <Pressable style={styles.shareSheetBackdropHit} onPress={() => setShowShareSheet(false)} />
-            <View style={[styles.shareSheet, { paddingBottom: insets.bottom + 16 }]}>
-              <View style={styles.shareSheetHandle} />
-              <Text style={styles.shareSheetTitle}>Share your post</Text>
-              <Text style={styles.shareSheetSub}>Share your post with friends on social media or copy the link.</Text>
-              <View style={styles.shareAppsRow}>
-                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://wa.me/?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#25D366' }]}>
-                    <Ionicons name="logo-whatsapp" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>WhatsApp</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getPostLink())}`)}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#1877F2' }]}>
-                    <Ionicons name="logo-facebook" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>Facebook</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#0D0D0D', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }]}>
-                    <Ionicons name="logo-twitter" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>X (Twitter)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.shareApp} onPress={shareToInstagram}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#C13584' }]}>
-                    <Ionicons name="logo-instagram" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>Instagram</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://t.me/share/url?url=${encodeURIComponent(getPostLink())}&text=${encodeURIComponent(formData.title)}`)}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#229ED9' }]}>
-                    <Ionicons name="paper-plane" size={22} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>Telegram</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`mailto:?subject=${encodeURIComponent(formData.title)}&body=${encodeURIComponent(`${formData.title}\n\n${formData.description}\n\n${getPostLink()}`)}`)}>
-                  <View style={[styles.shareAppIcon, { backgroundColor: '#34C759' }]}>
-                    <Ionicons name="mail" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.shareAppLabel}>Email</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity style={styles.shareCopyBtn} onPress={copyLink}>
-                <Ionicons name={linkCopied ? 'checkmark-circle' : 'link-outline'} size={20} color={linkCopied ? '#00D4AA' : COLORS.primary} />
-                <Text style={[styles.shareCopyText, linkCopied && { color: '#00D4AA' }]}>
-                  {linkCopied ? 'Link copied!' : 'Copy Link'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </View>
-    );
-  }
-
-  // ============================================================
   // MAIN RENDER
   // ============================================================
 
@@ -835,8 +742,90 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       </ScrollView>
 
       {/* ============================================================
+          PUBLISHED TOAST OVERLAY
+          ============================================================ */}
+      {published && (
+        <View style={styles.toastOverlay} pointerEvents="box-none">
+          <FadeInView delay={100} style={styles.toastCard}>
+            <View style={styles.toastIconWrap}>
+              <LinearGradient colors={[COLORS.primary, '#FF8A33']} style={styles.toastIconGrad}>
+                <Ionicons name="checkmark" size={28} color="#fff" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.toastTitle}>Your post has been published!</Text>
+            <View style={styles.toastActions}>
+              <TouchableOpacity style={styles.toastBtn} onPress={handleViewPost}>
+                <Ionicons name="eye-outline" size={16} color={COLORS.primary} />
+                <Text style={styles.toastBtnText}>View Post</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toastBtnOutline} onPress={() => setShowShareSheet(true)}>
+                <Ionicons name="share-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.toastBtnOutlineText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+          </FadeInView>
+        </View>
+      )}
+
+      {/* ============================================================
           MODALS
           ============================================================ */}
+
+      {/* Share Sheet */}
+      <Modal visible={showShareSheet} transparent animationType="slide" onRequestClose={() => setShowShareSheet(false)}>
+        <View style={styles.shareSheetBackdrop}>
+          <Pressable style={styles.shareSheetBackdropHit} onPress={() => setShowShareSheet(false)} />
+          <View style={[styles.shareSheet, { paddingBottom: insets.bottom + 16 }]}>
+            <View style={styles.shareSheetHandle} />
+            <Text style={styles.shareSheetTitle}>Share your post</Text>
+            <Text style={styles.shareSheetSub}>Share your post with friends on social media or copy the link.</Text>
+            <View style={styles.shareAppsRow}>
+              <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://wa.me/?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#25D366' }]}>
+                  <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>WhatsApp</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getPostLink())}`)}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#1877F2' }]}>
+                  <Ionicons name="logo-facebook" size={24} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>Facebook</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${formData.title} — ${getPostLink()}`)}`)}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#0D0D0D', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }]}>
+                  <Ionicons name="logo-twitter" size={24} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>X (Twitter)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareApp} onPress={shareToInstagram}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#C13584' }]}>
+                  <Ionicons name="logo-instagram" size={24} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>Instagram</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`https://t.me/share/url?url=${encodeURIComponent(getPostLink())}&text=${encodeURIComponent(formData.title)}`)}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#229ED9' }]}>
+                  <Ionicons name="paper-plane" size={22} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>Telegram</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareApp} onPress={() => shareViaUrl(`mailto:?subject=${encodeURIComponent(formData.title)}&body=${encodeURIComponent(`${formData.title}\n\n${formData.description}\n\n${getPostLink()}`)}`)}>
+                <View style={[styles.shareAppIcon, { backgroundColor: '#34C759' }]}>
+                  <Ionicons name="mail" size={24} color="#fff" />
+                </View>
+                <Text style={styles.shareAppLabel}>Email</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.shareCopyBtn} onPress={copyLink}>
+              <Ionicons name={linkCopied ? 'checkmark-circle' : 'link-outline'} size={20} color={linkCopied ? '#00D4AA' : COLORS.primary} />
+              <Text style={[styles.shareCopyText, linkCopied && { color: '#00D4AA' }]}>
+                {linkCopied ? 'Link copied!' : 'Copy Link'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Help Bottom Sheet */}
       <Modal visible={showHelp} transparent animationType="slide" onRequestClose={() => setShowHelp(false)}>
@@ -1113,6 +1102,35 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   successBtnOutlineText: { color: COLORS.textSecondary, fontSize: 15, fontWeight: '600' },
+
+  // Toast overlay
+  toastOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 999,
+  },
+  toastCard: {
+    backgroundColor: '#1C1C1E', borderRadius: 20, borderWidth: 1, borderColor: '#2C2C2E',
+    paddingHorizontal: 28, paddingVertical: 24, alignItems: 'center',
+    width: '82%', maxWidth: 340,
+    shadowColor: '#FF6A00', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 12,
+  },
+  toastIconWrap: { marginBottom: SPACING.md },
+  toastIconGrad: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' },
+  toastTitle: { color: '#fff', fontSize: 17, fontWeight: '700', textAlign: 'center', marginBottom: SPACING.lg },
+  toastActions: { flexDirection: 'row', gap: 10, width: '100%' },
+  toastBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 12,
+  },
+  toastBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  toastBtnOutline: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#252528', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#333',
+    paddingVertical: 12,
+  },
+  toastBtnOutlineText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
 
   // Share sheet
   shareSheetBackdrop: { flex: 1, justifyContent: 'flex-end' },

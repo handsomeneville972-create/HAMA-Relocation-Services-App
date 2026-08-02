@@ -53,7 +53,7 @@ const createSettingsSections = (navigation?: any): { title: string; items: Setti
       { icon: 'help-circle-outline', label: 'Help Center', type: 'link', color: COLORS.primary },
       { icon: 'chatbubble-ellipses-outline', label: 'Contact Support', type: 'link', color: COLORS.accent },
       { icon: 'document-text-outline', label: 'Terms of Service', type: 'link', color: COLORS.textSecondary, onPress: () => navigation?.navigate('Legal', { initialPage: 'terms' }) },
-      { icon: 'shield-outline', label: 'Privacy Policy', type: 'link', color: COLORS.textSecondary, onPress: () => navigation?.navigate('Legal', { initialPage: 'privacy' }) },
+      { icon: 'shield-outline', label: 'Privacy Policy', type: 'link', color: COLORS.textSecondary, onPress: () => navigation?.navigate('PrivacyPolicy' as never) },
     ],
   },
 ];
