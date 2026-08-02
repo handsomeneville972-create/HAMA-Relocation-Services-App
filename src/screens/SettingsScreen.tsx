@@ -296,6 +296,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 13,
   },
+  scaledContent: {
+    flex: 1,
+  },
   section: {
     paddingHorizontal: 13,
     marginBottom: 19,

@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
+
+const CHECKLIST_STORAGE_KEY = 'hama_landlord_checklist_v1';
 
 interface DashboardMetric {
   label: string;
@@ -36,6 +40,14 @@ interface ReviewData {
   date: string;
 }
 
+interface SetupChecklistItem {
+  key: string;
+  label: string;
+  desc: string;
+  icon: string;
+  done: boolean;
+}
+
 const METRICS: DashboardMetric[] = [
   { label: 'Total Properties', value: '12', change: '+3', changeType: 'positive', icon: 'business-outline', color: COLORS.primary },
   { label: 'Occupied', value: '8', change: '67%', changeType: 'positive', icon: 'people-outline', color: COLORS.success },
@@ -56,13 +68,24 @@ const RECENT_REVIEWS: ReviewData[] = [
   { id: '3', property: '1BR in Lavington', tenant: 'Sarah W.', rating: 5, comment: 'Exactly as described. Highly recommend!', date: '1 week ago' },
 ];
 
-export const LandlordDashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const SETUP_CHECKLIST: SetupChecklistItem[] = [
+  { key: 'identity', label: 'Verify your identity', desc: 'Complete ID verification to unlock all landlord tools', icon: 'shield-checkmark-outline', done: false },
+  { key: 'property', label: 'Add your first property', desc: 'Create a listing to start attracting tenants', icon: 'home-outline', done: false },
+  { key: 'photos', label: 'Add property photos', desc: 'Listings with photos get 3x more views', icon: 'images-outline', done: false },
+];
+
+export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boolean }> = ({ navigation, firstRun = false }) => {
   const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'properties' | 'bookings' | 'analytics'>('overview');
   const [showVerificationBanner, setShowVerificationBanner] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(firstRun);
+  const [checklist, setChecklist] = useState<SetupChecklistItem[]>(SETUP_CHECKLIST);
+  const [hasProperties, setHasProperties] = useState(true);
 
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const welcomeAnim = useRef(new Animated.Value(0)).current;
+  const metricScale = useRef(METRICS.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -71,6 +94,42 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any }> = ({ navigat
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (showWelcome) {
+      Animated.spring(welcomeAnim, { toValue: 1, friction: 6, tension: 90, useNativeDriver: true }).start();
+    }
+  }, [showWelcome]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      Animated.stagger(80, metricScale.map((a) =>
+        Animated.spring(a, { toValue: 1, friction: 7, tension: 80, useNativeDriver: true })
+      )).start();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    AsyncStorage.getItem(CHECKLIST_STORAGE_KEY)
+      .then((raw) => {
+        if (raw) {
+          const doneKeys = JSON.parse(raw) as string[];
+          setChecklist(prev => prev.map(item => ({ ...item, done: doneKeys.includes(item.key) })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleChecklistItem = (key: string) => {
+    setChecklist(prev => {
+      const updated = prev.map(item => item.key === key ? { ...item, done: !item.done } : item);
+      AsyncStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(updated.filter(i => i.done).map(i => i.key))).catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      return updated;
+    });
+  };
+
+  const allChecklistDone = checklist.every(item => item.done);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -109,16 +168,103 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any }> = ({ navigat
   }
 
   const renderMetricCard = (metric: DashboardMetric, index: number) => (
-    <LiquidGlass key={index} variant="elevated" style={styles.metricCard}>
-      <View style={[styles.metricIcon, { backgroundColor: `${metric.color}15` }]}>
-        <Ionicons name={metric.icon as any} size={22} color={metric.color} />
+    <Animated.View
+      key={index}
+      style={{
+        width: (width - SPACING.lg * 2 - SPACING.md) / 2,
+        opacity: metricScale[index],
+        transform: [{ scale: metricScale[index] }],
+      }}
+    >
+      <LiquidGlass variant="elevated" style={styles.metricCard}>
+        <View style={[styles.metricIcon, { backgroundColor: `${metric.color}15` }]}>
+          <Ionicons name={metric.icon as any} size={22} color={metric.color} />
+        </View>
+        <Text style={styles.metricValue}>{metric.value}</Text>
+        <Text style={styles.metricLabel}>{metric.label}</Text>
+        <View style={[styles.metricChange, { backgroundColor: metric.changeType === 'positive' ? 'rgba(0,212,170,0.15)' : 'rgba(255,77,106,0.15)' }]}>
+          <Ionicons name={metric.changeType === 'positive' ? 'arrow-up' : 'arrow-down'} size={10} color={metric.changeType === 'positive' ? COLORS.success : COLORS.error} />
+          <Text style={[styles.metricChangeText, { color: metric.changeType === 'positive' ? COLORS.success : COLORS.error }]}>{metric.change}</Text>
+        </View>
+      </LiquidGlass>
+    </Animated.View>
+  );
+
+  const renderWelcomeBanner = () => (
+    showWelcome ? (
+      <Animated.View style={{ opacity: welcomeAnim, transform: [{ translateY: welcomeAnim.interpolate({ inputRange: [0, 1], outputRange: [-12, 0] }) }] }}>
+        <LinearGradient colors={['#1A1A1D', '#252528']} style={styles.welcomeBanner}>
+          <TouchableOpacity style={styles.welcomeClose} onPress={() => setShowWelcome(false)}>
+            <Ionicons name="close" size={18} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+          <View style={styles.welcomeIcon}>
+            <Ionicons name="sparkles" size={22} color={COLORS.primary} />
+          </View>
+          <Text style={styles.welcomeTitle}>Welcome to your Landlord Dashboard</Text>
+          <Text style={styles.welcomeDesc}>Complete the quick setup checklist below to get your first property live and start receiving tenant inquiries.</Text>
+        </LinearGradient>
+      </Animated.View>
+    ) : null
+  );
+
+  const renderSetupChecklist = () => (
+    !allChecklistDone ? (
+      <LiquidGlass variant="elevated" style={styles.checklistCard}>
+        <View style={styles.checklistHeader}>
+          <View>
+            <Text style={styles.checklistTitle}>Set up your hosting</Text>
+            <Text style={styles.checklistSub}>{checklist.filter(i => !i.done).length} steps remaining to go live</Text>
+          </View>
+          <View style={styles.checklistProgress}>
+            <Text style={styles.checklistProgressText}>
+              {checklist.filter(i => i.done).length}/{checklist.length}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.checklistTrack}>
+          <View
+            style={[
+              styles.checklistFill,
+              { width: `${(checklist.filter(i => i.done).length / checklist.length) * 100}%` },
+            ]}
+          />
+        </View>
+        {checklist.map((item, i) => (
+          <TouchableOpacity
+            key={item.key}
+            style={[styles.checklistItem, i < checklist.length - 1 && styles.checklistItemBorder]}
+            onPress={() => toggleChecklistItem(item.key)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checklistCheck, item.done && styles.checklistCheckDone]}>
+              {item.done ? (
+                <Ionicons name="checkmark" size={14} color="#fff" />
+              ) : (
+                <Ionicons name={item.icon as any} size={14} color={COLORS.primary} />
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.checklistItemLabel, item.done && styles.checklistItemLabelDone]}>{item.label}</Text>
+              <Text style={styles.checklistItemDesc}>{item.desc}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+        ))}
+      </LiquidGlass>
+    ) : null
+  );
+
+  const renderPropertiesEmptyState = () => (
+    <LiquidGlass variant="elevated" style={styles.emptyStateCard}>
+      <View style={styles.emptyStateIcon}>
+        <Ionicons name="home-outline" size={40} color={COLORS.primary} />
       </View>
-      <Text style={styles.metricValue}>{metric.value}</Text>
-      <Text style={styles.metricLabel}>{metric.label}</Text>
-      <View style={[styles.metricChange, { backgroundColor: metric.changeType === 'positive' ? 'rgba(0,212,170,0.15)' : 'rgba(255,77,106,0.15)' }]}>
-        <Ionicons name={metric.changeType === 'positive' ? 'arrow-up' : 'arrow-down'} size={10} color={metric.changeType === 'positive' ? COLORS.success : COLORS.error} />
-        <Text style={[styles.metricChangeText, { color: metric.changeType === 'positive' ? COLORS.success : COLORS.error }]}>{metric.change}</Text>
-      </View>
+      <Text style={styles.emptyStateTitle}>No properties yet</Text>
+      <Text style={styles.emptyStateDesc}>List your first property to start attracting tenants and tracking revenue.</Text>
+      <TouchableOpacity style={styles.emptyStateBtn} onPress={() => navigation.navigate('LandlordOnboarding')}>
+        <Ionicons name="add-circle-outline" size={18} color="#fff" />
+        <Text style={styles.emptyStateBtnText}>List your first property</Text>
+      </TouchableOpacity>
     </LiquidGlass>
   );
 
@@ -153,6 +299,8 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any }> = ({ navigat
 
   const renderOverviewTab = () => (
     <Animated.View style={{ opacity: fadeAnim }}>
+      {renderWelcomeBanner()}
+      {renderSetupChecklist()}
       {renderVerificationBanner()}
       <View style={styles.metricsGrid}>
         {METRICS.map((metric, index) => renderMetricCard(metric, index))}
@@ -208,6 +356,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any }> = ({ navigat
         <Ionicons name="add-circle-outline" size={20} color={COLORS.text} />
         <Text style={styles.addListingText}>Add New Property</Text>
       </TouchableOpacity>
+      {!hasProperties && renderPropertiesEmptyState()}
       {[1, 2, 3].map(i => (
         <LiquidGlass key={i} variant="elevated" style={styles.propertyListItem}>
           <View style={styles.propertyListImage} />
@@ -406,4 +555,68 @@ const styles = StyleSheet.create({
   statBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
   statLabel: { flex: 1, color: COLORS.textSecondary, fontSize: 13 },
   statValue: { color: COLORS.text, fontSize: 14, fontWeight: '700' },
+
+  // Welcome banner
+  welcomeBanner: {
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    position: 'relative',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.primary + '40',
+  },
+  welcomeClose: { position: 'absolute', top: 12, right: 12, zIndex: 2, padding: 4 },
+  welcomeIcon: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: 'rgba(255,107,0,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  welcomeTitle: { color: COLORS.text, fontSize: 17, fontWeight: '700', marginBottom: 6 },
+  welcomeDesc: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 19 },
+
+  // Setup checklist
+  checklistCard: { borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.md },
+  checklistHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
+  checklistTitle: { color: COLORS.text, fontSize: 16, fontWeight: '700' },
+  checklistSub: { color: COLORS.textTertiary, fontSize: 12, marginTop: 2 },
+  checklistProgress: {
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: RADIUS.full,
+    backgroundColor: 'rgba(255,107,0,0.12)',
+  },
+  checklistProgressText: { color: COLORS.primary, fontSize: 12, fontWeight: '700' },
+  checklistTrack: { height: 6, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: SPACING.sm, overflow: 'hidden' },
+  checklistFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 3 },
+  checklistItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingVertical: SPACING.md },
+  checklistItemBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
+  checklistCheck: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(255,107,0,0.12)',
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: COLORS.primary + '40',
+  },
+  checklistCheckDone: { backgroundColor: COLORS.success, borderColor: COLORS.success },
+  checklistItemLabel: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
+  checklistItemLabelDone: { color: COLORS.textTertiary, textDecorationLine: 'line-through' },
+  checklistItemDesc: { color: COLORS.textTertiary, fontSize: 12, marginTop: 2 },
+
+  // Empty state
+  emptyStateCard: { borderRadius: RADIUS.lg, padding: SPACING.xl, alignItems: 'center', marginBottom: SPACING.md },
+  emptyStateIcon: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: 'rgba(255,107,0,0.1)',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  emptyStateTitle: { color: COLORS.text, fontSize: 17, fontWeight: '700', marginBottom: 6 },
+  emptyStateDesc: { color: COLORS.textTertiary, fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: SPACING.lg },
+  emptyStateBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12, paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.full,
+  },
+  emptyStateBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

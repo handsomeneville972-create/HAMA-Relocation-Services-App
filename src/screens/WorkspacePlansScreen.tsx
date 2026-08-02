@@ -1,18 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { GlassCard } from '../components/GlassCard';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { useEarlyAccess } from '../contexts/EarlyAccessContext';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
+import { activateWorkspace, getActiveWorkspaces, subscribeWorkspaces, type WorkspaceRole } from '../utils/workspaces';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 interface WorkspacePlan {
-  id: string;
+  id: WorkspaceRole;
   role: 'house_seeker' | 'landlord' | 'seller' | 'service_provider';
   title: string;
   icon: string;
@@ -31,14 +33,27 @@ interface WorkspacePlan {
   features: string[];
 }
 
+const MANAGE_ROUTES: Record<WorkspaceRole, string | null> = {
+  house_seeker: null,
+  landlord: 'LandlordDashboard',
+  seller: 'SellerDashboard',
+  service_provider: 'SellerDashboard',
+};
+
 export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const { showPremiumModal } = useEarlyAccess();
   const [isLoading, setIsLoading] = useState(true);
-  const [activeWorkspaces, setActiveWorkspaces] = useState<Set<string>>(new Set());
+  const [activeWorkspaces, setActiveWorkspaces] = useState<Set<string>>(new Set(getActiveWorkspaces()));
   const [workspacePlans, setWorkspacePlans] = useState<WorkspacePlan[]>([]);
-  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
+  const [justActivatedId, setJustActivatedId] = useState<string | null>(null);
+  const activatePop = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    return subscribeWorkspaces((list) => setActiveWorkspaces(new Set(list)));
+  }, []);
 
   // Mock workspace plans data
   const WORKSPACE_PLANS: WorkspacePlan[] = [
@@ -188,15 +203,23 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
   }, [currentUserId]);
 
   const handleActivateWorkspace = useCallback(async (workspaceId: string) => {
-    setIsUpgrading(true);
+    setIsUpgrading(workspaceId);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newActiveWorkspaces = new Set(activeWorkspaces);
-      newActiveWorkspaces.add(workspaceId);
-      setActiveWorkspaces(newActiveWorkspaces);
-      
+
+      await activateWorkspace(workspaceId as WorkspaceRole);
+      setJustActivatedId(workspaceId);
+      activatePop.setValue(0);
+      Animated.spring(activatePop, {
+        toValue: 1,
+        friction: 4,
+        tension: 140,
+        useNativeDriver: true,
+      }).start();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
       // Update local workspace plan state
       const updatedPlans = workspacePlans.map(plan => {
         if (plan.id === workspaceId) {
@@ -215,9 +238,9 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
     } catch (error) {
       console.error('Failed to activate workspace:', error);
     } finally {
-      setIsUpgrading(false);
+      setIsUpgrading(null);
     }
-  }, [activeWorkspaces, workspacePlans]);
+  }, [workspacePlans, activatePop]);
 
   const getVerificationStatusColor = (status: string) => {
     switch (status) {
@@ -270,110 +293,134 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
     const statusColor = getVerificationStatusColor(plan.verificationStatus);
     const statusText = getVerificationStatusLabel(plan.verificationStatus);
     const badgeColor = getSubscriptionBadgeColor(plan.subscription.name);
+    const manageRoute = MANAGE_ROUTES[plan.id];
+    const upgrading = isUpgrading === plan.id;
+    const isJustActivated = justActivatedId === plan.id;
+
+    const handlePress = () => {
+      if (isActive) {
+        if (manageRoute) {
+          if (plan.id === 'landlord' && isJustActivated) {
+            navigation.navigate(manageRoute, { firstRun: '1' });
+          } else {
+            navigation.navigate(manageRoute);
+          }
+        }
+      } else {
+        handleActivateWorkspace(plan.id);
+      }
+    };
 
     return (
       <LiquidGlass
         key={plan.id}
         variant={isActive ? 'elevated' : 'default'}
-        style={styles.workspaceCard}
+        style={[styles.workspaceCard, isActive && { borderColor: `${plan.color}60` }]}
         noPadding
       >
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => {
-            if (isActive) {
-              // Navigate to workspace management
-              navigation.navigate('WorkspaceManagement', { workspaceId: plan.id });
-            } else {
-              handleActivateWorkspace(plan.id);
-            }
-          }}
-          disabled={isUpgrading}
-        >
-          <View style={styles.cardContent}>
-            {/* Icon Section */}
-            <View style={[styles.iconContainer, { backgroundColor: `${plan.color}20` }]}>            
-              <Ionicons name={plan.icon as any} size={28} color={plan.color} />
-              {isActive && (
-                <View style={styles.activeIndicator}>
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-                </View>
-              )}
-            </View>
-
-            {/* Title and Status */}
-            <View style={styles.titleSection}>
-              <View style={styles.titleRow}>
-                <Text style={styles.title}>{plan.title}</Text>
-                {isDefault && (
-                  <View style={styles.defaultBadge}>
-                    <Text style={styles.defaultText}>Default</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.statusRow}>
-                <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                <Text style={styles.statusText}>{statusText}</Text>
-              </View>
-            </View>
-
-            {/* Description */}
-            <Text style={styles.description} numberOfLines={2}>
-              {plan.description}
-            </Text>
-
-            {/* Benefits Preview */}
-            <View style={styles.benefitsSection}>
-              {plan.benefits.slice(0, 2).map((benefit, index) => (
-                <View key={index} style={styles.benefitItem}>
-                  <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
-                  <Text style={styles.benefitText} numberOfLines={1}>
-                    {benefit}
-                  </Text>
-                </View>
-              ))}
-              {plan.benefits.length > 2 && (
-                <Text style={styles.moreBenefitsText}>
-                  + {plan.benefits.length - 2} more benefits
-                </Text>
-              )}
-            </View>
-
-            {/* Subscription Badge */}
-            <View style={[styles.subscriptionBadge, { backgroundColor: badgeColor }]}>
-              <Text style={[styles.subscriptionText, { color: plan.subscription.active ? plan.color : COLORS.text }]}>
-                {plan.subscription.active ? 'Active' : plan.subscription.name}
-              </Text>
-            </View>
-
-            {/* Action Button */}
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: isActive ? 'rgba(255, 255, 255, 0.05)' : plan.color }]}
-              onPress={() => {
-                if (isActive) {
-                  navigation.navigate('WorkspaceManagement', { workspaceId: plan.id });
-                } else {
-                  handleActivateWorkspace(plan.id);
-                }
-              }}
-              disabled={isUpgrading}
-            >
-              {isUpgrading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : isActive ? (
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>Manage</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#fff" />
-                </View>
-              ) : (
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>Activate</Text>
-                  <Ionicons name="add-circle-outline" size={16} color="#fff" />
-                </View>
-              )}
-            </TouchableOpacity>
+        <View style={styles.cardContent}>
+          {/* Icon Section */}
+          <View style={[styles.iconContainer, { backgroundColor: `${plan.color}20` }]}>
+            <Ionicons name={plan.icon as any} size={28} color={plan.color} />
+            {isActive ? (
+              <Animated.View
+                style={[
+                  styles.activeIndicator,
+                  isJustActivated && {
+                    transform: [
+                      { scale: activatePop },
+                      { rotate: activatePop.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+                    ],
+                  },
+                ]}
+              >
+                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+              </Animated.View>
+            ) : (
+              <View style={styles.activeIndicator} />
+            )}
           </View>
-        </TouchableOpacity>
+
+          {/* Title and Status */}
+          <View style={styles.titleSection}>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{plan.title}</Text>
+              {isDefault && (
+                <View style={styles.defaultBadge}>
+                  <Text style={styles.defaultText}>Default</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+              <Text style={styles.statusText}>{statusText}</Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          <Text style={styles.description} numberOfLines={2}>
+            {plan.description}
+          </Text>
+
+          {/* Benefits Preview */}
+          <View style={styles.benefitsSection}>
+            {plan.benefits.slice(0, 2).map((benefit, index) => (
+              <View key={index} style={styles.benefitItem}>
+                <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
+                <Text style={styles.benefitText} numberOfLines={1}>
+                  {benefit}
+                </Text>
+              </View>
+            ))}
+            {plan.benefits.length > 2 && (
+              <Text style={styles.moreBenefitsText}>
+                + {plan.benefits.length - 2} more benefits
+              </Text>
+            )}
+          </View>
+
+          {/* Subscription Badge */}
+          <View style={[styles.subscriptionBadge, { backgroundColor: badgeColor }]}>
+            <Text style={[styles.subscriptionText, { color: plan.subscription.active ? plan.color : COLORS.text }]}>
+              {plan.subscription.active ? 'Active' : plan.subscription.name}
+            </Text>
+          </View>
+
+          {/* Action Button */}
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: isActive ? 'rgba(255, 255, 255, 0.05)' : plan.color }]}
+            onPress={handlePress}
+            disabled={upgrading}
+            activeOpacity={0.85}
+          >
+            {upgrading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : isActive && isJustActivated ? (
+              <Animated.View
+                style={[
+                  styles.buttonContent,
+                  {
+                    opacity: activatePop,
+                    transform: [{ scale: activatePop.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }],
+                  },
+                ]}
+              >
+                <Text style={[styles.buttonText, isActive && styles.buttonTextActive]}>Manage</Text>
+                <Ionicons name="chevron-forward" size={16} color={plan.color} />
+              </Animated.View>
+            ) : isActive ? (
+              <View style={styles.buttonContent}>
+                <Text style={[styles.buttonText, isActive && styles.buttonTextActive]}>Manage</Text>
+                <Ionicons name="chevron-forward" size={16} color={plan.color} />
+              </View>
+            ) : (
+              <View style={styles.buttonContent}>
+                <Text style={styles.buttonText}>Activate</Text>
+                <Ionicons name="add-circle-outline" size={16} color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </LiquidGlass>
     );
   };
@@ -630,6 +677,9 @@ const styles = StyleSheet.create({
     ...FONTS.button,
     color: '#fff',
     fontWeight: '600',
+  },
+  buttonTextActive: {
+    color: COLORS.text,
   },
   summaryCard: {
     padding: SPACING.lg,

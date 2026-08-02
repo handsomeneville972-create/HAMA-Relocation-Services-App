@@ -10,6 +10,7 @@ import { useProfileBadges } from '../hooks/useUserData';
 import { getCommunityPosts } from '../services/communityService';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { navigateToRoute } from '../utils/navigation';
+import { getActiveWorkspaces, subscribeWorkspaces, type WorkspaceRole } from '../utils/workspaces';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const MENU_SECTIONS = [
@@ -23,16 +24,9 @@ const MENU_SECTIONS = [
   {
     title: 'Subscriptions',
     items: [
-      { icon: 'star-outline', label: 'My Plan', color: COLORS.primary, badge: 'Free', route: 'WorkspacePlans' },
+      { icon: 'star-outline', label: 'My Plan', color: COLORS.primary, badgeKey: 'myPlan', route: 'WorkspacePlans' },
       { icon: 'card-outline', label: 'Payment Methods', color: COLORS.accent, route: 'PaymentMethods' },
       { icon: 'receipt-outline', label: 'Billing History', color: COLORS.textSecondary, route: 'BillingHistory' },
-    ],
-  },
-  {
-    title: 'Hosting',
-    items: [
-      { icon: 'add-circle-outline', label: 'List a Property', color: COLORS.primary, route: 'LandlordOnboarding' },
-      { icon: 'home-outline', label: 'Landlord Dashboard', color: COLORS.accent, route: 'LandlordDashboard' },
     ],
   },
   {
@@ -61,12 +55,24 @@ const MENU_SECTIONS = [
   },
 ];
 
+const ACTIVE_WORKSPACE_BADGES: Record<WorkspaceRole, string> = {
+  house_seeker: 'Free',
+  landlord: 'Landlord',
+  seller: 'Seller',
+  service_provider: 'Provider',
+};
+
 export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
   const [postCount, setPostCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [activeWorkspaces, setActiveWorkspaces] = useState<WorkspaceRole[]>(getActiveWorkspaces());
+
+  useEffect(() => {
+    return subscribeWorkspaces(setActiveWorkspaces);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -162,9 +168,14 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.menuSectionTitle}>{section.title}</Text>
               <GlassCard noPadding>
                 {section.items.map((item, itemIndex) => {
-                  const badgeText = (item as any).badgeKey
-                    ? dynamicBadges[(item as any).badgeKey]
-                    : (item as any).badge;
+                  let badgeText: string | undefined = (item as any).badge;
+                  const badgeKey = (item as any).badgeKey;
+                  if (badgeKey === 'myPlan') {
+                    const extras = activeWorkspaces.filter((w) => w !== 'house_seeker');
+                    badgeText = extras.length > 0 ? extras.map((w) => ACTIVE_WORKSPACE_BADGES[w]).join(' · ') : 'Free';
+                  } else if (badgeKey) {
+                    badgeText = dynamicBadges[badgeKey];
+                  }
                   return (
                     <TouchableOpacity
                       key={itemIndex}

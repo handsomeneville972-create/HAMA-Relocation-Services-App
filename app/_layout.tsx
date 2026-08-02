@@ -12,6 +12,7 @@ import { ProviderProvider } from '../src/contexts/ProviderContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
 import { loadUserCurrency } from '../src/utils/currency';
+import { loadWorkspaces } from '../src/utils/workspaces';
 import { startPeriodicRefresh } from '../src/utils/exchangeRates';
 
 /**
@@ -95,6 +96,7 @@ export default function RootLayout() {
   // correct in-memory value from the start.
   useEffect(() => {
     loadUserCurrency();
+    loadWorkspaces();
     // Start periodic exchange rate refresh (fetches immediately, then every 6h)
     const stopRefresh = startPeriodicRefresh();
     return () => stopRefresh();
