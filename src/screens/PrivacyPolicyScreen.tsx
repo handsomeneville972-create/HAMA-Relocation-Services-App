@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, RADIUS, SPACING } from '../constants/theme';
-import { FadeInView } from '../components/FadeInView';
+import { FadeInView } from '../components/BlurText';
 
 interface PrivacyPolicyScreenProps {
   navigation?: { goBack: () => void };
