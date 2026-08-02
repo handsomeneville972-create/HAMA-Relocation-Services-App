@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useUserFavorites } from '../hooks/useUserData';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
@@ -21,6 +22,12 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   const tabIndicator = useRef(new Animated.Value(0)).current;
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   const { properties: savedProperties, products: savedProducts, posts: savedPosts } = useUserFavorites();
 
@@ -83,6 +90,11 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {loading ? (
+          <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: SPACING.sm }}>
+            <SkeletonLoader type="card" count={3} />
+          </View>
+        ) : <>
         {/* Properties Tab */}
         {activeTab === 'properties' && (
           <>
@@ -174,6 +186,8 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             )}
           </>
         )}
+
+        </>}
 
         <View style={{ height: 40 }} />
       </ScrollView>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfileBadges } from '../hooks/useUserData';
 import { getCommunityPosts } from '../services/communityService';
@@ -65,22 +66,35 @@ export const ProfileScreen: React.FC = () => {
   const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
   const [postCount, setPostCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     const loadPostCount = async () => {
-      if (!currentUserId) return;
+      if (!currentUserId) { setLoading(false); return; }
       const { data } = await getCommunityPosts({ userId: currentUserId });
       if (active && data) setPostCount(data.length);
+      setLoading(false);
     };
     loadPostCount();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [currentUserId]);
 
   // Get verification badge info
   const verificationInfo = VERIFICATION_LABELS[currentUser.verificationLevel] ?? VERIFICATION_LABELS.unverified;
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+          <SkeletonLoader type="profile-header" />
+        </LinearGradient>
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: SPACING.sm }}>
+          <SkeletonLoader type="list" count={5} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

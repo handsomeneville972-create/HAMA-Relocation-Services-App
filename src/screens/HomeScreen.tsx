@@ -24,6 +24,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,8 +71,19 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         {/* Hero Section */}
         <Animated.View style={[styles.heroContainer, { transform: [{ translateY: heroTranslateY }], opacity: heroOpacity }]}>
+          {/* Skeleton shimmer while image loads */}
+          {!heroImageLoaded && (
+            <View style={styles.heroImageSkeleton}>
+              <SkeletonLoader type="banner" width={width} />
+            </View>
+          )}
           {/* Background Image */}
-          <Image source={require('../../assets/header.png')} style={styles.heroImage} resizeMode="cover" />
+          <Image
+            source={require('../../assets/header.png')}
+            style={[styles.heroImage, { opacity: heroImageLoaded ? 1 : 0 }]}
+            resizeMode="cover"
+            onLoad={() => setHeroImageLoaded(true)}
+          />
           {/* Edge fades for blurred-edge effect */}
           <LinearGradient
             colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.3)', 'transparent']}
@@ -390,6 +402,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   heroImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  heroImageSkeleton: {
     position: 'absolute',
     top: 0,
     left: 0,

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { searchProperties } from '../services/propertyService';
 import { searchProducts } from '../services/productService';
 import { searchServiceProviders } from '../services/serviceProviderService';
@@ -27,6 +28,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [filteredServices, setFilteredServices] = useState<ServiceProvider[]>([]);
+  const [searching, setSearching] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -39,9 +41,11 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       setFilteredProperties([]);
       setFilteredProducts([]);
       setFilteredServices([]);
+      setSearching(false);
       return;
     }
 
+    setSearching(true);
     const timer = setTimeout(async () => {
       const [propRes, prodRes, servRes] = await Promise.all([
         searchProperties(query),
@@ -51,6 +55,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       if (propRes.data) setFilteredProperties(propRes.data);
       if (prodRes.data) setFilteredProducts(prodRes.data);
       if (servRes.data) setFilteredServices(servRes.data);
+      setSearching(false);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -144,6 +149,12 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </>
         ) : (
           <>
+            {searching ? (
+              <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: SPACING.sm }}>
+                <SkeletonLoader type="list" count={5} />
+              </View>
+            ) : (
+            <>
             {/* Results Summary */}
             <View style={styles.resultSummary}>
               <Text style={styles.resultText}>{totalResults} results for "{query}"</Text>
@@ -248,6 +259,8 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Text style={styles.noResultsTitle}>No results found</Text>
                 <Text style={styles.noResultsSubtitle}>Try adjusting your search terms or browse categories</Text>
               </View>
+            )}
+            </>
             )}
           </>
         )}

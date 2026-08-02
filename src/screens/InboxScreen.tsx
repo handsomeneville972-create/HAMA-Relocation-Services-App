@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserConversations, useUserUnreadCount } from '../hooks/useUserData';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const formatTime = (timestamp: string) => {
@@ -27,6 +28,12 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { currentUserId } = useAuth();
   const conversations = useUserConversations();
   const totalUnread = useUserUnreadCount();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -49,7 +56,9 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {conversations.map((conversation, index) => {
+        {loading ? (
+          <SkeletonLoader type="chat" count={5} />
+        ) : conversations.map((conversation, index) => {
           const otherUser = conversation.participants.find(p => p.id !== currentUserId) || conversation.participants[0];
           return (
             <ConversationCard

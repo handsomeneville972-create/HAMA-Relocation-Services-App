@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getCommunityPosts } from '../services/communityService';
 import type { CommunityPost } from '../constants/types';
 import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
@@ -72,8 +73,8 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
       </LinearGradient>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={COLORS.primary} size="large" />
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: SPACING.sm }}>
+          <SkeletonLoader type="post" count={3} />
         </View>
       ) : posts.length === 0 ? (
         <View style={styles.emptyState}>

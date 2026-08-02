@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { GlassCard } from '../components/GlassCard';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useProvider } from '../contexts/ProviderContext';
 import { MOCK_SERVICE_PROVIDERS } from '../constants/data';
@@ -206,6 +207,12 @@ function enrichMock(sp: ServiceProvider): ProviderProfile {
 export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navigation }) => {
   const insets = useSafeAreaInsets();
   const { provider: ownProfile } = useProvider();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, [providerId]);
 
   const profile = useMemo<ProviderProfile>(() => {
     if (ownProfile && ownProfile.onboardingComplete && !providerId) return ownProfile;
@@ -329,6 +336,22 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
   );
 
   const visibleReviews = viewAllReviews ? profile.reviews : profile.reviews.slice(0, 2);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180 }}>
+          <SkeletonLoader type="detail-hero" />
+          <View style={{ paddingHorizontal: SPACING.md, gap: SPACING.md }}>
+            <SkeletonLoader type="detail-section" />
+            <SkeletonLoader type="list" count={3} />
+            <SkeletonLoader type="detail-section" />
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
