@@ -174,6 +174,8 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           </View>
         ))}
 
+        </View>
+
         {/* Account Management Section */}
         {isAuthenticated && (
           <View style={styles.section}>
