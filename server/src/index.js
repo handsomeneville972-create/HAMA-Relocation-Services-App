@@ -24,6 +24,7 @@ const cors = require('cors');
 const { stkPush, processCallback, queryStatus } = require('./mpesa');
 const { initializeTransaction, verifyTransaction } = require('./paystack');
 const { createPaymentIntent, retrievePaymentIntent, getPublishableKey } = require('./stripe');
+const { activateSubscription, getActiveSubscription } = require('./subscriptions');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -45,7 +46,7 @@ const paystackPayments = new Map();
 // ============================================================
 app.post('/api/mpesa/stkpush', async (req, res) => {
   try {
-    const { phoneNumber, amount, accountReference, transactionDesc } = req.body;
+    const { phoneNumber, amount, accountReference, transactionDesc, subscription } = req.body;
 
     // Validate required fields
     if (!phoneNumber) {
@@ -68,11 +69,25 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
       });
     }
 
+    // When the payment is for a subscription, register the intent so the
+    // callback can store the subscription. AccountReference is limited to
+    // 12 characters, so we use a short generated reference as the lookup key.
+    let subscriptionIntent = null;
+    let ref = accountReference || `HAMA-${Date.now()}`;
+    if (subscription && (subscription.userId || subscription.userType)) {
+      subscriptionIntent = {
+        userId: String(subscription.userId || ''),
+        tier: String(subscription.tier || 'Premium'),
+        userType: String(subscription.userType || 'seeker'),
+      };
+      ref = `HAMA-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    }
+
     // Initiate STK Push
     const result = await stkPush({
       phoneNumber: cleaned,
       amount,
-      accountReference: accountReference || `HAMA-${Date.now()}`,
+      accountReference: ref,
       transactionDesc: transactionDesc || 'HAMA Payment',
     });
 
@@ -81,13 +96,14 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
       checkoutRequestId: result.CheckoutRequestID,
       phoneNumber: cleaned,
       amount,
-      accountReference,
+      accountReference: ref,
       transactionDesc,
+      subscription: subscriptionIntent,
       status: 'pending',
       createdAt: new Date().toISOString(),
     });
 
-    console.log(`[STK Push] Initiated: ${result.CheckoutRequestID} for KSh ${amount} to ${cleaned}`);
+    console.log(`[STK Push] Initiated: ${result.CheckoutRequestID} for KSh ${amount} to ${cleaned}${subscriptionIntent ? ` (${subscriptionIntent.tier} / ${subscriptionIntent.userType} / ${subscriptionIntent.userId})` : ''}`);
 
     res.json({
       success: true,
@@ -106,7 +122,7 @@ app.post('/api/mpesa/stkpush', async (req, res) => {
 // POST /api/mpesa/callback
 // Safaricom calls this after user enters PIN (or cancels)
 // ============================================================
-app.post('/api/mpesa/callback', (req, res) => {
+app.post('/api/mpesa/callback', async (req, res) => {
   try {
     const result = processCallback(req.body);
 
@@ -122,6 +138,21 @@ app.post('/api/mpesa/callback', (req, res) => {
       payment.phoneNumber = result.PhoneNumber;
       payment.amount = result.Amount || payment.amount;
       payments.set(result.checkoutRequestId, payment);
+
+      // Successful payment for a subscription → store it in the backend
+      if (result.success && payment.subscription) {
+        const { userId, tier, userType } = payment.subscription;
+        try {
+          const activated = await activateSubscription({ userId, tier, userType });
+          if (activated.success) {
+            console.log(`[Callback] Subscription stored for ${userId}: ${tier} (${userType})`);
+          } else {
+            console.error('[Callback] Failed to store subscription:', activated.error);
+          }
+        } catch (err) {
+          console.error('[Callback] Subscription activation threw:', err.message);
+        }
+      }
     }
 
     // Safaricom expects an empty 200 response to acknowledge receipt
@@ -163,6 +194,28 @@ app.get('/api/mpesa/query/:checkoutRequestId', async (req, res) => {
     const result = await queryStatus(req.params.checkoutRequestId);
     res.json({ success: true, result });
   } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================================
+// GET /api/subscriptions/status/:userId
+// Returns the user's currently active subscription (joined with plan).
+// The app polls this to refresh entitlement after payment.
+// ============================================================
+app.get('/api/subscriptions/status/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'userId is required' });
+    }
+    const { success, subscription, expired, error } = await getActiveSubscription(userId);
+    if (!success) {
+      return res.status(500).json({ success: false, error });
+    }
+    res.json({ success: true, subscription, expired: !!expired });
+  } catch (err) {
+    console.error('[Subscriptions] Status error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

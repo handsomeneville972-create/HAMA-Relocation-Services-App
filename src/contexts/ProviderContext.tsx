@@ -14,6 +14,7 @@ import {
   validateStep,
 } from '../services/providerOnboardingService';
 import { PROVIDER_STEP_KEYS, ProviderStepKey } from '../services/providerOnboardingService';
+import { normalizeProviderPlan } from '../services/providerOnboardingService';
 
 interface ProviderContextValue {
   isHydrated: boolean;
@@ -42,8 +43,8 @@ export function ProviderProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const [saved, savedDraft] = await Promise.all([loadProfile(), loadDraft()]);
-        if (saved) setProvider(saved);
-        if (savedDraft) setDraftState(savedDraft);
+        if (saved) setProvider({ ...saved, plan: normalizeProviderPlan(saved.plan) });
+        if (savedDraft) setDraftState({ ...savedDraft, plan: normalizeProviderPlan(savedDraft.plan) });
       } catch {
         // Corrupt storage — start fresh
       } finally {

@@ -202,7 +202,7 @@ export interface CartTotals {
 
 // ============ SERVICE PROVIDER PROFILE TYPES ============
 
-export type ProviderPlanTier = 'House Seeker' | 'Standard' | 'Premium';
+export type ProviderPlanTier = 'House Seeker' | 'Basic' | 'Premium';
 
 export interface ProviderService {
   id: string;

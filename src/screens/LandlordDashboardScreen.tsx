@@ -7,6 +7,8 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { getPlan } from '../constants/plans';
+import { formatPrice } from '../utils/currency';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -82,6 +84,8 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const [showWelcome, setShowWelcome] = useState(firstRun);
   const [checklist, setChecklist] = useState<SetupChecklistItem[]>(SETUP_CHECKLIST);
   const [hasProperties, setHasProperties] = useState(true);
+
+  const landlordPlan = getPlan('landlord', 'Premium')!;
 
   const fadeAnim = useState(new Animated.Value(0))[0];
   const welcomeAnim = useRef(new Animated.Value(0)).current;
@@ -340,9 +344,9 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
             <Ionicons name="newspaper-outline" size={20} color={COLORS.warning} />
             <Text style={styles.sectionTitle}>Subscription</Text>
           </View>
-          <Text style={styles.halfCardValue}>Premium</Text>
-          <Text style={styles.halfCardLabel}>Renews in 23 days · KSh 2,999/mo</Text>
-          <TouchableOpacity style={styles.halfCardButton}>
+          <Text style={styles.halfCardValue}>{landlordPlan.tier}</Text>
+          <Text style={styles.halfCardLabel}>Renews in 23 days · {formatPrice(landlordPlan.price, landlordPlan.currency)}/mo</Text>
+          <TouchableOpacity style={styles.halfCardButton} onPress={() => navigation.navigate('Subscriptions')}>
             <Text style={styles.halfCardButtonText}>Manage Plan</Text>
           </TouchableOpacity>
         </LiquidGlass>

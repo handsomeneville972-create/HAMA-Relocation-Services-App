@@ -6,7 +6,7 @@ import { COLORS, RADIUS, SPACING } from '../constants/theme';
 const { width } = Dimensions.get('window');
 
 interface SkeletonLoaderProps {
-  type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat' | 'text' | 'liquid-card';
+  type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat' | 'text' | 'liquid-card' | 'featured-property-card';
   count?: number;
   width?: number;
   style?: any;
@@ -56,6 +56,23 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', c
         return <ShimmerBlock style={[styles.textLine, style]} />;
       case 'liquid-card':
         return <ShimmerBlock style={[styles.liquidCard, style]} />;
+      case 'featured-property-card':
+        return (
+          <View style={styles.featuredPropertyCard}>
+            <ShimmerBlock style={styles.featuredPropertyImage} />
+            <View style={styles.featuredPropertyInfo}>
+              <ShimmerBlock style={styles.featuredPropertyBadge} />
+              <ShimmerBlock style={styles.featuredPropertyTitle} />
+              <ShimmerBlock style={styles.featuredPropertyLocation} />
+              <ShimmerBlock style={styles.featuredPropertyPrice} />
+              <View style={styles.featuredPropertyDetails}>
+                <ShimmerBlock style={styles.featuredPropertyDetail} />
+                <ShimmerBlock style={styles.featuredPropertyDetail} />
+                <ShimmerBlock style={styles.featuredPropertyDetail} />
+              </View>
+            </View>
+          </View>
+        );
       case 'card':
         return (
           <View style={styles.card}>
@@ -290,6 +307,52 @@ const styles = StyleSheet.create({
   metaLine: {
     height: 12,
     width: '60%',
+  },
+  // Featured property card skeleton
+  featuredPropertyCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+    marginBottom: SPACING.md,
+  },
+  featuredPropertyImage: {
+    width: '38%',
+    aspectRatio: 0.85,
+  },
+  featuredPropertyInfo: {
+    flex: 1,
+    padding: SPACING.sm,
+    gap: 6,
+  },
+  featuredPropertyBadge: {
+    height: 16,
+    width: 70,
+    borderRadius: RADIUS.sm,
+    alignSelf: 'flex-start',
+  },
+  featuredPropertyTitle: {
+    height: 16,
+    width: '90%',
+  },
+  featuredPropertyLocation: {
+    height: 12,
+    width: '60%',
+  },
+  featuredPropertyPrice: {
+    height: 20,
+    width: '50%',
+  },
+  featuredPropertyDetails: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  featuredPropertyDetail: {
+    height: 12,
+    width: 50,
   },
   // List skeleton
   listItem: {

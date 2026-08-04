@@ -10,11 +10,14 @@ import { PaystackWebView } from '../components/PaystackWebView';
 import { useMpesaPayment } from '../hooks/useMpesaPayment';
 import { usePaystackPayment } from '../hooks/usePaystackPayment';
 import { useStripePayment } from '../hooks/useStripePayment';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
-import { getSubscriptionPlans } from '../services/subscriptionService';
+import { getSubscriptionPlans, purchaseSubscription } from '../services/subscriptionService';
+import { getSeekerTrialPlan, getPlansForRole } from '../constants/plans';
+import { getEnabledPaymentMethods } from '../config/payments';
 import { formatPrice } from '../utils/currency';
-import { trackFreemiumUpgradeClicked, trackFreemiumPlanViewed, trackSubscriptionInterest } from '../utils/analytics';
-import { isSubscriptionPaymentEnabled } from '../config/earlyAccess';
+import { trackFreemiumPlanViewed } from '../utils/analytics';
+import { getTrialState, startTrial, subscribeTrial } from '../utils/trial';
+import { recordSubscription } from '../utils/subscriptionStore';
+import { useAuth } from '../contexts/AuthContext';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { UserType, SubscriptionPlan } from '../constants/types';
 
@@ -29,14 +32,14 @@ type PaymentMethod = 'mpesa' | 'paystack' | 'stripe' | null;
 
 export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { showPremiumModal } = useEarlyAccess();
-  const paymentEnabled = isSubscriptionPaymentEnabled();
+  const { currentUserId } = useAuth();
   const [selectedUserType, setSelectedUserType] = useState<UserType>('seeker');
   const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
+  const [trial, setTrial] = useState(getTrialState());
 
   // M-Pesa state
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -48,6 +51,8 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
   const paystack = usePaystackPayment();
   const stripe = useStripePayment();
 
+  const enabledPaymentMethods = getEnabledPaymentMethods();
+
   useEffect(() => {
     const fetchPlans = async () => {
       const { data } = await getSubscriptionPlans();
@@ -56,6 +61,8 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
     };
     fetchPlans();
   }, []);
+
+  useEffect(() => subscribeTrial(setTrial), []);
 
   // Track plan views for analytics
   useEffect(() => {
@@ -66,7 +73,10 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
     }
   }, [selectedUserType, loading]);
 
-  const plans = allPlans.filter(p => p.userType === selectedUserType);
+  // Seeker's Free plan is displayed as the 7-day free trial of Premium
+  const plans: SubscriptionPlan[] = (allPlans.length > 0 ? allPlans : getPlansForRole(selectedUserType))
+    .filter(p => p.userType === selectedUserType)
+    .map(p => (p.userType === 'seeker' && p.tier === 'Free' ? getSeekerTrialPlan() : p));
 
   // Determine which payment flow is active
   const isPaying = mpesa.step !== 'idle' || paystack.step !== 'idle' || stripe.step !== 'idle';
@@ -84,10 +94,46 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
     stripe.reset();
   }, [mpesa, paystack, stripe]);
 
-  /** Handle successful payment */
-  const handlePaymentSuccess = useCallback(() => {
-    Alert.alert('Welcome!', 'Your subscription has been activated successfully!');
-  }, []);
+  /** Handle successful payment — record the subscription locally + backend */
+  const handlePaymentSuccess = useCallback(async () => {
+    if (!selectedPlan) return;
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await recordSubscription({
+      planId: selectedPlan.id,
+      tier: selectedPlan.tier,
+      userType: selectedPlan.userType,
+      price: selectedPlan.price,
+      status: 'active',
+      startedAt: now,
+      expiresAt,
+    });
+    if (currentUserId) {
+      const { error } = await purchaseSubscription({ userId: currentUserId, planId: selectedPlan.id });
+      if (error) {
+        console.warn('[Subscriptions] Backend record failed:', error);
+      }
+    }
+    Alert.alert('Welcome!', `Your ${selectedPlan.tier} subscription has been activated successfully!`);
+  }, [selectedPlan, currentUserId]);
+
+  /** Handle tapping a plan card */
+  const handlePlanSelect = useCallback((plan: SubscriptionPlan) => {
+    if (plan.tier === 'Free') {
+      if (trial.status === 'none') {
+        startTrial();
+        Alert.alert('Free Trial Started', 'Your 7-day free trial of Premium is now active. Enjoy everything in Premium — no card required.');
+      } else if (trial.status === 'active') {
+        Alert.alert('Trial Active', `Your Premium trial is active with ${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left.`);
+      } else {
+        Alert.alert('Trial Ended', 'Your free trial has ended. Choose a plan below to continue enjoying Premium features.');
+      }
+      return;
+    }
+    setSelectedPlan(plan);
+    setShowPaymentSheet(true);
+    setPaymentMethod(null);
+  }, [trial]);
 
   return (
     <View style={styles.container}>
@@ -145,26 +191,27 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             </View>
 
             {/* Pricing Plans */}
-            <View style={styles.plansContainer}>
+            <View style={styles.plansContainer} key={selectedUserType}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plansScroll}>
-                {plans.map((plan) => (
+                {plans.map((plan, index) => (
                   <PricingCard
                     key={plan.id}
                     plan={plan}
-                    onSelect={() => {
-                      if (plan.price === 0) {
-                        Alert.alert('Free Plan', 'Your free plan has been activated!');
-                      } else if (paymentEnabled) {
-                        setSelectedPlan(plan);
-                        setShowPaymentSheet(true);
-                        setPaymentMethod(null);
-                      } else {
-                        // During Early Access — show premium modal + track interest
-                        trackFreemiumUpgradeClicked('pricing_card', plan.tier);
-                        trackSubscriptionInterest(plan.tier, plan.userType);
-                        showPremiumModal();
-                      }
-                    }}
+                    index={index}
+                    trial={
+                      plan.userType === 'seeker' && plan.tier === 'Free'
+                        ? { active: trial.status === 'active', daysLeft: trial.daysLeft }
+                        : undefined
+                    }
+                    ctaLabel={
+                      plan.tier === 'Free' && plan.userType === 'seeker'
+                        ? trial.status === 'active'
+                          ? 'Trial active'
+                          : 'Start 7-Day Free Trial'
+                        : undefined
+                    }
+                    badgeLabel={plan.tier === 'Free' && plan.userType === 'seeker' ? 'TRIAL' : undefined}
+                    onSelect={() => handlePlanSelect(plan)}
                   />
                 ))}
               </ScrollView>
@@ -237,35 +284,39 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                   <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
                 </TouchableOpacity>
 
-                {/* Paystack Option */}
-                <TouchableOpacity
-                  style={styles.methodCard}
-                  onPress={() => setPaymentMethod('paystack')}
-                >
-                  <View style={[styles.methodIcon, { backgroundColor: 'rgba(0,212,170,0.15)' }]}>
-                    <Ionicons name="card-outline" size={24} color={COLORS.accent} />
-                  </View>
-                  <View style={styles.methodInfo}>
-                    <Text style={styles.methodName}>Paystack</Text>
-                    <Text style={styles.methodDesc}>Pay with card or M-Pesa</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
-                </TouchableOpacity>
+                {/* Paystack Option (hidden until backend keys are configured) */}
+                {enabledPaymentMethods.includes('paystack') && (
+                  <TouchableOpacity
+                    style={styles.methodCard}
+                    onPress={() => setPaymentMethod('paystack')}
+                  >
+                    <View style={[styles.methodIcon, { backgroundColor: 'rgba(0,212,170,0.15)' }]}>
+                      <Ionicons name="card-outline" size={24} color={COLORS.accent} />
+                    </View>
+                    <View style={styles.methodInfo}>
+                      <Text style={styles.methodName}>Paystack</Text>
+                      <Text style={styles.methodDesc}>Pay with card or M-Pesa</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+                  </TouchableOpacity>
+                )}
 
-                {/* Stripe Option */}
-                <TouchableOpacity
-                  style={styles.methodCard}
-                  onPress={() => setPaymentMethod('stripe')}
-                >
-                  <View style={[styles.methodIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
-                    <Ionicons name="logo-usd" size={24} color={COLORS.info} />
-                  </View>
-                  <View style={styles.methodInfo}>
-                    <Text style={styles.methodName}>Stripe</Text>
-                    <Text style={styles.methodDesc}>Pay with international card (USD, EUR, GBP)</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
-                </TouchableOpacity>
+                {/* Stripe Option (hidden until backend keys are configured) */}
+                {enabledPaymentMethods.includes('stripe') && (
+                  <TouchableOpacity
+                    style={styles.methodCard}
+                    onPress={() => setPaymentMethod('stripe')}
+                  >
+                    <View style={[styles.methodIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
+                      <Ionicons name="logo-usd" size={24} color={COLORS.info} />
+                    </View>
+                    <View style={styles.methodInfo}>
+                      <Text style={styles.methodName}>Stripe</Text>
+                      <Text style={styles.methodDesc}>Pay with international card (USD, EUR, GBP)</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </>
             ) : (
               <>
@@ -311,6 +362,11 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                           currency: selectedPlan.currency,
                           planName: `${selectedPlan.tier} - ${selectedPlan.userType}`,
                           accountReference: `HAMA-${selectedPlan.tier}-${selectedPlan.userType}`,
+                          subscription: {
+                            userId: currentUserId || 'guest',
+                            tier: selectedPlan.tier,
+                            userType: selectedPlan.userType,
+                          },
                         });
                       }}
                     >

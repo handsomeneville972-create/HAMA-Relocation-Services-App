@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { GlassCard } from '../components/GlassCard';
-import { HomieAssistant } from '../components/HomieAssistant';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getProducts } from '../services/productService';
 import { getProperties, getNeighborhoods } from '../services/propertyService';
@@ -173,7 +172,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Ionicons name="home-outline" size={18} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>Featured Properties</Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('FeaturedProperties')}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -305,7 +304,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://x.com/hamanasi2026')} activeOpacity={0.7}>
                     <Ionicons name="logo-twitter" size={18} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.tiktok.com/@hama_nasi_2026')} activeOpacity={0.7}>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.tiktok.com/@hama_relocation_services')} activeOpacity={0.7}>
                     <Ionicons name="logo-tiktok" size={18} color="#fff" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.youtube.com/channel/UCR6Px4BchUW3z143ntOLx7w')} activeOpacity={0.7}>
@@ -315,16 +314,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <Ionicons name="logo-linkedin" size={18} color="#fff" />
                   </TouchableOpacity>
                 </View>
-              </View>
-
-              {/* Company Column */}
-              <View style={styles.footerColumn}>
-                <Text style={styles.footerColumnTitle}>Company</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('About')}><Text style={styles.footerLink}>About HAMA</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/careers')}><Text style={styles.footerLink}>Careers</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/press')}><Text style={styles.footerLink}>Press</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('mailto:support@hama.com')}><Text style={styles.footerLink}>Contact Us</Text></TouchableOpacity>
               </View>
 
               {/* Support Column */}
@@ -378,12 +367,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Bottom padding for Homie */}
-        <View style={{ height: 80 }} />
       </Animated.ScrollView>
-
-      {/* Floating AI Assistant */}
-      <HomieAssistant onPress={() => {}} />
     </View>
   );
 };

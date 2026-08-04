@@ -1,0 +1,44 @@
+# Render blueprint for the HAMA M-Pesa/Daraja payment server.
+#
+# Deploy with the Render dashboard ("New > Blueprint") pointed at the `server/`
+# directory of this repo. The service is exposed publicly so the app's STK push
+# + status polling can reach it directly.
+#
+# Required env vars (set in Render):
+#   MPESA_CONSUMER_KEY / MPESA_CONSUMER_SECRET   -> Safaricom Daraja app credentials
+#   MPESA_PASSKEY                                 -> Daraja sandbox/production passkey
+#   MPESA_SHORTCODE                               -> Till/paybill number (e.g. 0116369266)
+#   MPESA_TRANSACTION_TYPE                        -> CustomerBuyGoodsOnline (till) or CustomerPayBillOnline
+#   MPESA_CALLBACK_URL                            -> public URL of the /mpesa/callback route
+#   MPESA_ENV                                     -> sandbox | production
+#   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY       -> for writing user_subscriptions
+
+services:
+  - type: web
+    name: hama-payment-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: MPESA_SHORTCODE
+        sync: false
+      - key: MPESA_TRANSACTION_TYPE
+        value: CustomerBuyGoodsOnline
+      - key: MPESA_CALLBACK_URL
+        sync: false
+      - key: MPESA_ENV
+        value: sandbox
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PORT
+        value: 10000

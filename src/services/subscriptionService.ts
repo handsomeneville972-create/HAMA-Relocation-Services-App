@@ -8,6 +8,7 @@
 import { supabase } from '../utils/supabaseClient';
 import { executeQuery } from './supabaseService';
 import { MOCK_SUBSCRIPTION_PLANS } from '../constants/data';
+import { recordSubscription, clearLocalSubscription, type LocalSubscription } from '../utils/subscriptionStore';
 import type { SubscriptionPlan, UserType } from '../constants/types';
 
 export async function getSubscriptionPlans(
@@ -75,10 +76,63 @@ export async function purchaseSubscription(params: {
         })
         .select()
         .single();
+
+      // Mirror locally so entitlement is instant
+      if (!error && plan) {
+        await recordSubscription({
+          planId: params.planId,
+          tier: plan.tier,
+          userType: plan.user_type,
+          price: Number(plan.price),
+          status: 'active',
+          startedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+      }
       return { data, error };
     },
     null,
   );
+}
+
+/**
+ * Reconcile the local mirror against the authoritative Supabase record.
+ * Call after payment success / app start (authed users).
+ */
+export async function syncSubscriptionFromSupabase(userId: string): Promise<void> {
+  if (!userId) return;
+  const { data, error } = await executeQuery(
+    async () => {
+      const res = await supabase
+        .from('user_subscriptions')
+        .select('*, plan:plan_id(*)')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return { data: res.data, error: res.error };
+    },
+    null,
+  );
+  if (error || !data) {
+    await clearLocalSubscription();
+    return;
+  }
+  const expiresAt = data.expires_at as string | null;
+  if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
+    await clearLocalSubscription();
+    return;
+  }
+  await recordSubscription({
+    planId: data.plan_id,
+    tier: data.plan?.tier ?? 'Free',
+    userType: data.plan?.user_type ?? 'seeker',
+    price: Number(data.plan?.price ?? 0),
+    status: 'active',
+    startedAt: data.started_at ?? new Date().toISOString(),
+    expiresAt,
+  });
 }
 
 export async function cancelSubscription(

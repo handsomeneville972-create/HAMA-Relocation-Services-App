@@ -26,6 +26,7 @@ import { GlassCard } from '../components/GlassCard';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
+import { ADMIN_PRICING_ROWS, TIER_COLORS } from '../constants/plans';
 import { formatPrice } from '../utils/currency';
 import { logEvent } from '../utils/analytics';
 import {
@@ -82,9 +83,9 @@ const MOCK_ANALYTICS = {
     crm: 28,
   },
   upgradeInterest: [
-    { plan: 'Professional', interested: 126, price: 299, currency: 'KSh' as const },
-    { plan: 'Enterprise', interested: 44, price: 699, currency: 'KSh' as const },
-    { plan: 'Startup', interested: 307, price: 99, currency: 'KSh' as const },
+    { plan: 'Premium', interested: 126, price: 199, currency: 'KSh' as const },
+    { plan: 'Pro', interested: 44, price: 599, currency: 'KSh' as const },
+    { plan: 'Basic', interested: 307, price: 399, currency: 'KSh' as const },
   ],
 };
 
@@ -496,24 +497,18 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       {/* Pricing Management */}
       <Text style={styles.sectionTitle}>Pricing Plans</Text>
       <GlassCard>
-        <Text style={styles.cardHelp}>Configure subscription plans. Toggle early access mode to unlock all features for Founding Members.</Text>
+        <Text style={styles.cardHelp}>Live subscription pricing across all user types — sourced from the canonical plans table.</Text>
         <View style={styles.planRows}>
-          {[
-            { name: 'Free', price: 0, tier: 'Basic', billing: 'Forever', color: COLORS.textTertiary },
-            { name: 'Starter', price: 99, tier: 'Individuals', billing: 'Monthly', color: COLORS.primaryLight },
-            { name: 'Premium', price: 299, tier: 'Professionals', billing: 'Monthly', color: COLORS.primary },
-            { name: 'Professional', price: 699, tier: 'Businesses', billing: 'Monthly', color: COLORS.warning },
-            { name: 'Enterprise', price: 1499, tier: 'Corporations', billing: 'Monthly', color: COLORS.accent },
-          ].map((plan, i) => (
+          {ADMIN_PRICING_ROWS.map((row, i) => (
             <View key={i} style={styles.planRow}>
-              <View style={[styles.planDot, { backgroundColor: plan.color + '30' }]}>
-                <View style={[styles.planDotInner, { backgroundColor: plan.color }]} />
+              <View style={[styles.planDot, { backgroundColor: TIER_COLORS[row.tier] + '30' }]}>
+                <View style={[styles.planDotInner, { backgroundColor: TIER_COLORS[row.tier] }]} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.planName}>{plan.name}</Text>
-                <Text style={styles.planDesc}>{plan.tier} • {plan.billing}</Text>
+                <Text style={styles.planName}>{row.tier}</Text>
+                <Text style={styles.planDesc}>{row.roleLabel} • Monthly</Text>
               </View>
-              <Text style={[styles.planPrice, { color: plan.color }]}>{plan.price === 0 ? 'Free' : `KSh ${plan.price.toLocaleString()}`}</Text>
+              <Text style={[styles.planPrice, { color: TIER_COLORS[row.tier] }]}>{row.price === 0 ? 'Free' : `KSh ${row.price.toLocaleString()}`}</Text>
               <TouchableOpacity style={styles.planEditBtn}>
                 <Ionicons name="create-outline" size={16} color={COLORS.primary} />
               </TouchableOpacity>

@@ -13,9 +13,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Animated,
-  Dimensions,
   TouchableOpacity,
   Linking,
   Image,
@@ -26,10 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { ThumbnailCard, ThumbnailGrid } from '../components/ThumbnailCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, DIMENSIONS } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
-const GRID_CARD_WIDTH = (width - SPACING.md * 2 - SPACING.sm) / 2; // 2 columns with gap
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 // ============================================================
 // SECTION DATA — Ready for user content injection
@@ -428,7 +423,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   imageUri={item.imageUri}
                   placeholderGradient={item.gradient}
                   placeholderIcon={item.icon}
-                  width={GRID_CARD_WIDTH}
                 />
               ))}
             </ThumbnailGrid>
@@ -448,7 +442,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   imageUri={item.imageUri}
                   placeholderGradient={item.gradient}
                   placeholderIcon={item.icon}
-                  width={GRID_CARD_WIDTH}
                 />
               ))}
             </ThumbnailGrid>
@@ -468,7 +461,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   imageUri={item.imageUri}
                   placeholderGradient={item.gradient}
                   placeholderIcon={item.icon}
-                  width={GRID_CARD_WIDTH}
                 />
               ))}
             </ThumbnailGrid>
@@ -490,7 +482,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   placeholderIcon={service.icon}
                   badge={service.badge}
                   meta={service.meta}
-                  width={GRID_CARD_WIDTH}
                   onPress={() => {}}
                 />
               ))}
@@ -548,7 +539,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   description={item.description}
                   placeholderGradient={item.gradient}
                   placeholderIcon={item.icon}
-                  width={GRID_CARD_WIDTH}
                 />
               ))}
             </ThumbnailGrid>
@@ -620,7 +610,6 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   imageUri={item.imageUri}
                   placeholderGradient={item.gradient}
                   placeholderIcon={item.icon}
-                  width={GRID_CARD_WIDTH}
                 />
               ))}
             </ThumbnailGrid>
@@ -670,7 +659,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://x.com/hamanasi2026')} activeOpacity={0.7}>
                     <Ionicons name="logo-twitter" size={18} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.tiktok.com/@hama_nasi_2026')} activeOpacity={0.7}>
+                  <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.tiktok.com/@hama_relocation_services')} activeOpacity={0.7}>
                     <Ionicons name="logo-tiktok" size={18} color="#fff" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.footerSocialBtn} onPress={() => Linking.openURL('https://www.youtube.com/channel/UCR6Px4BchUW3z143ntOLx7w')} activeOpacity={0.7}>

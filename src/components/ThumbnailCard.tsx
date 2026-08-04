@@ -93,11 +93,11 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
       ]}
     >
       {/* ===== THUMBNAIL AREA (rounded, like YouTube) ===== */}
-      <View style={styles.thumbnailContainer}>
+      <View style={[styles.thumbnailContainer, { aspectRatio }]}>
         {imageUri ? (
           <Image
             source={typeof imageUri === 'number' ? imageUri : { uri: imageUri }}
-            style={[styles.thumbnailImage, { aspectRatio }]}
+            style={styles.thumbnailImage}
             resizeMode="cover"
           />
         ) : (
@@ -105,7 +105,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             colors={placeholderGradient || [COLORS.primary, COLORS.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.placeholderGradient, { aspectRatio }]}
+            style={styles.placeholderGradient}
           >
             <Ionicons
               name={(placeholderIcon || 'image-outline') as any}
@@ -190,11 +190,28 @@ interface ThumbnailGridProps {
   style?: ViewStyle;
 }
 
-export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({ children, style }) => (
-  <View style={[styles.grid, style]}>
-    {children}
-  </View>
-);
+export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({ children, style }) => {
+  const items = React.Children.toArray(children);
+  const rows: React.ReactNode[][] = [];
+  
+  for (let i = 0; i < items.length; i += 2) {
+    rows.push(items.slice(i, i + 2));
+  }
+
+  return (
+    <View style={[styles.grid, style]}>
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.gridRow}>
+          {row.map((item, colIndex) => (
+            <View key={colIndex} style={styles.gridCol}>
+              {item}
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   // Card
@@ -210,10 +227,14 @@ const styles = StyleSheet.create({
   thumbnailContainer: {
     width: '100%',
     position: 'relative',
+    overflow: 'hidden',
   },
   thumbnailImage: {
     width: '100%',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   placeholderGradient: {
     width: '100%',
@@ -299,8 +320,13 @@ const styles = StyleSheet.create({
   },
   // Grid
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: SPACING.sm,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  gridCol: {
+    flex: 1,
   },
 });

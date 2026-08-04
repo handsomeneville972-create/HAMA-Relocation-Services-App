@@ -14,11 +14,11 @@
 
 export const SYSTEM_SETTINGS = {
   /** Master toggle — Early Access mode ON = all features free, OFF = paid subscriptions active */
-  earlyAccessMode: true,
+  earlyAccessMode: false,
   /** When true, payment workflows are live; when false, modals are shown instead */
-  subscriptionsEnabled: false,
+  subscriptionsEnabled: true,
   /** When true, payment integrations are active */
-  paymentsEnabled: false,
+  paymentsEnabled: true,
   /** When true, Founding Member Program is active with badges and benefits */
 } as const;
 

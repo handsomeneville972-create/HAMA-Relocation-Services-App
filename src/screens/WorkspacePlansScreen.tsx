@@ -8,8 +8,8 @@ import { GlassCard } from '../components/GlassCard';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
+import { WORKSPACE_PLAN_PRICES } from '../constants/plans';
 import { activateWorkspace, getActiveWorkspaces, subscribeWorkspaces, type WorkspaceRole } from '../utils/workspaces';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
@@ -43,7 +43,6 @@ const MANAGE_ROUTES: Record<WorkspaceRole, string | null> = {
 export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
-  const { showPremiumModal } = useEarlyAccess();
   const [isLoading, setIsLoading] = useState(true);
   const [activeWorkspaces, setActiveWorkspaces] = useState<Set<string>>(new Set(getActiveWorkspaces()));
   const [workspacePlans, setWorkspacePlans] = useState<WorkspacePlan[]>([]);
@@ -74,9 +73,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       verificationRequired: false,
       verificationStatus: 'verified',
       subscription: {
-        name: 'Free',
-        price: 0,
-        interval: 'free',
+        ...WORKSPACE_PLAN_PRICES.house_seeker,
         active: true,
       },
       activatedAt: new Date(),
@@ -105,9 +102,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       verificationRequired: true,
       verificationStatus: 'pending',
       subscription: {
-        name: 'Premium',
-        price: 2999,
-        interval: 'monthly',
+        ...WORKSPACE_PLAN_PRICES.landlord,
         active: false,
       },
       features: [
@@ -135,9 +130,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       verificationRequired: true,
       verificationStatus: 'in_progress',
       subscription: {
-        name: 'Pro',
-        price: 4999,
-        interval: 'monthly',
+        ...WORKSPACE_PLAN_PRICES.seller,
         active: false,
       },
       features: [
@@ -165,9 +158,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       verificationRequired: true,
       verificationStatus: 'pending',
       subscription: {
-        name: 'Standard',
-        price: 1999,
-        interval: 'monthly',
+        ...WORKSPACE_PLAN_PRICES.service_provider,
         active: false,
       },
       features: [
@@ -280,7 +271,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
         return 'rgba(255, 107, 0, 0.15)';
       case 'Pro':
         return 'rgba(99, 102, 241, 0.15)';
-      case 'Standard':
+      case 'Basic':
         return 'rgba(16, 185, 129, 0.15)';
       default:
         return 'rgba(255, 255, 255, 0.05)';

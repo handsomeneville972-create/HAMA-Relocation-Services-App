@@ -13,7 +13,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { MOCK_PAYMENT_METHODS, MOCK_BILLING_HISTORY } from '../constants/data';
 import { formatPrice } from '../utils/currency';
-import { isSubscriptionPaymentEnabled } from '../config/earlyAccess';
 import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
 import type { SavedPaymentMethod, BillingEntry } from '../constants/types';
 
@@ -246,16 +245,6 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                   <Ionicons name="add-circle-outline" size={22} color={COLORS.primary} />
                   <Text style={styles.addCardText}>Add New Card</Text>
                 </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Payment Methods Summary */}
-            {!isSubscriptionPaymentEnabled() && (
-              <View style={styles.freemiumPaymentBanner}>
-                <Ionicons name="information-circle" size={18} color={COLORS.warning} />
-                <Text style={styles.freemiumPaymentText}>
-                  Subscriptions will be activated soon. Until then, all users receive complimentary access to premium features.
-                </Text>
               </View>
             )}
 

@@ -59,6 +59,64 @@ export async function getProperties(params?: {
   );
 }
 
+export async function getFeaturedProperties(params?: {
+  limit?: number;
+  offset?: number;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  sortBy?: string;
+}): Promise<{ data: Property[] | null; error: string | null }> {
+  return executeQuery<Property[]>(
+    async () => {
+      let query = supabase
+        .from('properties')
+        .select('*, landlord:landlord_id(*, profile:profiles!landlord_id(*))');
+
+      if (params?.category && params.category !== 'all') {
+        query = query.ilike('title', `%${params.category}%`);
+      }
+      if (params?.minPrice !== undefined) {
+        query = query.gte('price', params.minPrice);
+      }
+      if (params?.maxPrice !== undefined) {
+        query = query.lte('price', params.maxPrice);
+      }
+      if (params?.bedrooms !== undefined) {
+        query = query.eq('bedrooms', params.bedrooms);
+      }
+      if (params?.bathrooms !== undefined) {
+        query = query.eq('bathrooms', params.bathrooms);
+      }
+
+      // Sorting
+      switch (params?.sortBy) {
+        case 'lowest':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'highest':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+
+      // Pagination
+      const limit = params?.limit ?? 20;
+      const offset = params?.offset ?? 0;
+      query = query.range(offset, offset + limit - 1);
+
+      const { data, error } = await query;
+      return { data: data as unknown as Property[] | null, error };
+    },
+    MOCK_PROPERTIES,
+  );
+}
+
 export async function getPropertyById(id: string): Promise<{ data: Property | null; error: string | null }> {
   return executeQuery<Property>(
     async () => {

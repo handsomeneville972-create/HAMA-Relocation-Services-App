@@ -121,7 +121,7 @@ const EMPTY_PROFILE: ProviderProfile = {
   faqs: [],
   promotions: [],
   status: 'draft',
-  plan: 'Standard',
+  plan: 'Basic',
   subscriptionExpiry: null,
   completedSteps: [],
   keywords: [],
@@ -447,7 +447,7 @@ export function rankProviders(
     const recentActivity = profile.updatedAt
       ? Math.max(0, 1 - (now - new Date(profile.updatedAt).getTime()) / (30 * 86400000))
       : 0.2;
-    const subscriptionBoost = profile.plan === 'Premium' ? 1 : profile.plan === 'Standard' ? 0.6 : 0.2;
+    const subscriptionBoost = profile.plan === 'Premium' ? 1 : profile.plan === 'Basic' ? 0.6 : 0.2;
 
     const score =
       weights.categoryRelevance * categoryRelevance +
@@ -485,41 +485,23 @@ export function rankProviders(
 }
 
 // ---------------- Plan pricing ----------------
+// Canonical provider pricing lives in constants/plans.ts.
 
-export const PROVIDER_PLANS: Record<
-  Exclude<ProviderPlanTier, 'House Seeker'>,
-  { price: number; period: string; features: string[]; boost: number }
-> = {
-  Standard: {
-    price: 199,
-    period: '/month',
-    boost: 0.6,
-    features: [
-      'Public business profile',
-      'Search ranking boost',
-      'Up to 10 services',
-      'Quotation management',
-      'Portfolio gallery',
-    ],
-  },
-  Premium: {
-    price: 499,
-    period: '/month',
-    boost: 1,
-    features: [
-      'Everything in Standard',
-      'Top-of-search priority',
-      'Verified badge',
-      'Analytics dashboard',
-      'Promotions & featured slots',
-      'Priority support',
-    ],
-  },
-};
+export { PROVIDER_PLANS } from '../constants/plans';
+
+/**
+ * Maps legacy plan values onto the canonical scale.
+ * 'Standard' was the old name for the provider Basic tier.
+ */
+export function normalizeProviderPlan(plan: string | null | undefined): ProviderPlanTier {
+  if (plan === 'Standard') return 'Basic';
+  if (plan === 'Basic' || plan === 'Premium' || plan === 'House Seeker') return plan;
+  return 'Basic';
+}
 
 export function getPlanBoost(plan: ProviderPlanTier): number {
-  if (plan === 'Premium') return PROVIDER_PLANS.Premium.boost;
-  if (plan === 'Standard') return PROVIDER_PLANS.Standard.boost;
+  if (plan === 'Premium') return 1;
+  if (plan === 'Basic') return 0.6;
   return 0.2;
 }
 

@@ -6,18 +6,25 @@
  * operations happen server-side.
  */
 
-// Update this to your actual server URL
-// For local dev: http://192.168.x.x:3001 (your local IP)
-// For production: https://your-domain.com
-const API_BASE_URL = __DEV__
-  ? 'http://192.168.1.100:3001' // Replace with your dev machine's local IP
-  : 'https://api.hama.co.ke';
+// Backend server URL. Override with EXPO_PUBLIC_PAYMENT_API_URL (deployed
+// server). Falls back to the dev machine's LAN IP while running locally.
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_PAYMENT_API_URL ||
+  (__DEV__ ? 'http://192.168.1.100:3001' : 'https://api.hama.co.ke');
+
+export interface MpesaSubscriptionIntent {
+  userId: string;
+  tier: string;
+  userType: string;
+}
 
 export interface MpesaPaymentRequest {
   phoneNumber: string;
   amount: number;
   accountReference?: string;
   transactionDesc?: string;
+  /** When paying for a subscription, the backend stores it on success */
+  subscription?: MpesaSubscriptionIntent;
 }
 
 export interface MpesaPaymentResponse {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,11 +6,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, AppState, AppStateStatus } from 'react-native';
 import { COLORS } from '../src/constants/theme';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
-import { EarlyAccessProvider } from '../src/contexts/EarlyAccessContext';
 import { CartProvider } from '../src/contexts/CartContext';
 import { ProviderProvider } from '../src/contexts/ProviderContext';
+import { SubscriptionProvider, useSubscriptions } from '../src/contexts/SubscriptionContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { PriorityWaitlistForm } from '../src/components/PriorityWaitlistForm';
+import { TrialEndedModal } from '../src/components/TrialEndedModal';
 import { loadUserCurrency } from '../src/utils/currency';
 import { loadWorkspaces } from '../src/utils/workspaces';
 import { startPeriodicRefresh } from '../src/utils/exchangeRates';
@@ -78,15 +78,19 @@ function SessionMonitor() {
 }
 
 /**
- * LayoutWithBanner — wraps screens with the Early Access announcement banner
- * and the premium modal so they appear consistently across all pages.
+ * TrialEndedGate — shows the trial-ended popup (with seeker plan options)
+ * once the 7-day free trial expires without an active subscription.
+ * Dismissal lasts for the current app session.
  */
-function LayoutWithBanner({ children }: { children: React.ReactNode }) {
+function TrialEndedGate() {
+  const { trialEnded } = useSubscriptions();
+  const [dismissed, setDismissed] = useState(false);
+
   return (
-    <View style={{ flex: 1 }}>
-      {children}
-      <PriorityWaitlistForm />
-    </View>
+    <TrialEndedModal
+      visible={trialEnded && !dismissed}
+      onClose={() => setDismissed(true)}
+    />
   );
 }
 
@@ -106,14 +110,14 @@ export default function RootLayout() {
     <ErrorBoundary>
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <EarlyAccessProvider>
-          <AuthProvider>
-            <CartProvider>
+        <AuthProvider>
+          <CartProvider>
             <ProviderProvider>
+              <SubscriptionProvider>
               <AuthGuard>
                 <SessionMonitor />
                 <StatusBar style="light" />
-                <LayoutWithBanner>
+                <View style={{ flex: 1 }}>
                   <Stack
                   screenOptions={{
                     headerShown: false,
@@ -168,6 +172,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="About"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="FeaturedProperties"
                     options={{
                       headerShown: false,
                       animation: 'slide_from_right',
@@ -376,12 +387,13 @@ export default function RootLayout() {
                     }}
                   />
                 </Stack>
-              </LayoutWithBanner>
-            </AuthGuard>
+                </View>
+                <TrialEndedGate />
+              </AuthGuard>
+              </SubscriptionProvider>
             </ProviderProvider>
           </CartProvider>
-          </AuthProvider>
-        </EarlyAccessProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
     </ErrorBoundary>

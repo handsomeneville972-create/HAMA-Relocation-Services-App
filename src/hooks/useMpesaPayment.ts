@@ -4,6 +4,7 @@ import {
   initiateSTKPush,
   waitForPayment,
   type MpesaPaymentStatus,
+  type MpesaSubscriptionIntent,
 } from '../services/mpesaService';
 import { formatPrice } from '../utils/currency';
 import { CurrencyCode } from '../constants/types';
@@ -57,12 +58,14 @@ export function useMpesaPayment(options: UseMpesaPaymentOptions = {}) {
       currency,
       planName,
       accountReference,
+      subscription,
     }: {
       phoneNumber: string;
       amount: number;
       currency: CurrencyCode;
       planName: string;
       accountReference?: string;
+      subscription?: MpesaSubscriptionIntent;
     }) => {
       // Show confirmation
       setState({ step: 'confirm' });
@@ -88,6 +91,7 @@ export function useMpesaPayment(options: UseMpesaPaymentOptions = {}) {
                     amount,
                     accountReference: accountReference || `${appName}-${planName.replace(/\s+/g, '')}`,
                     transactionDesc: `${appName} ${planName} Subscription`,
+                    subscription,
                   });
 
                   if (!response.success || !response.checkoutRequestId) {

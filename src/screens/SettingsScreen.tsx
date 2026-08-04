@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { EmailCaptureForm } from '../components/EmailCaptureForm';
 import { useAuth } from '../contexts/AuthContext';
 import { useCurrency } from '../hooks/useCurrency';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
@@ -229,11 +228,6 @@ export const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             </GlassCard>
           </View>
         )}
-
-        {/* Email Capture */}
-        <View style={styles.section}>
-          <EmailCaptureForm compact message="Get early access to subscription launch news, feature releases, and exclusive updates." />
-        </View>
 
         {/* Sign Out Button */}
         {isAuthenticated && (

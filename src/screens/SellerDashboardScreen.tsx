@@ -116,7 +116,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   // ---------- Upsell state (not a provider) ----------
-  const [plan, setPlan] = useState<'Standard' | 'Premium'>('Standard');
+  const [plan, setPlan] = useState<'Basic' | 'Premium'>('Basic');
 
   if (!isProvider || !provider || !data) {
     return (
@@ -146,7 +146,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </View>
           </View>
-          {(['Standard', 'Premium'] as const).map((p) => (
+          {(['Basic', 'Premium'] as const).map((p) => (
             <TouchableOpacity key={p} onPress={() => setPlan(p)} style={[styles.planCard, plan === p && styles.planCardActive]}>
               <View style={{ flex: 1 }}>
                 <View style={styles.planNameRow}>

@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { MOCK_BILLING_HISTORY } from '../constants/data';
 import { formatPrice } from '../utils/currency';
-import { isSubscriptionPaymentEnabled } from '../config/earlyAccess';
 import type { CurrencyCode } from '../constants/types';
 import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -395,16 +394,6 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
-
-      {/* Freemium banner */}
-      {!isSubscriptionPaymentEnabled() && (
-        <View style={styles.freemiumBanner}>
-          <Ionicons name="information-circle" size={18} color={COLORS.warning} />
-          <Text style={styles.freemiumBannerText}>
-            Subscriptions will be activated soon. Until then, all users receive complimentary access to premium features.
-          </Text>
-        </View>
-      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}

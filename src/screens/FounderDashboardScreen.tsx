@@ -5,7 +5,7 @@
  * - Total Users / Active Users / New Registrations
  * - Growth Rates (Daily, Weekly, Referral)
  * - Engagement Metrics (Session Duration, Feature Usage, Retention)
- * - Monetization Readiness (Upgrade Interest, Most Desired Plans, Waitlist Size, Revenue Forecast)
+ * - Monetization Readiness (Upgrade Interest, Most Desired Plans, Revenue Forecast)
  * - Revenue Forecasting Engine
  * - Feature Request Rankings
  */
@@ -18,8 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
-import { useEarlyAccess } from '../contexts/EarlyAccessContext';
-import { waitlistService, featureRequestService } from '../services/earlyAccessService';
+import { featureRequestService } from '../services/earlyAccessService';
 import { formatPrice } from '../utils/currency';
 
 const { width } = Dimensions.get('window');
@@ -37,11 +36,10 @@ const MOCK_ANALYTICS = {
   featureUsage: 68,
   retentionRate: 87,
   upgradeInterest: [
-    { plan: 'Professional', interested: 126, price: 299, currency: 'KSh' as const },
-    { plan: 'Enterprise', interested: 44, price: 699, currency: 'KSh' as const },
-    { plan: 'Startup', interested: 307, price: 99, currency: 'KSh' as const },
+    { plan: 'Premium', interested: 126, price: 199, currency: 'KSh' as const },
+    { plan: 'Pro', interested: 44, price: 599, currency: 'KSh' as const },
+    { plan: 'Basic', interested: 307, price: 399, currency: 'KSh' as const },
   ],
-  waitlistSize: 0,
   topRequests: [
     { title: 'Inventory Forecasting', votes: 87 },
     { title: 'Supplier Marketplace', votes: 54 },
@@ -58,26 +56,17 @@ interface FounderDashboardScreenProps {
 export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { currentUser } = useAuth();
-  const { isEarlyAccessActive } = useEarlyAccess();
-  const [waitlistCount, setWaitlistCount] = useState(0);
   const [featureRequestCount, setFeatureRequestCount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
-      const [wc, frc] = await Promise.all([
-        waitlistService.getCount(),
-        featureRequestService.getCount(),
-      ]);
-      setWaitlistCount(wc);
+      const frc = await featureRequestService.getCount();
       setFeatureRequestCount(frc);
     };
     loadData();
   }, []);
 
-  const analytics = {
-    ...MOCK_ANALYTICS,
-    waitlistSize: waitlistCount,
-  };
+  const analytics = { ...MOCK_ANALYTICS };
 
   // Revenue forecast
   const totalForecast = analytics.upgradeInterest.reduce((sum, item) => {
@@ -127,7 +116,7 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
         {/* Upgrade Interest */}
         <GlassCard>
           <Text style={styles.cardTitle}>Upgrade Interest</Text>
-          <Text style={styles.cardSubtitle}>Users interested in paid plans during Early Access</Text>
+          <Text style={styles.cardSubtitle}>Users interested in paid plans</Text>
           {analytics.upgradeInterest.map((item, i) => (
             <View key={i} style={styles.interestRow}>
               <View style={styles.interestInfo}>
@@ -158,9 +147,8 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
           </LinearGradient>
         </GlassCard>
 
-        {/* Waitlist + Feature Requests */}
+        {/* Feature Requests */}
         <View style={styles.metricsGrid}>
-          <MetricCard icon="notifications" value={analytics.waitlistSize.toLocaleString()} label="Waitlist Size" color={COLORS.primary} />
           <MetricCard icon="bulb" value={featureRequestCount.toLocaleString()} label="Feature Requests" color={COLORS.warning} />
         </View>
 

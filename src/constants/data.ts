@@ -1,4 +1,4 @@
-import { Product, Seller, ServiceProvider, CommunityPost, Property, PropertyReview, Neighborhood, SubscriptionPlan, Notification, User, Landlord } from './types';
+import { Product, Seller, ServiceProvider, CommunityPost, Property, PropertyReview, Neighborhood, Notification, User, Landlord } from './types';
 
 // ============ USERS ============
 
@@ -281,24 +281,10 @@ export const MOCK_NEIGHBORHOODS: Neighborhood[] = [
 
 // ============ SUBSCRIPTION PLANS ============
 
-export const MOCK_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  // House Seekers
-  { id: 'sub1', userType: 'seeker', tier: 'Free', price: 0, currency: 'KSh', features: ['Basic search', 'Save up to 20 properties', 'Standard recommendations'] },
-  { id: 'sub2', userType: 'seeker', tier: 'Premium', price: 299, currency: 'KSh', features: ['Unlimited saves', 'AI recommendations', 'Advanced filters', 'Student housing tools', 'Priority notifications'], highlighted: true },
-  { id: 'sub3', userType: 'seeker', tier: 'Pro', price: 699, currency: 'KSh', features: ['Premium listings first', 'Advanced neighborhood reports', 'Relocation discounts', 'Priority support', 'Exclusive deals'] },
-  // Landlords
-  { id: 'sub4', userType: 'landlord', tier: 'Basic', price: 999, currency: 'KSh', features: ['10 active listings'] },
-  { id: 'sub5', userType: 'landlord', tier: 'Premium', price: 2999, currency: 'KSh', features: ['50 listings', 'Featured properties'], highlighted: true },
-  { id: 'sub6', userType: 'landlord', tier: 'Pro', price: 6999, currency: 'KSh', features: ['Unlimited listings', 'Analytics dashboard', 'Priority placement', 'Marketing tools'] },
-  // Sellers
-  { id: 'sub7', userType: 'seller', tier: 'Basic', price: 499, currency: 'KSh', features: ['25 products'] },
-  { id: 'sub8', userType: 'seller', tier: 'Premium', price: 1999, currency: 'KSh', features: ['250 products', 'Featured store'], highlighted: true },
-  { id: 'sub9', userType: 'seller', tier: 'Pro', price: 4999, currency: 'KSh', features: ['Unlimited products', 'Store analytics', 'Homepage promotion'] },
-  // Service Providers
-  { id: 'sub10', userType: 'service_provider', tier: 'Basic', price: 499, currency: 'KSh', features: ['List your services'] },
-  { id: 'sub11', userType: 'service_provider', tier: 'Premium', price: 1499, currency: 'KSh', features: ['Priority ranking', 'Lead generation', 'Verified badge'], highlighted: true },
-  { id: 'sub12', userType: 'service_provider', tier: 'Pro', price: 3999, currency: 'KSh', features: ['Top ranking', 'Premium leads', 'Verified badge', 'Analytics'] },
-];
+// ============ SUBSCRIPTION PLANS ============
+// Single source of truth lives in constants/plans.ts.
+
+export { SUBSCRIPTION_PLANS as MOCK_SUBSCRIPTION_PLANS } from './plans';
 
 // ============ NOTIFICATIONS ============
 

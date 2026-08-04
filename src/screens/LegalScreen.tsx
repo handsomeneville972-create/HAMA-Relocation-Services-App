@@ -60,8 +60,8 @@ const LEGAL_CONTENT: Record<LegalPage, { title: string; hostedUrl?: string; sect
         body: 'Premium features and transactions may require payment processed through Stripe, Paystack, or M-Pesa. HAMA does not store full payment card details. All payments are subject to the applicable payment processor\'s terms.',
       },
       {
-        heading: '7. Early Access Program',
-        body: 'HAMA is currently in Early Access. Premium features may be provided complimentary to Founding Members. This access is temporary and may be modified or discontinued with reasonable notice.',
+        heading: '7. Subscriptions',
+        body: 'Certain premium features require an active subscription plan, payable monthly via M-Pesa, Paystack, or Stripe. Subscriptions renew on a monthly cycle and can be cancelled at any time through the app. Features are provided for the duration of your active plan and revert to the Free tier upon expiry or cancellation.',
       },
       {
         heading: '8. Intellectual Property',
