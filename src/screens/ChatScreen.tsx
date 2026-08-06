@@ -1,10 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getConversationById } from '../services/conversationService';
+import { useAuth } from '../contexts/AuthContext';
+import { getConversationById, sendMessage, markMessagesAsRead } from '../services/conversationService';
 import { softSanitize } from '../utils/sanitize';
+import { supabase } from '../utils/supabaseClient';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Message, Conversation, User } from '../constants/types';
@@ -46,27 +48,69 @@ const formatDateHeader = (dateStr: string) => {
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
-
-
 export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { conversationId } = route.params;
   const insets = useSafeAreaInsets();
+  const { currentUserId } = useAuth();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [sending, setSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Fetch conversation data
   useEffect(() => {
     getConversationById(conversationId).then(({ data }) => {
       if (data) {
         setConversation(data);
-        const other = data.participants.find(p => p.id !== 'u1') || data.participants[0];
+        const other = data.participants.find(p => p.id !== currentUserId) || data.participants[0];
         setOtherUser(other ?? null);
         setMessages(data.messages ?? []);
       }
     });
-  }, [conversationId]);
+  }, [conversationId, currentUserId]);
+
+  // Mark messages as read when conversation opens
+  useEffect(() => {
+    if (conversationId && currentUserId) {
+      markMessagesAsRead(conversationId, currentUserId);
+    }
+  }, [conversationId, currentUserId]);
+
+  // Subscribe to new messages via Supabase Realtime
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const channel = supabase
+      .channel(`conversation:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+          // Mark as read if from other user
+          if (newMessage.sender_id !== currentUserId) {
+            markMessagesAsRead(conversationId, currentUserId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, currentUserId]);
 
   if (!conversation || !otherUser) {
     return (
@@ -81,13 +125,48 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 
   const dateGroups = groupMessagesByDate(messages);
 
-  const handleSend = () => {
-    if (!messageText.trim()) return;
-    // In a real app, this would send the message
+  const handleSend = async () => {
+    if (!messageText.trim() || sending) return;
+    const text = messageText.trim();
     setMessageText('');
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    setSending(true);
+
+    // Optimistic add
+    const optimisticMsg: Message = {
+      id: `temp-${Date.now()}`,
+      senderId: currentUserId,
+      text,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    try {
+      const { data, error } = await sendMessage({
+        conversationId,
+        senderId: currentUserId,
+        text,
+      });
+
+      if (error) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+        setMessageText(text); // Restore text
+      } else if (data) {
+        // Replace optimistic with real message
+        setMessages(prev =>
+          prev.map(m => (m.id === optimisticMsg.id ? { ...data, id: data.id } : m))
+        );
+      }
+    } catch (err) {
+      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+      setMessageText(text);
+    } finally {
+      setSending(false);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
   };
 
   return (
@@ -134,14 +213,14 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
               <View style={styles.dateLine} />
             </View>
             {group.messages.map((msg, mi) => {
-              const isOwn = msg.senderId === 'u1';
+              const isOwn = msg.senderId === currentUserId || msg.sender_id === currentUserId;
               return (
                 <View key={msg.id} style={[styles.messageRow, isOwn && styles.ownMessageRow]}>
                   {!isOwn && <Image source={{ uri: otherUser.avatar }} style={styles.messageAvatar} />}
                   <View style={[styles.messageBubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
                     <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>{msg.text}</Text>
                     <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
-                      {formatMessageTime(msg.timestamp)}
+                      {formatMessageTime(msg.timestamp || msg.created_at)}
                       {isOwn && (
                         <Ionicons
                           name={msg.read ? 'checkmark-done' : 'checkmark'}
@@ -181,13 +260,17 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
             <TouchableOpacity
               style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
               onPress={handleSend}
-              disabled={!messageText.trim()}
+              disabled={!messageText.trim() || sending}
             >
-              <Ionicons
-                name="send"
-                size={20}
-                color={messageText.trim() ? '#fff' : COLORS.textTertiary}
-              />
+              {sending ? (
+                <Ionicons name="hourglass" size={20} color={COLORS.textTertiary} />
+              ) : (
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={messageText.trim() ? '#fff' : COLORS.textTertiary}
+                />
+              )}
             </TouchableOpacity>
           </View>
         </LinearGradient>

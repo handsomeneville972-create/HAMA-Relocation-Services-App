@@ -11,7 +11,13 @@ export default function ServiceProviderProfileRoute() {
       navigation={{
         goBack: () => router.back(),
         replace: (route: string) => router.replace(`/${route}`),
-        navigate: (route: string) => router.push(`/${route}`),
+        navigate: (route: string, routeParams?: any) => {
+          if (route === 'Chat') {
+            router.push({ pathname: '/Chat', params: routeParams });
+          } else {
+            router.push(`/${route}`);
+          }
+        },
       }}
     />
   );

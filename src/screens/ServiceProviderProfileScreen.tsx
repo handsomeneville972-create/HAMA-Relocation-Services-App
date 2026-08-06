@@ -10,6 +10,7 @@ import {
   TextInput,
   Linking,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +20,8 @@ import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useProvider } from '../contexts/ProviderContext';
+import { useAuth } from '../contexts/AuthContext';
+import { findOrCreateConversation } from '../services/conversationService';
 import { MOCK_SERVICE_PROVIDERS } from '../constants/data';
 import {
   ProviderDayHours,
@@ -207,6 +210,7 @@ function enrichMock(sp: ServiceProvider): ProviderProfile {
 export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navigation }) => {
   const insets = useSafeAreaInsets();
   const { provider: ownProfile } = useProvider();
+  const { currentUserId } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -264,7 +268,18 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
 
   const handleCall = () => Linking.openURL(`tel:${profile.phone.replace(/\s/g, '')}`);
   const handleWhatsApp = () => Linking.openURL(`https://wa.me/${profile.phone.replace(/\s/g, '').replace('+', '')}?text=${encodeURIComponent(`Hi ${profile.businessName}, I found you on HAMA and would like to enquire about your services.`)}`);
-  const handleChat = () => navigation.navigate('Inbox');
+  const handleChat = async () => {
+    if (!currentUserId) {
+      Alert.alert('Error', 'Please log in to chat with this provider.');
+      return;
+    }
+    const { data, error } = await findOrCreateConversation(currentUserId, profile.id);
+    if (data) {
+      navigation.navigate('Chat', { conversationId: data.conversationId });
+    } else {
+      Alert.alert('Error', 'Could not start conversation. Please try again.');
+    }
+  };
   const handleShare = async () => {
     await Clipboard.setStringAsync(`https://hama.co.ke/provider/${profile.id}`);
     setCopied(true);

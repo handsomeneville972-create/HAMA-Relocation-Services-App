@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
 import { getPropertyById, getPropertyReviews } from '../services/propertyService';
+import { findOrCreateConversation } from '../services/conversationService';
+import { useAuth } from '../contexts/AuthContext';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -111,6 +113,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
   const [showQuestions, setShowQuestions] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { currentUserId } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -150,9 +153,22 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
     extrapolate: 'clamp',
   });
 
-  const handleAction = (action: string) => {
+  const handleAction = async (action: string) => {
     if (action === 'Chat with Landlord' || action === 'Chat') {
-      navigation.navigate('Inbox');
+      if (!property?.landlord?.id) {
+        Alert.alert('Error', 'Landlord information not available.');
+        return;
+      }
+      if (!currentUserId) {
+        Alert.alert('Error', 'Please log in to chat with the landlord.');
+        return;
+      }
+      const { data, error } = await findOrCreateConversation(currentUserId, property.landlord.id);
+      if (data) {
+        navigation.navigate('Chat', { conversationId: data.conversationId });
+      } else {
+        Alert.alert('Error', 'Could not start conversation. Please try again.');
+      }
     } else {
       Alert.alert(action, 'Coming soon.');
     }

@@ -148,3 +148,72 @@ export async function createConversation(params: {
     null,
   );
 }
+
+/**
+ * Find an existing conversation between two users, or create a new one.
+ * Returns the conversation ID for navigation.
+ */
+export async function findOrCreateConversation(
+  userId1: string,
+  userId2: string,
+): Promise<{ data: { conversationId: string; isNew: boolean } | null; error: string | null }> {
+  return executeQuery<{ conversationId: string; isNew: boolean }>(
+    async () => {
+      // Find conversations where both users are participants
+      const { data: userConvs } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', userId1);
+
+      if (!userConvs || userConvs.length === 0) {
+        // No conversations for user1, create new
+        const { data: conv, error: convError } = await supabase
+          .from('conversations')
+          .insert({})
+          .select()
+          .single();
+
+        if (convError) return { data: null, error: convError };
+
+        await supabase.from('conversation_participants').insert([
+          { conversation_id: conv.id, user_id: userId1 },
+          { conversation_id: conv.id, user_id: userId2 },
+        ]);
+
+        return { data: { conversationId: conv.id, isNew: true }, error: null };
+      }
+
+      const convIds = userConvs.map(c => c.conversation_id);
+
+      // Check if user2 is also in any of these conversations
+      const { data: sharedConvs } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', userId2)
+        .in('conversation_id', convIds);
+
+      if (sharedConvs && sharedConvs.length > 0) {
+        // Found existing conversation
+        return { data: { conversationId: sharedConvs[0].conversation_id, isNew: false }, error: null };
+      }
+
+      // No shared conversation, create new
+      const { data: conv, error: convError } = await supabase
+        .from('conversations')
+        .insert({})
+        .select()
+        .single();
+
+      if (convError) return { data: null, error: convError };
+
+      await supabase.from('conversation_participants').insert([
+        { conversation_id: conv.id, user_id: userId1 },
+        { conversation_id: conv.id, user_id: userId2 },
+      ]);
+
+      return { data: { conversationId: conv.id, isNew: true }, error: null };
+    },
+    // Mock fallback: return existing mock conversation
+    { conversationId: 'conv1', isNew: false },
+  );
+}

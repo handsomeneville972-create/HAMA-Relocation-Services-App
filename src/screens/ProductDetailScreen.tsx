@@ -1,10 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
 import { getProductById } from '../services/productService';
+import { findOrCreateConversation } from '../services/conversationService';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -18,6 +20,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const { addItem, inCart, cartQuantity, trackView } = useCart();
+  const { currentUserId } = useAuth();
 
   useEffect(() => {
     getProductById(productId).then(({ data }) => {
@@ -144,7 +147,25 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
       {/* Bottom CTA */}
       <View style={styles.bottomCta}>
         <LinearGradient colors={[COLORS.bgBlur, COLORS.bg]} style={styles.ctaGradient}>
-          <TouchableOpacity style={styles.contactButton} onPress={() => navigation.navigate('Inbox')}>
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={async () => {
+              if (!product?.seller?.id) {
+                Alert.alert('Error', 'Seller information not available.');
+                return;
+              }
+              if (!currentUserId) {
+                Alert.alert('Error', 'Please log in to contact the seller.');
+                return;
+              }
+              const { data, error } = await findOrCreateConversation(currentUserId, product.seller.id);
+              if (data) {
+                navigation.navigate('Chat', { conversationId: data.conversationId });
+              } else {
+                Alert.alert('Error', 'Could not start conversation. Please try again.');
+              }
+            }}
+          >
             <Ionicons name="chatbubble-outline" size={20} color={COLORS.text} />
             <Text style={styles.contactButtonText}>Contact Seller</Text>
           </TouchableOpacity>

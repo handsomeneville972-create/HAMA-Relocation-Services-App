@@ -8,7 +8,13 @@ export default function PropertyDetail() {
   return (
     <PropertyDetailScreen
       route={{ params: { propertyId: propertyId as string } }}
-      navigation={{ goBack: () => router.back(), navigate: (route: string) => { if (route === 'Inbox') router.push('/Inbox'); } }}
+      navigation={{
+        goBack: () => router.back(),
+        navigate: (route: string, params?: any) => {
+          if (route === 'Inbox') router.push('/Inbox');
+          else if (route === 'Chat') router.push({ pathname: '/Chat', params });
+        },
+      }}
     />
   );
 }
