@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Property } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - SPACING.md * 2;
@@ -30,15 +31,23 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   isFavourited = false,
   style,
 }) => {
+  const reducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const liftAnim = useRef(new Animated.Value(0)).current;
+  const pressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (reducedMotion) {
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+      return;
+    }
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: ANIMATION.normal,
+        easing: EASING.easeOut,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -48,19 +57,33 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [reducedMotion, fadeAnim, scaleAnim]);
 
   const handlePressIn = () => {
-    Animated.spring(liftAnim, {
-      toValue: -4,
+    if (!reducedMotion) {
+      Animated.spring(liftAnim, {
+        toValue: -4,
+        damping: 15,
+        stiffness: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+    Animated.spring(pressAnim, {
+      toValue: 1,
       damping: 15,
-      stiffness: 200,
+      stiffness: 250,
       useNativeDriver: true,
     }).start();
   };
 
   const handlePressOut = () => {
     Animated.spring(liftAnim, {
+      toValue: 0,
+      damping: 15,
+      stiffness: 150,
+      useNativeDriver: true,
+    }).start();
+    Animated.spring(pressAnim, {
       toValue: 0,
       damping: 15,
       stiffness: 150,
@@ -81,7 +104,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         styles.container,
         {
           opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }, { translateY: liftAnim }],
+          transform: [
+            { scale: scaleAnim },
+            {
+              scale: pressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0.97],
+              }),
+            },
+            { translateY: liftAnim },
+          ],
         },
         style,
       ]}

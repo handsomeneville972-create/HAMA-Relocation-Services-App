@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PropertyCard } from '../components/PropertyCard';
+import { StaggerItem } from '../components/StaggerItem';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getFeaturedProperties, searchProperties } from '../services/propertyService';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
@@ -197,6 +198,7 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
                     {section.options.map((option, oIndex) => (
                       <TouchableOpacity
                         key={oIndex}
+                        activeOpacity={0.7}
                         style={[
                           styles.filterChip,
                           filters[section.title] === option && styles.filterChipActive,
@@ -224,6 +226,7 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
                   {SORT_OPTIONS.map((option) => (
                     <TouchableOpacity
                       key={option.key}
+                      activeOpacity={0.7}
                       style={[
                         styles.filterChip,
                         filters.sortBy === option.key && styles.filterChipActive,
@@ -500,30 +503,31 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
         >
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat.key}
-              style={[
-                styles.categoryChip,
-                activeCategory === cat.key && styles.categoryChipActive,
-              ]}
-              onPress={() => setActiveCategory(cat.key)}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name={cat.icon as any}
-                size={16}
-                color={activeCategory === cat.key ? '#fff' : COLORS.textSecondary}
-              />
-              <Text
+          {CATEGORIES.map((cat, i) => (
+            <StaggerItem key={cat.key} index={i}>
+              <TouchableOpacity
                 style={[
-                  styles.categoryChipText,
-                  activeCategory === cat.key && styles.categoryChipTextActive,
+                  styles.categoryChip,
+                  activeCategory === cat.key && styles.categoryChipActive,
                 ]}
+                onPress={() => setActiveCategory(cat.key)}
+                activeOpacity={0.8}
               >
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons
+                  name={cat.icon as any}
+                  size={16}
+                  color={activeCategory === cat.key ? '#fff' : COLORS.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    activeCategory === cat.key && styles.categoryChipTextActive,
+                  ]}
+                >
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            </StaggerItem>
           ))}
         </ScrollView>
       </View>

@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
+import { StaggerItem } from '../components/StaggerItem';
 import { getPropertyById, getPropertyReviews } from '../services/propertyService';
 import { findOrCreateConversation } from '../services/conversationService';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Property, PropertyReview } from '../constants/types';
@@ -104,6 +106,50 @@ const actionBtnStyles = StyleSheet.create({
     color: '#fff',
   },
 });
+
+// Smooth height + opacity expand/collapse. Uses non-native driver for height,
+// keeps opacity on the native driver. Honors reduced-motion by snapping.
+const AnimatedCollapsible: React.FC<{
+  expanded: boolean;
+  children: React.ReactNode;
+}> = ({ expanded, children }) => {
+  const reducedMotion = useReducedMotion();
+  const progress = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      progress.setValue(expanded ? 1 : 0);
+      return;
+    }
+    Animated.timing(progress, {
+      toValue: expanded ? 1 : 0,
+      duration: ANIMATION.normal,
+      easing: EASING.easeInOut,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, reducedMotion, progress]);
+
+  return (
+    <Animated.View
+      style={{
+        height: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, contentHeight],
+        }),
+        opacity: progress,
+        overflow: 'hidden',
+      }}
+    >
+      <View
+        style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+        onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
+      >
+        {children}
+      </View>
+    </Animated.View>
+  );
+};
 
 export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { propertyId } = route.params;
@@ -245,16 +291,19 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
             <Text style={styles.sectionLabel}>Amenities</Text>
             <View style={styles.amenitiesGrid}>
               {property.amenities.map((amenity, i) => (
-                <View key={i} style={styles.amenityTag}>
+                <StaggerItem key={i} index={i} style={styles.amenityTag}>
                   <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
                   <Text style={styles.amenityText}>{amenity}</Text>
-                </View>
+                </StaggerItem>
               ))}
               {property.furnished && (
-                <View style={styles.amenityTag}>
+                <StaggerItem
+                  index={property.amenities.length}
+                  style={styles.amenityTag}
+                >
                   <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
                   <Text style={styles.amenityText}>Furnished</Text>
-                </View>
+                </StaggerItem>
               )}
             </View>
           </GlassCard>
@@ -326,7 +375,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                 color={COLORS.textSecondary}
               />
             </TouchableOpacity>
-            {showQuestions && (
+            <AnimatedCollapsible expanded={showQuestions}>
               <View style={styles.questionsList}>
                 {QUICK_QUESTIONS.map((q, i) => (
                   <TouchableOpacity
@@ -340,7 +389,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                   </TouchableOpacity>
                 ))}
               </View>
-            )}
+            </AnimatedCollapsible>
           </GlassCard>
 
           {/* ===== TRUST & SAFETY ===== */}
@@ -364,7 +413,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
               <Text style={styles.reportText}>Report Listing</Text>
               <Ionicons name={showReport ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.error} />
             </TouchableOpacity>
-            {showReport && (
+            <AnimatedCollapsible expanded={showReport}>
               <View style={styles.reportList}>
                 {REPORT_REASONS.map((reason, i) => (
                   <TouchableOpacity
@@ -376,7 +425,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                   </TouchableOpacity>
                 ))}
               </View>
-            )}
+            </AnimatedCollapsible>
             <TouchableOpacity style={styles.blockButton}>
               <Ionicons name="ban-outline" size={18} color={COLORS.textTertiary} />
               <Text style={styles.blockText}>Block Contact</Text>

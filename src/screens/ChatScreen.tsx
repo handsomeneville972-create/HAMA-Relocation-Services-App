@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { getConversationById, sendMessage, markMessagesAsRead } from '../services/conversationService';
 import { softSanitize } from '../utils/sanitize';
 import { supabase } from '../utils/supabaseClient';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Message, Conversation, User } from '../constants/types';
 
@@ -48,6 +49,64 @@ const formatDateHeader = (dateStr: string) => {
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
+// Single message bubble with a subtle fade + rise on mount. Reduced-motion
+// users get a quick opacity fade only (movement dropped, comprehension kept).
+const MessageBubble: React.FC<{
+  msg: Message;
+  isOwn: boolean;
+  avatar: string;
+}> = ({ msg, isOwn, avatar }) => {
+  const reducedMotion = useReducedMotion();
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: ANIMATION.fast,
+      easing: EASING.easeOut,
+      useNativeDriver: true,
+    }).start();
+  }, [reducedMotion, anim]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.messageRow,
+        isOwn && styles.ownMessageRow,
+        {
+          opacity: anim,
+          transform: reducedMotion
+            ? []
+            : [
+                {
+                  translateY: anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [6, 0],
+                  }),
+                },
+              ],
+        },
+      ]}
+    >
+      {!isOwn && <Image source={{ uri: avatar }} style={styles.messageAvatar} />}
+      <View style={[styles.messageBubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
+        <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>{msg.text}</Text>
+        <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
+          {formatMessageTime(msg.timestamp || msg.created_at || '')}
+          {isOwn && (
+            <Ionicons
+              name={msg.read ? 'checkmark-done' : 'checkmark'}
+              size={12}
+              color={msg.read ? COLORS.primary : COLORS.textTertiary}
+              style={{ marginLeft: 4 }}
+            />
+          )}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
+
 export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { conversationId } = route.params;
   const insets = useSafeAreaInsets();
@@ -58,6 +117,18 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
   const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const reducedMotion = useReducedMotion();
+  const sendPressAnim = useRef(new Animated.Value(0)).current;
+
+  const animateSendPress = (pressed: boolean) => {
+    if (reducedMotion) return;
+    Animated.spring(sendPressAnim, {
+      toValue: pressed ? 1 : 0,
+      damping: 15,
+      stiffness: 250,
+      useNativeDriver: true,
+    }).start();
+  };
 
   // Fetch conversation data
   useEffect(() => {
@@ -212,26 +283,15 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
               <Text style={styles.dateText}>{formatDateHeader(group.date)}</Text>
               <View style={styles.dateLine} />
             </View>
-            {group.messages.map((msg, mi) => {
+            {group.messages.map((msg) => {
               const isOwn = msg.senderId === currentUserId || msg.sender_id === currentUserId;
               return (
-                <View key={msg.id} style={[styles.messageRow, isOwn && styles.ownMessageRow]}>
-                  {!isOwn && <Image source={{ uri: otherUser.avatar }} style={styles.messageAvatar} />}
-                  <View style={[styles.messageBubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
-                    <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>{msg.text}</Text>
-                    <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
-                      {formatMessageTime(msg.timestamp || msg.created_at)}
-                      {isOwn && (
-                        <Ionicons
-                          name={msg.read ? 'checkmark-done' : 'checkmark'}
-                          size={12}
-                          color={msg.read ? COLORS.primary : COLORS.textTertiary}
-                          style={{ marginLeft: 4 }}
-                        />
-                      )}
-                    </Text>
-                  </View>
-                </View>
+                <MessageBubble
+                  key={msg.id}
+                  msg={msg}
+                  isOwn={isOwn}
+                  avatar={otherUser.avatar}
+                />
               );
             })}
           </View>
@@ -257,21 +317,36 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
                 maxLength={500}
               />
             </View>
-            <TouchableOpacity
-              style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
-              onPress={handleSend}
-              disabled={!messageText.trim() || sending}
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    scale: sendPressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0.9],
+                    }),
+                  },
+                ],
+              }}
             >
-              {sending ? (
-                <Ionicons name="hourglass" size={20} color={COLORS.textTertiary} />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color={messageText.trim() ? '#fff' : COLORS.textTertiary}
-                />
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
+                onPress={handleSend}
+                onPressIn={() => animateSendPress(true)}
+                onPressOut={() => animateSendPress(false)}
+                disabled={!messageText.trim() || sending}
+              >
+                {sending ? (
+                  <Ionicons name="hourglass" size={20} color={COLORS.textTertiary} />
+                ) : (
+                  <Ionicons
+                    name="send"
+                    size={20}
+                    color={messageText.trim() ? '#fff' : COLORS.textTertiary}
+                  />
+                )}
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </LinearGradient>
       </View>

@@ -3,8 +3,9 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, Dimensions }
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../constants/types';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { formatPrice } from '../utils/currency';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - SPACING.md * 3) / 2;
@@ -16,16 +17,23 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, featured = false }) => {
+  const reducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const liftAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (reducedMotion) {
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+      return;
+    }
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: ANIMATION.normal,
         delay: Math.random() * 200,
+        easing: EASING.easeOut,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -36,7 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, feat
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [reducedMotion, fadeAnim, scaleAnim]);
 
   const handlePressIn = () => {
     Animated.spring(liftAnim, {

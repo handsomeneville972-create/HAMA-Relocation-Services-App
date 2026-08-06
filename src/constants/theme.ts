@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, Easing } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -177,6 +177,14 @@ export const ANIMATION = {
     stiffness: 200,
     mass: 0.5,
   },
+};
+
+// Strong easing curves for deliberate motion. UI entrances/exits use easeOut;
+// on-screen movement uses easeInOut; sheets/drawers use drawer (iOS-like).
+export const EASING = {
+  easeOut: Easing.bezier(0.23, 1, 0.32, 1),
+  easeInOut: Easing.bezier(0.77, 0, 0.175, 1),
+  drawer: Easing.bezier(0.32, 0.72, 0, 1),
 };
 
 export const DIMENSIONS = {

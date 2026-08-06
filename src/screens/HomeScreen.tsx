@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { StaggerItem } from '../components/StaggerItem';
 import { getProducts } from '../services/productService';
 import { getProperties, getNeighborhoods } from '../services/propertyService';
 import { formatPrice } from '../utils/currency';
@@ -186,20 +187,22 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </ScrollView>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
-              {properties.map((property) => (
-                <TouchableOpacity key={property.id} activeOpacity={0.9} style={styles.propertyCard} onPress={() => navigation.navigate('PropertyDetail', { propertyId: property.id })}>
-                  <GlassCard>
-                    <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
-                    <View style={styles.propertyInfo}>
-                      <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
-                      <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
-                      <View style={styles.propertyMeta}>
-                        <Text style={styles.propertyMetaText}>{property.bedrooms} Bed • {property.bathrooms} Bath</Text>
-                        <Text style={styles.propertyLocation}>{property.location}</Text>
+              {properties.map((property, i) => (
+                <StaggerItem key={property.id} index={i} style={styles.propertyCard}>
+                  <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('PropertyDetail', { propertyId: property.id })}>
+                    <GlassCard>
+                      <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
+                      <View style={styles.propertyInfo}>
+                        <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
+                        <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
+                        <View style={styles.propertyMeta}>
+                          <Text style={styles.propertyMetaText}>{property.bedrooms} Bed • {property.bathrooms} Bath</Text>
+                          <Text style={styles.propertyLocation}>{property.location}</Text>
+                        </View>
                       </View>
-                    </View>
-                  </GlassCard>
-                </TouchableOpacity>
+                    </GlassCard>
+                  </TouchableOpacity>
+                </StaggerItem>
               ))}
             </ScrollView>
           )}

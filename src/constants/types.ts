@@ -612,6 +612,9 @@ export interface Message {
   text: string;
   timestamp: string;
   read: boolean;
+  /** Snake-case aliases returned directly by Supabase rows (cast to Message). */
+  sender_id?: string;
+  created_at?: string;
 }
 
 export interface Conversation {
