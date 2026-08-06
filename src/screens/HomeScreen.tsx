@@ -323,7 +323,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.footerColumn}>
                 <Text style={styles.footerColumnTitle}>Support</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help & Support</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/faqs')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Faq')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy' as never)}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>

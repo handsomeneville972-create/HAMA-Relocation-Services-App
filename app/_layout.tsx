@@ -331,6 +331,13 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="Faq"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
                     name="FounderDashboard"
                     options={{
                       headerShown: false,
