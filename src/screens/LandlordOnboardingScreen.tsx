@@ -1,10 +1,13 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { GlassCard } from '../components/GlassCard';
+import { LandlordUploadSuccessPopup } from '../components/LandlordUploadSuccessPopup';
+import { LandlordSubscriptionModal } from '../components/LandlordSubscriptionModal';
+import { loadLandlordUploads, incrementPropertyCount, getLandlordUploadState } from '../utils/landlordUploads';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -87,6 +90,12 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
   const [properties, setProperties] = useState<PropertyDraft[]>([{ ...INITIAL_PROPERTY }]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadSuccess, setShowUploadSuccess] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  useEffect(() => {
+    loadLandlordUploads();
+  }, []);
 
   const stepIndex = STEPS.findIndex(s => s.key === currentStep);
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
@@ -141,7 +150,13 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
     setIsSubmitting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      navigation.replace('LandlordDashboard');
+      const state = await incrementPropertyCount();
+      if (state.propertyCount === 3 && !state.hasExceededFreeLimit) {
+        navigation.replace('LandlordDashboard');
+        setTimeout(() => setShowUploadSuccess(true), 600);
+      } else {
+        navigation.replace('LandlordDashboard');
+      }
     } catch {
       // error handled silently
     } finally {
@@ -474,6 +489,22 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
           {!isLastStep && !isSubmitting && <Ionicons name="arrow-forward" size={20} color="#fff" />}
         </TouchableOpacity>
       </View>
+
+      {/* Upload Success Popup */}
+      <LandlordUploadSuccessPopup
+        visible={showUploadSuccess}
+        onPay={() => {
+          setShowUploadSuccess(false);
+          setShowSubscriptionModal(true);
+        }}
+        onMaybeLater={() => setShowUploadSuccess(false)}
+      />
+
+      {/* Subscription Modal */}
+      <LandlordSubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </View>
   );
 };

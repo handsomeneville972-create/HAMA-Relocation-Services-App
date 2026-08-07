@@ -8,7 +8,28 @@
 import { supabase } from '../utils/supabaseClient';
 import { executeQuery } from './supabaseService';
 import { MOCK_SERVICE_PROVIDERS } from '../constants/data';
-import type { ServiceProvider } from '../constants/types';
+import type { ProviderProfile, ServiceProvider } from '../constants/types';
+
+/**
+ * Fetch the signed-in user's own provider profile (full profile jsonb).
+ * Returns null when the user has no published provider row.
+ */
+export async function getProviderProfileByUserId(
+  userId: string,
+): Promise<{ data: ProviderProfile | null; error: string | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select('profile')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) return { data: null, error: error.message };
+    return { data: (data?.profile as ProviderProfile) ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to load provider profile' };
+  }
+}
+
 
 export async function getServiceProviders(params?: {
   category?: string;

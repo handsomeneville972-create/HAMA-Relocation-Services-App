@@ -330,6 +330,13 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="LandlordPlans"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
                     name="Legal"
                     options={{
                       headerShown: false,
@@ -373,6 +380,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen
                     name="ServiceProviderOnboarding"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="BecomeProvider"
                     options={{
                       headerShown: false,
                       animation: 'slide_from_right',
