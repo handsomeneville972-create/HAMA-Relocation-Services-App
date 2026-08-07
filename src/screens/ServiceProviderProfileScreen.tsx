@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { GiveReviewComposer } from '../components/ReviewSection';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useProvider } from '../contexts/ProviderContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -140,6 +141,10 @@ function enrichMock(sp: ServiceProvider): ProviderProfile {
     gps: { lat: -1.2921, lng: 36.8219 },
     category: sp.category,
     subcategory: sp.subcategory,
+    workerType: '',
+    pricingType: 'fixed',
+    startingPrice: 0,
+    availability: true,
     services,
     serviceAreas: { counties: ['Nairobi', 'Kiambu'], towns: ['Westlands', 'Kilimani', 'Kasarani', sp.location], neighborhoods: ['Garden City', 'Imara Daima'], radiusKm: 25 },
     businessHours: (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const).map((day): ProviderDayHours => ({
@@ -238,6 +243,8 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
   const [bookSent, setBookSent] = useState(false);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [viewAllReviews, setViewAllReviews] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState('');
+  const [extraReviews, setExtraReviews] = useState<ProviderReview[]>([]);
   const [quoteMode, setQuoteMode] = useState<'estimate' | 'request'>('estimate');
 
   const similar = useMemo(() => {
@@ -350,7 +357,38 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
     </GlassCard>
   );
 
-  const visibleReviews = viewAllReviews ? profile.reviews : profile.reviews.slice(0, 2);
+  const reviewFiltered = useMemo(() => {
+    const q = reviewFilter.trim().toLowerCase();
+    if (!q) return profile.reviews;
+    return profile.reviews.filter(
+      (r) =>
+        r.customerName.toLowerCase().includes(q) ||
+        r.text.toLowerCase().includes(q) ||
+        r.service.toLowerCase().includes(q)
+    );
+  }, [profile.reviews, reviewFilter]);
+
+  const localReviewCard = (r: ProviderReview) => (
+    <GlassCard key={r.id} style={styles.reviewCard}>
+      <View style={styles.reviewHeader}>
+        <View style={styles.localAvatar}>
+          <Text style={styles.localAvatarText}>{(r.customerName || '?').charAt(0).toUpperCase()}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.reviewName}>{r.customerName}</Text>
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={12} color={COLORS.primary} />
+            ))}
+            <Text style={styles.reviewDate}>{r.date}</Text>
+          </View>
+        </View>
+      </View>
+      <Text style={styles.reviewText}>{r.text}</Text>
+    </GlassCard>
+  );
+
+  const visibleReviews = viewAllReviews || reviewFilter.trim() ? reviewFiltered : reviewFiltered.slice(0, 2);
 
   if (loading) {
     return (
@@ -402,6 +440,12 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{profile.businessName}</Text>
+                {profile.status === 'active' && (
+                  <View style={styles.liveBadge}>
+                    <Ionicons name="radio" size={10} color={COLORS.success} />
+                    <Text style={styles.liveBadgeText}>Live</Text>
+                  </View>
+                )}
                 {profile.isEmergencyProvider && (
                   <View style={styles.emergencyBadge}>
                     <Ionicons name="flash" size={12} color={COLORS.warning} />
@@ -721,13 +765,33 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
               ))}
             </View>
           </GlassCard>
+          {extraReviews.map(localReviewCard)}
           {visibleReviews.map(reviewCard)}
-          {profile.reviews.length > 2 && (
+          {reviewFiltered.length > 2 && (
             <TouchableOpacity style={styles.viewAllBtn} onPress={() => setViewAllReviews((v) => !v)}>
-              <Text style={styles.viewAllText}>{viewAllReviews ? 'Show fewer' : `View all ${profile.reviews.length} reviews`}</Text>
+              <Text style={styles.viewAllText}>{viewAllReviews ? 'Show fewer' : `View all ${reviewFiltered.length} reviews`}</Text>
               <Ionicons name={viewAllReviews ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.primary} />
             </TouchableOpacity>
           )}
+          <View style={{ marginTop: SPACING.sm }}>
+            <GiveReviewComposer
+              onSearchChange={setReviewFilter}
+              onSubmitReview={(rating, text) => {
+                setExtraReviews((prev) => [
+                  {
+                    id: `local-${Date.now()}`,
+                    customerName: 'You',
+                    avatar: '',
+                    rating,
+                    text,
+                    date: 'Just now',
+                    service: 'Service',
+                  },
+                  ...prev,
+                ]);
+              }}
+            />
+          </View>
         </View>
 
         {/* FAQs */}
@@ -938,6 +1002,8 @@ const styles = StyleSheet.create({
   name: { ...FONTS.h2, fontSize: 20, lineHeight: 26, flexShrink: 1 },
   emergencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,184,77,0.12)', borderWidth: 1, borderColor: 'rgba(255,184,77,0.4)' },
   emergencyBadgeText: { ...FONTS.caption, fontSize: 10, color: COLORS.warning, fontWeight: '700' },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: 'rgba(0,212,170,0.12)', borderWidth: 1, borderColor: 'rgba(0,212,170,0.4)' },
+  liveBadgeText: { ...FONTS.caption, fontSize: 10, color: COLORS.success, fontWeight: '700' },
   starsRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 6 },
   ratingText: { ...FONTS.bodySmall, color: COLORS.text, fontWeight: '700', marginLeft: 4 },
   reviewCount: { ...FONTS.caption, color: COLORS.textTertiary },
@@ -1045,6 +1111,8 @@ const styles = StyleSheet.create({
   barCount: { ...FONTS.caption, width: 16, textAlign: 'right', color: COLORS.textTertiary },
   reviewCard: { padding: SPACING.md, marginBottom: SPACING.md },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.sm },
+  localAvatar: { width: 36, height: 36, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.18)', alignItems: 'center', justifyContent: 'center' },
+  localAvatarText: { ...FONTS.body, fontWeight: '800', color: COLORS.primary },
   avatar: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated },
   reviewName: { ...FONTS.bodySmall, fontWeight: '600' },
   reviewDate: { ...FONTS.caption, color: COLORS.textTertiary, marginLeft: 6 },

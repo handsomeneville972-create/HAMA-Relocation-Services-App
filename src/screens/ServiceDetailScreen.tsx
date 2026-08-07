@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
+import { ReviewSection, type ReviewItem } from '../components/ReviewSection';
 import { getServiceProviderById } from '../services/serviceProviderService';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { ServiceProvider } from '../constants/types';
@@ -12,6 +13,7 @@ export const ServiceDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const { providerId } = route.params;
   const [provider, setProvider] = useState<ServiceProvider | null>(null);
   const [loading, setLoading] = useState(true);
+  const [svcReviews, setSvcReviews] = useState<ReviewItem[]>([]);
 
   useEffect(() => {
     getServiceProviderById(providerId).then(({ data }) => {
@@ -114,15 +116,23 @@ export const ServiceDetailScreen: React.FC<{ route: any; navigation: any }> = ({
         <GlassCard>
           <View style={styles.reviewHeader}>
             <Text style={styles.sectionTitle}>Reviews</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
+            <Text style={styles.seeAllText}>({provider.reviewCount})</Text>
           </View>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={24} color={COLORS.warning} />
             <Text style={styles.ratingValue}>{provider.rating}</Text>
             <Text style={styles.ratingMax}>/ 5.0</Text>
           </View>
+          <ReviewSection
+            reviews={svcReviews}
+            emptyText="No reviews yet — be the first to review this service provider."
+            onSubmitReview={(rating, content) => {
+              setSvcReviews(prev => [
+                { id: `local-${Date.now()}`, name: 'You', rating, date: 'Just now', content },
+                ...prev,
+              ]);
+            }}
+          />
         </GlassCard>
 
         <View style={{ height: 100 }} />

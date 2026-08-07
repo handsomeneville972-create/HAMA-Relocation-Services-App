@@ -20,31 +20,19 @@ const DEBOUNCE_MS = 350;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const PROVIDER_STEP_KEYS = [
-  'identity',
-  'category',
-  'services',
-  'areas',
-  'hours',
-  'pricing',
+  'basic',
+  'service',
   'portfolio',
-  'certifications',
-  'payment',
-  'branding',
+  'boost',
 ] as const;
 
 export type ProviderStepKey = (typeof PROVIDER_STEP_KEYS)[number];
 
 export const PROVIDER_STEP_LABELS: Record<ProviderStepKey, string> = {
-  identity: 'Business Identity',
-  category: 'Category & Expertise',
-  services: 'Services & Pricing',
-  areas: 'Service Areas',
-  hours: 'Business Hours',
-  pricing: 'Packages & Pricing',
-  portfolio: 'Portfolio',
-  certifications: 'Certifications & Verification',
-  payment: 'Payment Preferences',
-  branding: 'Branding',
+  basic: 'Basic Information',
+  service: 'Service Information',
+  portfolio: 'Portfolio & Experience',
+  boost: 'Ranking Boost (optional)',
 };
 
 export const CATEGORIES: { value: ServiceCategory; subcategories: ServiceSubcategory[] }[] = [
@@ -94,6 +82,10 @@ const EMPTY_PROFILE: ProviderProfile = {
   gps: null,
   category: 'Home Maintenance',
   subcategory: 'Plumbers',
+  workerType: 'Individual',
+  pricingType: 'quote',
+  startingPrice: 0,
+  availability: true,
   services: [],
   serviceAreas: { counties: [], towns: [], neighborhoods: [], radiusKm: 10 },
   businessHours: DAYS.map((day) => ({
@@ -191,6 +183,149 @@ export async function loadProfile(): Promise<ProviderProfile | null> {
   }
 }
 
+// ---------------- Supabase publication ----------------
+
+import { supabase } from '../utils/supabaseClient';
+import { uploadFile } from './uploadService';
+
+export const PROVIDER_STORAGE = {
+  avatars: 'provider-avatars',
+  portfolio: 'provider-portfolio',
+  certificates: 'provider-certificates',
+} as const;
+
+/**
+ * Upload staged local media (logo, cover, portfolio photos, certificate
+ * documents) to Supabase Storage. Returns a copy of the profile whose
+ * media fields point at remote URLs. Local URIs are preserved for
+ * documents so they still render offline.
+ */
+export async function uploadProviderMedia(
+  profile: ProviderProfile,
+  userId: string
+): Promise<ProviderProfile> {
+  const next = { ...profile };
+
+  if (next.logo && !next.logo.startsWith('http')) {
+    const res = await uploadFile(PROVIDER_STORAGE.avatars, userId, next.logo);
+    if ('url' in res) next.logo = res.url;
+  }
+  if (next.coverImage && !next.coverImage.startsWith('http')) {
+    const res = await uploadFile(PROVIDER_STORAGE.avatars, userId, next.coverImage);
+    if ('url' in res) next.coverImage = res.url;
+  }
+  if (next.portfolio.length > 0) {
+    next.portfolio = await Promise.all(
+      next.portfolio.map(async (item) => {
+        if (item.uri.startsWith('http')) return item;
+        const res = await uploadFile(PROVIDER_STORAGE.portfolio, userId, item.uri);
+        if ('url' in res) return { ...item, uri: res.url };
+        return item;
+      })
+    );
+  }
+  if (next.documents.length > 0) {
+    next.documents = await Promise.all(
+      next.documents.map(async (doc) => {
+        if (doc.remotePath) return doc;
+        const res = await uploadFile(PROVIDER_STORAGE.certificates, userId, doc.uri);
+        if ('url' in res) {
+          return { ...doc, remotePath: res.fileName, uri: res.url };
+        }
+        return doc;
+      })
+    );
+  }
+  return next;
+}
+
+/**
+ * Publish a provider profile to Supabase (instant publish — no approval
+ * queue). Upserts into service_providers for the current user with the
+ * full profile stored in the `profile` jsonb column and core columns
+ * kept in sync for public listing queries. Duplicate phone numbers are
+ * rejected. Failures return an error string; callers may fall back to
+ * local-only profiles (offline-tolerant).
+ */
+export async function publishProviderProfile(
+  profile: ProviderProfile,
+  userId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const phone = normalizeKenyanPhone(profile.phone);
+    if (phone) {
+      const { data: dupes } = await supabase
+        .from('service_providers')
+        .select('id')
+        .eq('phone', phone)
+        .neq('user_id', userId)
+        .limit(1);
+      if (dupes && dupes.length > 0) {
+        return {
+          ok: false,
+          error:
+            'That phone number is already connected to another account. Use a different number or sign in to the existing account.',
+        };
+      }
+    }
+
+    const enriched = await uploadProviderMedia(profile, userId);
+    const payload = {
+      user_id: userId,
+      name: enriched.businessName,
+      logo_url: enriched.logo || null,
+      banner_url: enriched.coverImage || null,
+      description: enriched.description,
+      category: enriched.category,
+      subcategory: enriched.subcategory,
+      location: [enriched.town, enriched.county].filter(Boolean).join(', ') || null,
+      phone: phone || null,
+      email: enriched.email || null,
+      pricing: enriched.pricingType === 'fixed' && enriched.startingPrice > 0
+        ? `From KSh ${enriched.startingPrice}`
+        : 'quote',
+      availability: enriched.availability ? 'available' : 'offline',
+      status: 'active',
+      profile: enriched,
+    };
+
+    const { data: existing } = await supabase
+      .from('service_providers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabase
+        .from('service_providers')
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      if (error) return { ok: false, error: error.message };
+    } else {
+      const { error } = await supabase.from('service_providers').insert(payload);
+      if (error) return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Publication failed' };
+  }
+}
+
+// ---------------- Kenyan phone helpers ----------------
+
+export function normalizeKenyanPhone(phone: string): string {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (/^(07|01)\d{8}$/.test(digits)) return `+254${digits.slice(1)}`;
+  if (/^7\d{8}$/.test(digits)) return `+254${digits}`;
+  if (/^254(7|1)\d{8}$/.test(digits)) return `+${digits}`;
+  return phone.trim();
+}
+
+export function isValidKenyanPhone(phone: string): boolean {
+  const digits = (phone || '').replace(/\D/g, '');
+  return /^(07|01|2547|2541|7)\d{8}$/.test(digits);
+}
+
 // ---------------- Step validation ----------------
 
 export function validateStep(
@@ -198,102 +333,60 @@ export function validateStep(
   profile: ProviderProfile
 ): ProviderStepValidation {
   switch (step) {
-    case 'identity':
+    case 'basic':
       if (!profile.businessName.trim()) return { valid: false, message: 'Business name is required' };
+      if (!profile.phone.trim() || !isValidKenyanPhone(profile.phone))
+        return { valid: false, message: 'Enter a valid Kenyan mobile number, such as 0712 345 678.' };
       if (profile.description.trim().length < 30)
         return { valid: false, message: 'Description needs at least 30 characters' };
-      if (!profile.phone.trim()) return { valid: false, message: 'Phone number is required' };
-      if (!profile.county.trim() || !profile.town.trim())
-        return { valid: false, message: 'County and town are required' };
       return { valid: true };
-    case 'category':
+    case 'service':
       if (!profile.category) return { valid: false, message: 'Pick a category' };
       if (!profile.subcategory) return { valid: false, message: 'Pick a subcategory' };
-      return { valid: true };
-    case 'services':
       if (profile.services.length === 0)
         return { valid: false, message: 'Add at least one service' };
-      if (profile.services.some((s) => !s.name.trim() || !s.price || s.price < 0))
+      if (profile.services.some((s) => !s.name.trim() || s.price < 0))
         return { valid: false, message: 'Every service needs a name and valid price' };
       return { valid: true };
-    case 'areas':
-      if (
-        profile.serviceAreas.counties.length === 0 &&
-        profile.serviceAreas.towns.length === 0
-      )
-        return { valid: false, message: 'Add at least one county or town you serve' };
-      return { valid: true };
-    case 'hours':
-      if (profile.open247) return { valid: true };
-      if (profile.businessHours.filter((d) => !d.closed).length < 5)
-        return { valid: false, message: 'Be open at least 5 days a week' };
-      return { valid: true };
-    case 'pricing':
-      if (profile.callOutFee < 0)
-        return { valid: false, message: 'Call-out fee cannot be negative' };
-      if (profile.packages.length === 0)
-        return { valid: false, message: 'Create at least one package' };
-      if (profile.packages.some((p) => p.price <= 0))
-        return { valid: false, message: 'Package prices must be above zero' };
-      return { valid: true };
     case 'portfolio':
-      if (profile.portfolio.filter((p) => p.type === 'photo').length < 5)
-        return { valid: false, message: 'Upload at least 5 photos (videos optional)' };
-      return { valid: true };
-    case 'certifications':
       return { valid: true, message: 'Recommended but optional' };
-    case 'payment':
-      if (!profile.mpesaNumber.trim())
-        return { valid: false, message: 'M-Pesa number is required for payouts' };
-      if (!profile.paymentMethods.includes('M-Pesa') && !profile.bankAccount)
-        return { valid: false, message: 'Choose a payout method' };
-      return { valid: true };
-    case 'branding':
-      return { valid: true };
+    case 'boost':
+      return { valid: true, message: 'Recommended but optional' };
   }
 }
 
 // ---------------- Profile completeness ----------------
 
 const SECTION_WEIGHTS: { key: ProviderStepKey; label: string }[] = [
-  { key: 'identity', label: 'Business Identity' },
-  { key: 'category', label: 'Category' },
-  { key: 'services', label: 'Services' },
-  { key: 'areas', label: 'Service Areas' },
-  { key: 'hours', label: 'Business Hours' },
-  { key: 'pricing', label: 'Pricing & Packages' },
-  { key: 'portfolio', label: 'Portfolio' },
-  { key: 'certifications', label: 'Verification' },
-  { key: 'payment', label: 'Payment' },
-  { key: 'branding', label: 'Branding' },
+  { key: 'basic', label: 'Basic Information' },
+  { key: 'service', label: 'Services & Pricing' },
+  { key: 'portfolio', label: 'Portfolio & Certificates' },
+  { key: 'boost', label: 'Ranking Boost' },
 ];
 
 export function completionScore(profile: ProviderProfile): ProfileCompletionBreakdown {
   const checks: Record<ProviderStepKey, [boolean, number]> = {
-    identity: [
+    basic: [
       !!(
         profile.businessName.trim() &&
-        profile.logo &&
-        profile.coverImage &&
-        profile.description.trim().length >= 30 &&
         profile.phone.trim() &&
-        profile.county.trim() &&
-        profile.town.trim()
+        profile.description.trim().length >= 30 &&
+        profile.logo
       ),
       1,
     ],
-    category: [!!(profile.category && profile.subcategory), 1],
-    services: [profile.services.length >= 1, 2],
-    areas: [
-      profile.serviceAreas.counties.length > 0 || profile.serviceAreas.towns.length > 0,
-      1,
+    service: [!!(profile.category && profile.subcategory && profile.services.length >= 1 && profile.startingPrice > 0), 2],
+    portfolio: [
+      profile.portfolio.filter((p) => p.type === 'photo').length >= 3 || profile.certifications.length >= 1,
+      2,
     ],
-    hours: [profile.open247 || profile.businessHours.filter((d) => !d.closed).length >= 5, 1],
-    pricing: [profile.packages.length >= 1 && profile.callOutFee >= 0, 2],
-    portfolio: [profile.portfolio.filter((p) => p.type === 'photo').length >= 5, 2],
-    certifications: [profile.certifications.length >= 1, 1],
-    payment: [!!profile.mpesaNumber.trim(), 1],
-    branding: [!!profile.branding.tagline.trim(), 1],
+    boost: [
+      !!(
+        (profile.serviceAreas.counties.length > 0 || profile.serviceAreas.towns.length > 0) &&
+        (profile.packages.length >= 1 || profile.mpesaNumber.trim() || profile.branding.tagline.trim())
+      ),
+      2,
+    ],
   };
   let totalDone = 0;
   let totalPossible = 0;
@@ -307,6 +400,36 @@ export function completionScore(profile: ProviderProfile): ProfileCompletionBrea
     total: Math.round((totalDone / totalPossible) * 100),
     sections,
   };
+}
+
+// ---------------- Profile strength (ranking-boost language) ----------------
+
+export interface ProfileStrength {
+  score: number;
+  label: string;
+  hints: string[];
+}
+
+export function profileStrength(profile: ProviderProfile): ProfileStrength {
+  const hints: string[] = [];
+  const score = completionScore(profile).total;
+
+  if (!profile.logo) hints.push('Add a profile photo — profiles with a clear face photo get more requests.');
+  if (!profile.startingPrice || profile.startingPrice <= 0) hints.push('Add a starting price so clients can decide faster.');
+  if (profile.portfolio.filter((p) => p.type === 'photo').length < 3) hints.push('Add at least 3 work photos (max 5).');
+  if (profile.certifications.length === 0) hints.push('Upload trade certificates for the biggest ranking boost.');
+  if (profile.serviceAreas.counties.length === 0 && profile.serviceAreas.towns.length === 0)
+    hints.push('Tell clients which areas you serve.');
+  if (profile.packages.length === 0) hints.push('Create Bronze, Silver & Gold packages for premium clients.');
+  if (!profile.mpesaNumber.trim()) hints.push('Add your M-Pesa number for fast payouts.');
+  if (!profile.branding.tagline.trim()) hints.push('Add a short tagline to complete your storefront.');
+
+  let label = 'Getting started';
+  if (score >= 85) label = 'Excellent ranking potential';
+  else if (score >= 65) label = 'Strong ranking potential';
+  else if (score >= 40) label = 'Growing profile';
+
+  return { score, label, hints };
 }
 
 // ---------------- Keyword generation ----------------

@@ -32,7 +32,7 @@ const MENU_SECTIONS = [
   {
     title: 'Service Provider',
     items: [
-      { icon: 'storefront-outline', label: 'Become a Service Provider', color: COLORS.primary, route: 'ServiceProviderOnboarding' },
+      { icon: 'storefront-outline', label: 'Become a Service Provider', color: COLORS.primary, route: 'BecomeProvider' },
       { icon: 'analytics-outline', label: 'Seller Dashboard', color: COLORS.accent, route: 'SellerDashboard' },
       { icon: 'ribbon-outline', label: 'View My Public Profile', color: COLORS.textSecondary, route: 'ServiceProviderProfile' },
     ],

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
 import { StaggerItem } from '../components/StaggerItem';
+import { ReviewSection } from '../components/ReviewSection';
 import { getPropertyById, getPropertyReviews } from '../services/propertyService';
 import { findOrCreateConversation } from '../services/conversationService';
 import { useAuth } from '../contexts/AuthContext';
@@ -457,32 +458,75 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                 })}
               </View>
             </View>
-            {reviews.slice(0, 2).map(review => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewTop}>
-                  <Image source={{ uri: review.user.avatar }} style={styles.reviewAvatar} />
-                  <View style={styles.reviewUser}>
-                    <Text style={styles.reviewName}>{review.user.name}</Text>
-                    <View style={styles.reviewStars}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Ionicons
-                          key={i}
-                          name={i < Math.floor(review.rating) ? 'star' : 'star-outline'}
-                          size={12}
-                          color={COLORS.warning}
-                        />
-                      ))}
+            <ReviewSection
+              reviews={reviews.map(r => ({
+                id: r.id,
+                name: r.user?.name || 'User',
+                avatar: r.user?.avatar,
+                rating: r.rating,
+                date: r.createdAt,
+                content: r.content,
+              }))}
+              emptyText="No reviews yet — be the first to review this property."
+              onSubmitReview={(rating, content) => {
+                setReviews(prev => [
+                  {
+                    id: `local-${Date.now()}`,
+                    propertyId,
+                    user: {
+                      id: 'local-you',
+                      name: 'You',
+                      email: 'you@hama.app',
+                      emailVerified: true,
+                      phoneVerified: true,
+                      avatar: '',
+                      role: 'seeker',
+                      verified: false,
+                      verificationLevel: 'email',
+                      joinDate: new Date().toISOString(),
+                    },
+                    rating,
+                    security: rating,
+                    cleanliness: rating,
+                    accessibility: rating,
+                    amenities: rating,
+                    valueForMoney: rating,
+                    content,
+                    createdAt: 'Just now',
+                    helpful: 0,
+                  },
+                  ...prev,
+                ]);
+              }}
+              renderItem={(review) => (
+                <View style={styles.reviewCard}>
+                  <View style={styles.reviewTop}>
+                    {review.avatar ? (
+                      <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} />
+                    ) : (
+                      <View style={styles.reviewAvatarFallback}>
+                        <Text style={styles.reviewAvatarFallbackText}>{review.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                    )}
+                    <View style={styles.reviewUser}>
+                      <Text style={styles.reviewName}>{review.name}</Text>
+                      <View style={styles.reviewStars}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Ionicons
+                            key={i}
+                            name={i < Math.floor(review.rating) ? 'star' : 'star-outline'}
+                            size={12}
+                            color={COLORS.warning}
+                          />
+                        ))}
+                      </View>
                     </View>
+                    {review.date ? <Text style={styles.reviewDate}>{review.date}</Text> : null}
                   </View>
-                  <Text style={styles.reviewDate}>{review.createdAt}</Text>
+                  <Text style={styles.reviewContent}>{review.content}</Text>
                 </View>
-                <Text style={styles.reviewContent}>{review.content}</Text>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.allReviewsButton}>
-              <Text style={styles.allReviewsText}>See All Reviews</Text>
-              <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
-            </TouchableOpacity>
+              )}
+            />
           </GlassCard>
         </View>
 
@@ -874,6 +918,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+  },
+  reviewAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,107,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewAvatarFallbackText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '700',
   },
   reviewUser: {
     flex: 1,

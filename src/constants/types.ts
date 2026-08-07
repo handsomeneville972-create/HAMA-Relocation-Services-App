@@ -252,6 +252,7 @@ export interface ProviderDocument {
   name: string;
   uri: string;
   status: 'pending' | 'verified' | 'rejected';
+  remotePath?: string;
 }
 
 export interface ProviderSocialLink {
@@ -302,6 +303,10 @@ export interface ProviderProfile {
   gps: { lat: number; lng: number } | null;
   category: ServiceCategory;
   subcategory: ServiceSubcategory;
+  workerType: string;
+  pricingType: 'fixed' | 'quote';
+  startingPrice: number;
+  availability: boolean;
   services: ProviderService[];
   serviceAreas: { counties: string[]; towns: string[]; neighborhoods: string[]; radiusKm: number };
   businessHours: ProviderDayHours[];

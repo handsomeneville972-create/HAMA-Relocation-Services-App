@@ -7,16 +7,16 @@ const isWeb = Platform.OS === 'web';
 
 export type UploadResult = { url: string; fileName: string } | { error: string };
 
-const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'];
 
-const getPublicUrl = (filePath: string): string => {
-  const { data } = supabase.storage.from(AVATARS_BUCKET).getPublicUrl(filePath);
+const getPublicUrl = (bucket: string, filePath: string): string => {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
   return data.publicUrl;
 };
 
 /**
- * Upload a profile avatar image to Supabase Storage.
- * Stores at: avatars/{userId}/{timestamp}.{ext}
+ * Upload a file to a Supabase Storage bucket.
+ * Stores at: {folder}/{timestamp}.{ext}
  *
  * Web:        fetch(uri) -> Blob -> supabase.storage.upload
  * Native:     supabase-js FormData (documented RN pattern) first;
@@ -24,8 +24,9 @@ const getPublicUrl = (filePath: string): string => {
  *             expo-file-system, which avoids React Native's
  *             FormData/multipart boundary issues entirely.
  */
-export const uploadAvatar = async (
-  userId: string,
+export const uploadFile = async (
+  bucket: string,
+  folder: string,
   uri: string,
 ): Promise<UploadResult> => {
   try {
@@ -33,34 +34,35 @@ export const uploadAvatar = async (
     const urlExt = urlPath.split('.').pop()?.toLowerCase() ?? '';
     const ext = KNOWN_EXTS.includes(urlExt) ? urlExt : 'jpg';
     const fileName = `${Date.now()}.${ext}`;
-    const filePath = `${userId}/${fileName}`;
-    const type = `image/${ext}`;
+    const filePath = `${folder}/${fileName}`;
+    const isPdf = ext === 'pdf';
+    const type = isPdf ? 'application/pdf' : `image/${ext}`;
 
     if (isWeb) {
       const response = await fetch(uri);
       const blob = await response.blob();
       const { error } = await supabase.storage
-        .from(AVATARS_BUCKET)
+        .from(bucket)
         .upload(filePath, blob, {
           contentType: blob.type || type,
           upsert: true,
         });
       if (error) return { error: error.message };
-      return { url: getPublicUrl(filePath), fileName };
+      return { url: getPublicUrl(bucket, filePath), fileName };
     }
 
     // Native attempt 1: supabase-js with React Native FormData
     const formData = new FormData();
     formData.append('file', { uri, name: fileName, type } as any);
     const { error: firstError } = await supabase.storage
-      .from(AVATARS_BUCKET)
+      .from(bucket)
       .upload(filePath, formData as any, {
         contentType: type,
         upsert: true,
       });
 
     if (!firstError) {
-      return { url: getPublicUrl(filePath), fileName };
+      return { url: getPublicUrl(bucket, filePath), fileName };
     }
 
     // Native attempt 2: direct PUT via expo-file-system
@@ -70,7 +72,7 @@ export const uploadAvatar = async (
       return { error: firstError.message };
     }
 
-    const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${AVATARS_BUCKET}/${filePath}`;
+    const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${filePath}`;
     const uploadResult = await FileSystem.uploadAsync(uploadUrl, uri, {
       httpMethod: 'PUT',
       headers: {
@@ -82,7 +84,7 @@ export const uploadAvatar = async (
     });
 
     if (uploadResult.status >= 200 && uploadResult.status < 300) {
-      return { url: getPublicUrl(filePath), fileName };
+      return { url: getPublicUrl(bucket, filePath), fileName };
     }
 
     return {
@@ -92,6 +94,15 @@ export const uploadAvatar = async (
     return { error: err instanceof Error ? err.message : 'Upload failed' };
   }
 };
+
+/**
+ * Upload a profile avatar image to Supabase Storage.
+ * Stores at: avatars/{userId}/{timestamp}.{ext}
+ */
+export const uploadAvatar = async (
+  userId: string,
+  uri: string,
+): Promise<UploadResult> => uploadFile(AVATARS_BUCKET, userId, uri);
 
 /**
  * Delete a user's previous avatar file(s) from storage.

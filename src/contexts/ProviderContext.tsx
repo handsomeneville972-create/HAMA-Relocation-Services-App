@@ -10,11 +10,15 @@ import {
   generateKeywords,
   loadDraft,
   loadProfile,
+  normalizeProviderPlan,
+  PROVIDER_STEP_KEYS,
+  ProviderStepKey,
+  publishProviderProfile,
   saveProfile,
   validateStep,
 } from '../services/providerOnboardingService';
-import { PROVIDER_STEP_KEYS, ProviderStepKey } from '../services/providerOnboardingService';
-import { normalizeProviderPlan } from '../services/providerOnboardingService';
+import { getProviderProfileByUserId } from '../services/serviceProviderService';
+import { useAuth } from './AuthContext';
 
 interface ProviderContextValue {
   isHydrated: boolean;
@@ -26,7 +30,7 @@ interface ProviderContextValue {
   setDraft: (draft: ProviderProfile) => void;
   markStepComplete: (step: ProviderStepKey) => void;
   stepValid: (step: ProviderStepKey) => boolean;
-  activateProvider: (plan: ProviderPlanTier) => Promise<void>;
+  activateProvider: (plan?: ProviderPlanTier) => Promise<void>;
   logoutProvider: () => Promise<void>;
   getDashboardData: () => ReturnType<typeof generateDashboardData>;
 }
@@ -37,6 +41,7 @@ export function ProviderProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [provider, setProvider] = useState<ProviderProfile | null>(null);
   const [draft, setDraftState] = useState<ProviderProfile | null>(null);
+  const { currentUserId } = useAuth();
 
   // ---------- Hydration ----------
   useEffect(() => {
@@ -45,13 +50,20 @@ export function ProviderProvider({ children }: { children: React.ReactNode }) {
         const [saved, savedDraft] = await Promise.all([loadProfile(), loadDraft()]);
         if (saved) setProvider({ ...saved, plan: normalizeProviderPlan(saved.plan) });
         if (savedDraft) setDraftState({ ...savedDraft, plan: normalizeProviderPlan(savedDraft.plan) });
+
+        // Published providers: prefer the canonical Supabase copy so
+        // status/approval changes made elsewhere show up on launch.
+        if (currentUserId && saved) {
+          const { data: remote } = await getProviderProfileByUserId(currentUserId);
+          if (remote) setProvider({ ...remote, plan: normalizeProviderPlan(remote.plan) });
+        }
       } catch {
         // Corrupt storage — start fresh
       } finally {
         setIsHydrated(true);
       }
     })();
-  }, []);
+  }, [currentUserId]);
 
   // ---------- Draft management ----------
   const updateDraft = useCallback(
@@ -92,26 +104,25 @@ export function ProviderProvider({ children }: { children: React.ReactNode }) {
     [draft]
   );
 
-  // ---------- Activation ----------
-  const activateProvider = useCallback(async (plan: ProviderPlanTier) => {
-    setDraftState((currentDraft) => {
-      const base = currentDraft || emptyProviderProfile();
+  // ---------- Activation (instant publish — free to join) ----------
+  const activateProvider = useCallback(
+    async (plan?: ProviderPlanTier) => {
+      const selectedPlan = normalizeProviderPlan(plan || 'Basic');
+      const base = draft || emptyProviderProfile();
       const now = new Date().toISOString();
-      const expiry = new Date();
-      expiry.setMonth(expiry.getMonth() + 1);
       const completedSteps = [...PROVIDER_STEP_KEYS] as string[];
       const next: ProviderProfile = {
         ...base,
         id: base.id || `sp-${Date.now()}`,
-        plan,
+        plan: selectedPlan,
         status: 'active',
-        subscriptionExpiry: expiry.toISOString(),
+        subscriptionExpiry: null,
         completedSteps,
         onboardingComplete: true,
         keywords: generateKeywords(base),
         createdAt: base.createdAt || now,
         updatedAt: now,
-        rating: 4.5,
+        rating: base.rating || 4.5,
         reviewCount: 0,
         completedJobs: 0,
         totalRevenue: 0,
@@ -119,12 +130,21 @@ export function ProviderProvider({ children }: { children: React.ReactNode }) {
       };
       saveProfile(next);
       clearDraft();
+
+      // Best-effort publish to Supabase; local profile always wins.
+      if (currentUserId) {
+        const res = await publishProviderProfile(next, currentUserId);
+        if (!res.ok) {
+          console.warn('[Provider] Supabase publish failed:', res.error);
+        }
+      }
+
       setProvider(next);
       setDraftState(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      return null;
-    });
-  }, []);
+    },
+    [currentUserId, draft]
+  );
 
   const logoutProvider = useCallback(async () => {
     setProvider(null);

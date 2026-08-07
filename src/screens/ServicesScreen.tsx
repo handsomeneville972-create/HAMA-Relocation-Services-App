@@ -72,12 +72,12 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
           </View>
         ) : (
           <View style={styles.featuredBanner}>
-            <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('ServiceProviderOnboarding')}>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('BecomeProvider')}>
               <LinearGradient colors={['rgba(255,107,0,0.22)', 'rgba(255,107,0,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerGradient}>
                 <View style={styles.bannerContent}>
                   <View style={styles.bannerText}>
                     <Text style={styles.bannerTitle}>Grow your business with HAMA</Text>
-                    <Text style={styles.bannerSubtitle}>Become a verified service provider — get found, get booked, get paid</Text>
+                    <Text style={styles.bannerSubtitle}>Free to join — go live today and get found by nearby clients</Text>
                   </View>
                   <View style={styles.bannerIcon}>
                     <Ionicons name="storefront" size={34} color={COLORS.primary} />

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useProvider } from '../contexts/ProviderContext';
-import { PROVIDER_PLANS } from '../services/providerOnboardingService';
+import { completionScore } from '../services/providerOnboardingService';
 import {
   CustomerRecord,
   JobItem,
@@ -94,9 +94,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const completionPct = useMemo(() => {
     if (!provider) return 0;
-    const total = 10;
-    const done = provider.completedSteps.length;
-    return Math.round((done / total) * 100);
+    return completionScore(provider).total;
   }, [provider]);
 
   const moveJob = useCallback((id: string, direction: 'up' | 'down') => {
@@ -116,10 +114,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   // ---------- Upsell state (not a provider) ----------
-  const [plan, setPlan] = useState<'Basic' | 'Premium'>('Basic');
-
-  if (!isProvider || !provider || !data) {
-    return (
+  if (!isProvider || !provider || !data) {    return (
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
         <View style={styles.upsellHeader}>
@@ -135,10 +130,10 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             </LinearGradient>
             <Text style={styles.upsellHeading}>Grow your business on HAMA</Text>
             <Text style={styles.upsellBody}>
-              Create a professional storefront, get found in search, manage jobs, quotes, customers and payouts — all in one place.
+              Create a professional storefront for free, go live immediately, and get found in search. Upgrade anytime to unlock leads, booking tools and analytics.
             </Text>
             <View style={styles.upsellPoints}>
-              {['Public business profile', 'Search ranking & analytics', 'Quotes, jobs & customer CRM', 'Wallet & weekly payouts'].map((p) => (
+              {['Free to join — profile goes live immediately', 'No approval queue', 'Search ranking & public profile', 'Plans unlock leads, booking & analytics'].map((p) => (
                 <View key={p} style={styles.upsellPoint}>
                   <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
                   <Text style={styles.upsellPointText}>{p}</Text>
@@ -146,32 +141,12 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </View>
           </View>
-          {(['Basic', 'Premium'] as const).map((p) => (
-            <TouchableOpacity key={p} onPress={() => setPlan(p)} style={[styles.planCard, plan === p && styles.planCardActive]}>
-              <View style={{ flex: 1 }}>
-                <View style={styles.planNameRow}>
-                  <Ionicons name={p === 'Premium' ? 'diamond' : 'sparkles'} size={16} color={plan === p ? '#000' : COLORS.primary} />
-                  <Text style={[styles.planName, plan === p && { color: '#000' }]}>{p}</Text>
-                </View>
-                <Text style={[styles.planPrice, plan === p && { color: '#000' }]}>
-                  {formatPrice(PROVIDER_PLANS[p].price)}<Text style={[styles.planPeriod, plan === p && { color: '#000' }]}>{PROVIDER_PLANS[p].period}</Text>
-                </Text>
-                {PROVIDER_PLANS[p].features.slice(0, 3).map((f) => (
-                  <View key={f} style={styles.planFeatureRow}>
-                    <Ionicons name="checkmark-circle" size={12} color={plan === p ? '#000' : COLORS.success} />
-                    <Text style={[styles.planFeature, plan === p && { color: '#000' }]}>{f}</Text>
-                  </View>
-                ))}
-              </View>
-              <Ionicons name={plan === p ? 'radio-button-on' : 'radio-button-off'} size={20} color={plan === p ? '#000' : COLORS.textTertiary} />
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity style={styles.upsellCta} onPress={() => navigation.navigate(`ServiceProviderOnboarding?plan=${plan}`)}>
+          <TouchableOpacity style={styles.upsellCta} onPress={() => navigation.navigate('BecomeProvider')}>
             <Ionicons name="rocket" size={18} color="#000" />
-            <Text style={styles.upsellCtaText}>Become a Service Provider</Text>
+            <Text style={styles.upsellCtaText}>Start Free Registration</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.upsellSecondary} onPress={() => navigation.navigate('Subscriptions')}>
-            <Text style={styles.upsellSecondaryText}>Compare plans on Subscriptions</Text>
+          <TouchableOpacity style={styles.upsellSecondary} onPress={() => navigation.navigate('WorkspacePlans')}>
+            <Text style={styles.upsellSecondaryText}>See what paid plans unlock</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
