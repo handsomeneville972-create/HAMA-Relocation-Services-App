@@ -6,13 +6,15 @@
  * remains authoritative — the mirror is reconciled via
  * syncSubscriptionFromSupabase whenever the user signs in.
  *
- * Entitlement rule: a user may use the services/features of a plan for a
- * role only if their active subscription's tier covers it (Free < Basic <
- * Premium < Pro). During an active seeker trial, Premium features are
- * unlocked for the seeker role.
+ * House seeker flow:
+ *   1. 7-day free trial → Premium features unlocked
+ *   2. Trial ends → user must pay KSh 170/month
+ *   3. isSeekerLocked = !trialActive && !isSubscribed
+ *      When true: Marketplace blurred, Services gated, Home cards gated
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getLocalSubscription,
   loadSubscriptionStore,
@@ -23,6 +25,8 @@ import { getTrialState, loadTrial, subscribeTrial, TrialState } from '../utils/t
 import { SubscriptionTier, UserType } from '../constants/types';
 import { syncSubscriptionFromSupabase } from '../services/subscriptionService';
 import { useAuth } from './AuthContext';
+
+const TRIAL_NOTIF_KEY = 'hama_trial_notif_v1';
 
 export const TIER_RANK: Record<SubscriptionTier, number> = {
   Free: 0,
@@ -40,6 +44,16 @@ export interface PlanEntitlement {
   trialActive: boolean;
   /** True if the seeker's trial ran out and no seeker subscription replaced it */
   trialEnded: boolean;
+  /** True if the user has an active paid subscription for the seeker role */
+  isSubscribed: boolean;
+  /** True if the seeker is locked out of premium features (not trial, not subscribed) */
+  isSeekerLocked: boolean;
+  /** True if a previously active paid subscription has expired */
+  subscriptionExpired: boolean;
+  /** True if the 5-minute trial notification has been shown this trial period */
+  trialNotificationShown: boolean;
+  /** Mark the trial notification as shown (persisted to AsyncStorage) */
+  markTrialNotificationShown: () => void;
   /**
    * True if the user may use `tier` features for `role`.
    * Free is always allowed; trial counts as Premium for seekers.
@@ -57,6 +71,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const { currentUserId } = useAuth();
   const [subscription, setSubscription] = useState<LocalSubscription | null>(null);
   const [trial, setTrial] = useState<TrialState>(getTrialState());
+  const [trialNotificationShown, setTrialNotificationShown] = useState(false);
 
   // Load both stores on mount + subscribe to changes
   useEffect(() => {
@@ -66,6 +81,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       if (!mounted) return;
       setSubscription(getLocalSubscription());
       setTrial(getTrialState());
+      // Check if trial notification was already shown this trial period
+      const notifShown = await AsyncStorage.getItem(TRIAL_NOTIF_KEY);
+      if (mounted) setTrialNotificationShown(notifShown === 'true');
     })();
     const unsubSub = subscribeToSubscriptionStore(setSubscription);
     const unsubTrial = subscribeTrial(setTrial);
@@ -87,8 +105,35 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [currentUserId]);
 
+  const markTrialNotificationShown = useCallback(async () => {
+    setTrialNotificationShown(true);
+    await AsyncStorage.setItem(TRIAL_NOTIF_KEY, 'true');
+  }, []);
+
   const trialActive = trial.status === 'active';
-  const trialEnded = trial.status === 'expired' && (!subscription || subscription.userType !== 'seeker');
+
+  // Check if subscription exists and is not expired
+  const now = Date.now();
+  const hasActiveSeekerSub =
+    subscription &&
+    subscription.userType === 'seeker' &&
+    subscription.status === 'active' &&
+    subscription.expiresAt &&
+    new Date(subscription.expiresAt).getTime() > now;
+
+  const isSubscribed = !!hasActiveSeekerSub;
+
+  const subscriptionExpired =
+    !!subscription &&
+    subscription.userType === 'seeker' &&
+    subscription.status === 'active' &&
+    !!subscription.expiresAt &&
+    new Date(subscription.expiresAt).getTime() <= now;
+
+  const trialEnded = trial.status === 'expired' && !isSubscribed;
+
+  // Master gate: seeker is locked when trial is over AND no paid subscription
+  const isSeekerLocked = !trialActive && !isSubscribed;
 
   const isEntitled = useCallback(
     (role: UserType, tier: SubscriptionTier): boolean => {
@@ -122,11 +167,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       trial,
       trialActive,
       trialEnded,
+      isSubscribed,
+      isSeekerLocked,
+      subscriptionExpired,
+      trialNotificationShown,
+      markTrialNotificationShown,
       isEntitled,
       effectiveTier,
       refresh,
     }),
-    [subscription, trial, trialActive, trialEnded, isEntitled, effectiveTier, refresh]
+    [subscription, trial, trialActive, trialEnded, isSubscribed, isSeekerLocked, subscriptionExpired, trialNotificationShown, markTrialNotificationShown, isEntitled, effectiveTier, refresh]
   );
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;

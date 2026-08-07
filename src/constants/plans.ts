@@ -15,8 +15,7 @@ import type { SubscriptionPlan, UserType, SubscriptionTier } from './types';
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   // House Seekers
   { id: 'sub1', userType: 'seeker', tier: 'Free', price: 0, currency: 'KSh', features: ['Basic search', 'Save up to 20 properties', 'Standard recommendations'] },
-  { id: 'sub2', userType: 'seeker', tier: 'Premium', price: 199, currency: 'KSh', features: ['Unlimited saves', 'AI recommendations', 'Advanced filters', 'Student housing tools', 'Priority notifications'], highlighted: true },
-  { id: 'sub3', userType: 'seeker', tier: 'Pro', price: 599, currency: 'KSh', features: ['Premium listings first', 'Advanced neighborhood reports', 'Relocation discounts', 'Priority support', 'Exclusive deals'] },
+  { id: 'sub2', userType: 'seeker', tier: 'Premium', price: 170, currency: 'KSh', features: ['Featured properties access', 'Featured products access', 'Full marketplace shopping', 'Best house deal notifications', 'Community access & feed', 'Unlimited saves', 'AI recommendations', 'Advanced filters'], highlighted: true },
   // Landlords
   { id: 'sub4', userType: 'landlord', tier: 'Basic', price: 899, currency: 'KSh', features: ['10 active listings'] },
   { id: 'sub5', userType: 'landlord', tier: 'Premium', price: 2899, currency: 'KSh', features: ['50 listings', 'Featured properties'], highlighted: true },

@@ -11,6 +11,7 @@ import { ProviderProvider } from '../src/contexts/ProviderContext';
 import { SubscriptionProvider, useSubscriptions } from '../src/contexts/SubscriptionContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { TrialEndedModal } from '../src/components/TrialEndedModal';
+import { TrialNotification } from '../src/components/TrialNotification';
 import { loadUserCurrency } from '../src/utils/currency';
 import { loadWorkspaces } from '../src/utils/workspaces';
 import { startPeriodicRefresh } from '../src/utils/exchangeRates';
@@ -78,19 +79,24 @@ function SessionMonitor() {
 }
 
 /**
- * TrialEndedGate — shows the trial-ended popup (with seeker plan options)
- * once the 7-day free trial expires without an active subscription.
+ * TrialEndedGate — shows the trial-ended/subscription-expired popup
+ * once the 7-day free trial expires or paid subscription lapses.
  * Dismissal lasts for the current app session.
  */
 function TrialEndedGate() {
-  const { trialEnded } = useSubscriptions();
+  const { isSeekerLocked, subscriptionExpired, trialEnded } = useSubscriptions();
   const [dismissed, setDismissed] = useState(false);
 
+  const shouldShow = (trialEnded || subscriptionExpired) && isSeekerLocked && !dismissed;
+
   return (
-    <TrialEndedModal
-      visible={trialEnded && !dismissed}
-      onClose={() => setDismissed(true)}
-    />
+    <>
+      <TrialEndedModal
+        visible={shouldShow}
+        onClose={() => setDismissed(true)}
+      />
+      <TrialNotification />
+    </>
   );
 }
 

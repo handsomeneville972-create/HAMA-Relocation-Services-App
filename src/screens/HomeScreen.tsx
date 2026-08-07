@@ -7,6 +7,8 @@ import { ProductCard } from '../components/ProductCard';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { StaggerItem } from '../components/StaggerItem';
+import { PaywallOverlay } from '../components/PaywallOverlay';
+import { useSubscriptions } from '../contexts/SubscriptionContext';
 import { getProducts } from '../services/productService';
 import { getProperties, getNeighborhoods } from '../services/propertyService';
 import { formatPrice } from '../utils/currency';
@@ -17,6 +19,7 @@ const { width, height } = Dimensions.get('window');
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { isSeekerLocked } = useSubscriptions();
   const scrollY = useRef(new Animated.Value(0)).current;
   const heroScale = useRef(new Animated.Value(1)).current;
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -25,6 +28,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,7 +177,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Ionicons name="home-outline" size={18} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>Featured Properties</Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('FeaturedProperties')}>
+            <TouchableOpacity onPress={() => {
+              if (isSeekerLocked) { setPaywallVisible(true); return; }
+              navigation.navigate('FeaturedProperties');
+            }}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -189,7 +196,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
               {properties.map((property, i) => (
                 <StaggerItem key={property.id} index={i} style={styles.propertyCard}>
-                  <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('PropertyDetail', { propertyId: property.id })}>
+                  <TouchableOpacity activeOpacity={0.9} onPress={() => {
+                    if (isSeekerLocked) { setPaywallVisible(true); return; }
+                    navigation.navigate('PropertyDetail', { propertyId: property.id });
+                  }}>
                     <GlassCard>
                       <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
                       <View style={styles.propertyInfo}>
@@ -215,7 +225,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Ionicons name="cart-outline" size={18} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>Featured Products</Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}>
+            <TouchableOpacity onPress={() => {
+              if (isSeekerLocked) { setPaywallVisible(true); return; }
+              navigation.navigate('Marketplace');
+            }}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -234,7 +247,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   key={product.id}
                   product={product}
                   featured
-                  onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
+                  onPress={() => {
+                    if (isSeekerLocked) { setPaywallVisible(true); return; }
+                    navigation.navigate('ProductDetail', { productId: product.id });
+                  }}
                 />
               ))}
             </View>
@@ -371,6 +387,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
 
       </Animated.ScrollView>
+
+      {/* Paywall for gated features */}
+      <PaywallOverlay
+        visible={paywallVisible}
+        onDismiss={() => setPaywallVisible(false)}
+      />
     </View>
   );
 };

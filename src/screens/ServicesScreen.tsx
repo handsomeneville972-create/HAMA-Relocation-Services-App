@@ -6,18 +6,25 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ServiceCard } from '../components/ServiceCard';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { PaywallOverlay } from '../components/PaywallOverlay';
 import { SERVICE_CATEGORIES } from '../constants/data';
 import { getServiceProviders } from '../services/serviceProviderService';
 import { softSanitize } from '../utils/sanitize';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { ServiceProvider } from '../constants/types';
 
-export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+interface ServicesScreenProps {
+  navigation: any;
+  isSeekerLocked?: boolean;
+}
+
+export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSeekerLocked = false }) => {
   const insets = useSafeAreaInsets();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   useEffect(() => {
     getServiceProviders().then(({ data }) => {
@@ -121,7 +128,10 @@ export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               <ServiceCard
                 key={provider.id}
                 provider={provider}
-                onPress={() => navigation.navigate('ServiceProviderProfile', { providerId: provider.id })}
+                onPress={() => {
+                  if (isSeekerLocked) { setPaywallVisible(true); return; }
+                  navigation.navigate('ServiceProviderProfile', { providerId: provider.id });
+                }}
               />
             ))
           )}
@@ -129,6 +139,12 @@ export const ServicesScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Paywall for gated provider taps */}
+      <PaywallOverlay
+        visible={paywallVisible}
+        onDismiss={() => setPaywallVisible(false)}
+      />
     </View>
   );
 };

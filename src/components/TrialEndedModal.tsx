@@ -1,25 +1,37 @@
 /**
  * TrialEndedModal
  *
- * Shown when a seeker's 7-day free trial has ended and they have no active
- * subscription. Presents all seeker plan options; selecting a paid plan
- * opens the M-Pesa STK push billing flow.
+ * 3-step renewal flow shown when a seeker's 7-day free trial has ended
+ * or their paid subscription has expired.
+ *
+ * Step 1 (Renewal): Plan info + KSh 170 + "Pay" / "Nah, not today"
+ * Step 2 (Miss-out): Feature loss list + "Pay now" / "Am good"
+ * Step 3 (Phone): M-Pesa STK push flow
+ * Step 4 (Success): Animated confirmation
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getPlansForRole, getSeekerTrialPlan } from '../constants/plans';
 import { useMpesaPayment } from '../hooks/useMpesaPayment';
+import { PaymentSuccessModal } from './PaymentSuccessModal';
 import { PaymentModal } from './PaymentModal';
-import { formatPrice } from '../utils/currency';
 import { recordSubscription } from '../utils/subscriptionStore';
 import { purchaseSubscription } from '../services/subscriptionService';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
-import type { SubscriptionPlan } from '../constants/types';
+
+type Step = 'renewal' | 'missout' | 'phone' | 'success';
+
+const MISS_OUT_FEATURES = [
+  "You won't see featured properties",
+  "You won't see featured products",
+  "You won't shop for the best products in Kenya",
+  "You won't be notified on best house deals in the market",
+  "You won't have access to the community and enjoy the feed with friends",
+];
 
 interface TrialEndedModalProps {
   visible: boolean;
@@ -30,190 +42,246 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const mpesa = useMpesaPayment();
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [step, setStep] = useState<Step>('renewal');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showPhone, setShowPhone] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const seekerPlans = getPlansForRole('seeker');
-  const trialPlan = getSeekerTrialPlan();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const contentFade = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (visible) {
+      setStep('renewal');
+      setPhoneNumber('');
+      setShowSuccess(false);
+      fadeAnim.setValue(0);
       Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
     }
-  }, [visible, fadeAnim]);
+  }, [visible]);
 
-  const handlePlanPress = (plan: SubscriptionPlan) => {
-    if (plan.tier === 'Free') {
-      Alert.alert('Free Plan', 'You can continue on the Free plan with limited features — basic search, up to 20 saved properties.');
-      return;
-    }
-    setSelectedPlan(plan);
-    setShowPhone(true);
-  };
-
-  const startStk = () => {
-    if (!selectedPlan) return;
-    if (phoneNumber.replace(/[^0-9]/g, '').length < 9) {
-      Alert.alert('Phone Number', 'Please enter your M-Pesa phone number.');
-      return;
-    }
-    setShowPhone(false);
-    mpesa.startPayment({
-      phoneNumber,
-      amount: selectedPlan.price,
-      currency: selectedPlan.currency,
-      planName: `${selectedPlan.tier} - ${selectedPlan.userType}`,
-      accountReference: `HAMA-${selectedPlan.tier}-${selectedPlan.userType}`,
-      subscription: {
-        userId: currentUserId || 'guest',
-        tier: selectedPlan.tier,
-        userType: selectedPlan.userType,
-      },
+  const transitionTo = (nextStep: Step) => {
+    Animated.timing(contentFade, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
+      setStep(nextStep);
+      contentFade.setValue(0);
+      Animated.timing(contentFade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     });
   };
 
   const handlePaymentSuccess = async () => {
-    if (!selectedPlan) return;
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await recordSubscription({
-      planId: selectedPlan.id,
-      tier: selectedPlan.tier,
-      userType: selectedPlan.userType,
-      price: selectedPlan.price,
+      planId: 'sub2',
+      tier: 'Premium',
+      userType: 'seeker',
+      price: 170,
       status: 'active',
       startedAt: new Date().toISOString(),
       expiresAt,
     });
     if (currentUserId) {
-      await purchaseSubscription({ userId: currentUserId, planId: selectedPlan.id }).catch(() => {});
+      await purchaseSubscription({ userId: currentUserId, planId: 'sub2' }).catch(() => {});
     }
-    setSelectedPlan(null);
-    onClose();
+    setShowSuccess(true);
+  };
+
+  const startStk = () => {
+    if (phoneNumber.replace(/[^0-9]/g, '').length < 9) return;
+    setStep('phone');
+    mpesa.startPayment({
+      phoneNumber: '0' + phoneNumber,
+      amount: 170,
+      currency: 'KSh',
+      planName: 'Premium - seeker',
+      accountReference: 'HAMA-Premium-seeker',
+      subscription: {
+        userId: currentUserId || 'guest',
+        tier: 'Premium',
+        userType: 'seeker',
+      },
+    });
   };
 
   return (
     <>
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
         <View style={styles.backdrop}>
-          <Animated.View style={[styles.sheet, { opacity: fadeAnim, paddingBottom: insets.bottom + 16 }]}>
+          <Animated.View
+            style={[
+              styles.sheet,
+              { opacity: fadeAnim, paddingBottom: insets.bottom + 16 },
+            ]}
+          >
             <View style={styles.handle} />
 
-            <View style={styles.headerRow}>
-              <View style={styles.iconWrap}>
-                <Ionicons name="hourglass-outline" size={28} color={COLORS.primary} />
-              </View>
-              <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-                <Ionicons name="close" size={22} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            </View>
+            <Animated.View style={{ opacity: contentFade, width: '100%' }}>
+              {/* ========== STEP 1: RENEWAL ========== */}
+              {step === 'renewal' && (
+                <>
+                  <View style={styles.headerRow}>
+                    <View style={styles.iconWrap}>
+                      <Ionicons name="time-outline" size={28} color={COLORS.primary} />
+                    </View>
+                  </View>
 
-            <Text style={styles.title}>Your free trial has ended</Text>
-            <Text style={styles.subtitle}>
-              The 7-day Premium trial is over. Choose a plan to keep enjoying Premium features, or continue with the Free plan.
-            </Text>
+                  <Text style={styles.title}>Your free trial has ended</Text>
+                  <Text style={styles.subtitle}>
+                    Subscribe to our plan of only KSh 170 to continue enjoying Hama's great features!
+                  </Text>
 
-            {/* Plan options */}
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.plansList}>
-              {seekerPlans.map((plan) => {
-                const isTrialCard = plan.tier === 'Free';
-                const highlighted = plan.highlighted;
-                return (
-                  <TouchableOpacity
-                    key={plan.id}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      if (isTrialCard) {
-                        handlePlanPress({ ...trialPlan, tier: 'Free', price: 0, features: trialPlan.features, highlighted: false });
-                        return;
-                      }
-                      handlePlanPress(plan);
-                    }}
-                    style={[styles.planRow, highlighted && styles.planRowHighlighted]}
-                  >
-                    <View style={[styles.planIcon, { backgroundColor: highlighted ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.06)' }]}>
-                      <Ionicons
-                        name={highlighted ? 'diamond' : isTrialCard ? 'flame-outline' : 'sparkles-outline'}
-                        size={20}
-                        color={highlighted ? COLORS.primary : COLORS.textSecondary}
-                      />
+                  {/* Plan Card */}
+                  <View style={styles.planCard}>
+                    <View style={styles.planIconWrap}>
+                      <Ionicons name="diamond" size={22} color={COLORS.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <View style={styles.planTitleRow}>
-                        <Text style={styles.planName}>{isTrialCard ? 'Free' : plan.tier}</Text>
-                        {isTrialCard && (
-                          <View style={styles.freeTag}>
-                            <Text style={styles.freeTagText}>Limited</Text>
-                          </View>
-                        )}
-                        {highlighted && (
-                          <View style={styles.popTag}>
-                            <Text style={styles.popTagText}>Most Popular</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text style={styles.planDesc} numberOfLines={1}>
-                        {isTrialCard ? 'Basic search, 20 saved properties' : plan.features[0]}
-                      </Text>
+                      <Text style={styles.planName}>Premium</Text>
+                      <Text style={styles.planDesc}>Full access to all house seeker features</Text>
                     </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={[styles.planPrice, highlighted && { color: COLORS.primary }]}>
-                        {plan.price === 0 ? 'Free' : formatPrice(plan.price, plan.currency)}
-                      </Text>
-                      {plan.price > 0 && <Text style={styles.planPeriod}>/month</Text>}
+                    <View style={styles.planPriceWrap}>
+                      <Text style={styles.planPrice}>KSh 170</Text>
+                      <Text style={styles.planPeriod}>/month</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={highlighted ? COLORS.primary : COLORS.textTertiary} />
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                  </View>
 
-            {/* M-Pesa phone entry */}
-            {showPhone && selectedPlan && (
-              <View style={styles.phoneSection}>
-                <Text style={styles.phoneTitle}>
-                  Pay {formatPrice(selectedPlan.price, selectedPlan.currency)} for {selectedPlan.tier}
-                </Text>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputPrefix}>+254</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="712345678"
-                    placeholderTextColor={COLORS.textTertiary}
-                    keyboardType="phone-pad"
-                    maxLength={9}
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                  />
-                </View>
-                <TouchableOpacity style={styles.stkButton} onPress={startStk}>
-                  <LinearGradient
-                    colors={[COLORS.primary, COLORS.secondary]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.stkGradient}
+                  {/* Pay Button */}
+                  <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={() => transitionTo('phone')}
+                    activeOpacity={0.85}
                   >
-                    <Ionicons name="phone-portrait-outline" size={18} color="#fff" />
-                    <Text style={styles.stkText}>Pay with M-Pesa</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.backBtn} onPress={() => setShowPhone(false)}>
-                  <Text style={styles.backText}>Back to plans</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+                    <LinearGradient
+                      colors={[COLORS.success, '#34D399']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.payGradient}
+                    >
+                      <Ionicons name="phone-portrait-outline" size={18} color="#fff" />
+                      <Text style={styles.payText}>Pay</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
 
-            {!showPhone && (
-              <TouchableOpacity style={styles.dismissBtn} onPress={onClose}>
-                <Text style={styles.dismissText}>Maybe later</Text>
-              </TouchableOpacity>
-            )}
+                  {/* Nah, not today */}
+                  <TouchableOpacity
+                    style={styles.nahButton}
+                    onPress={() => transitionTo('missout')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.nahText}>Nah, not today</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* ========== STEP 2: MISS-OUT LIST ========== */}
+              {step === 'missout' && (
+                <>
+                  <View style={styles.headerRow}>
+                    <View style={[styles.iconWrap, { backgroundColor: 'rgba(255,59,48,0.12)' }]}>
+                      <Ionicons name="alert-circle-outline" size={28} color={COLORS.error} />
+                    </View>
+                  </View>
+
+                  <Text style={styles.title}>
+                    If I were you I would've subscribed. Here's what you'll miss out on:
+                  </Text>
+
+                  <View style={styles.featureList}>
+                    {MISS_OUT_FEATURES.map((feature, index) => (
+                      <View key={index} style={styles.featureRow}>
+                        <Text style={styles.featureNumber}>{index + 1}—</Text>
+                        <Text style={styles.featureText}>{feature}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <Text style={styles.happyText}>
+                    But hey, at least you'll get to explore neighborhoods.
+                  </Text>
+
+                  {/* Pay Now Button */}
+                  <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={() => transitionTo('phone')}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.success, '#34D399']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.payGradient}
+                    >
+                      <Text style={styles.payText}>Pay now</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  {/* Am good */}
+                  <TouchableOpacity
+                    style={styles.amGoodButton}
+                    onPress={onClose}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close-circle-outline" size={18} color={COLORS.error} />
+                    <Text style={styles.amGoodText}>Am good</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* ========== STEP 3: PHONE INPUT ========== */}
+              {step === 'phone' && (
+                <>
+                  <View style={styles.headerRow}>
+                    <View style={styles.iconWrap}>
+                      <Ionicons name="phone-portrait-outline" size={28} color={COLORS.success} />
+                    </View>
+                  </View>
+
+                  <Text style={styles.title}>Pay KSh 170</Text>
+                  <Text style={styles.subtitle}>Enter your M-Pesa phone number</Text>
+
+                  <View style={styles.inputRow}>
+                    <Text style={styles.inputPrefix}>+254</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="712345678"
+                      placeholderTextColor={COLORS.textTertiary}
+                      keyboardType="phone-pad"
+                      maxLength={9}
+                      value={phoneNumber}
+                      onChangeText={setPhoneNumber}
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.payButton, (!phoneNumber || phoneNumber.length < 9) && styles.payButtonDisabled]}
+                    disabled={!phoneNumber || phoneNumber.length < 9}
+                    onPress={startStk}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.success, '#34D399']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.payGradient}
+                    >
+                      <Ionicons name="phone-portrait-outline" size={18} color="#fff" />
+                      <Text style={styles.payText}>Pay with M-Pesa</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => transitionTo('renewal')}
+                  >
+                    <Ionicons name="arrow-back" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.backText}>Back</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </Animated.View>
           </Animated.View>
         </View>
       </Modal>
 
-      {/* Payment status modal */}
+      {/* M-Pesa Payment Status Modal */}
       <PaymentModal
         visible={mpesa.step !== 'idle' && mpesa.step !== 'confirm'}
         step={mpesa.step === 'waiting_pin' ? 'waiting_pin' : mpesa.step}
@@ -227,6 +295,15 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
           if (mpesa.step === 'success') {
             handlePaymentSuccess();
           }
+        }}
+      />
+
+      {/* Success Modal */}
+      <PaymentSuccessModal
+        visible={showSuccess}
+        onClose={() => {
+          setShowSuccess(false);
+          onClose();
         }}
       />
     </>
@@ -257,67 +334,48 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: SPACING.md,
   },
   iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(255,107,0,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     ...FONTS.h2,
     color: COLORS.text,
-    marginBottom: 6,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     color: COLORS.textSecondary,
     fontSize: 14,
     lineHeight: 20,
+    textAlign: 'center',
     marginBottom: SPACING.lg,
   },
-  plansList: {
-    flexGrow: 0,
-    maxHeight: 320,
-  },
-  planRow: {
+  planCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: 14,
     borderRadius: RADIUS.lg,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    marginBottom: 10,
-  },
-  planRowHighlighted: {
-    borderColor: `${COLORS.primary}80`,
     backgroundColor: 'rgba(255,107,0,0.06)',
+    borderWidth: 1,
+    borderColor: `${COLORS.primary}80`,
+    marginBottom: SPACING.lg,
   },
-  planIcon: {
+  planIconWrap: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(255,107,0,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  planTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   planName: {
     color: COLORS.text,
@@ -329,45 +387,84 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  freeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  freeTagText: {
-    color: COLORS.textSecondary,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  popTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  popTagText: {
-    color: COLORS.primary,
-    fontSize: 10,
-    fontWeight: '700',
+  planPriceWrap: {
+    alignItems: 'flex-end',
   },
   planPrice: {
-    color: COLORS.text,
-    fontSize: 16,
+    color: COLORS.primary,
+    fontSize: 18,
     fontWeight: '800',
   },
   planPeriod: {
     color: COLORS.textTertiary,
     fontSize: 11,
   },
-  phoneSection: {
-    marginTop: 4,
+  payButton: {
+    width: '100%',
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+    marginBottom: 8,
   },
-  phoneTitle: {
+  payButtonDisabled: {
+    opacity: 0.5,
+  },
+  payGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 15,
+  },
+  payText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  nahButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  nahText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+  },
+  featureList: {
+    gap: 10,
+    marginBottom: SPACING.md,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  featureNumber: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  featureText: {
     color: COLORS.text,
-    fontSize: 15,
+    fontSize: 14,
+    flex: 1,
+    lineHeight: 20,
+  },
+  happyText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+  },
+  amGoodButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+  },
+  amGoodText: {
+    color: COLORS.error,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 10,
   },
   inputRow: {
     flexDirection: 'row',
@@ -377,7 +474,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
     paddingHorizontal: 14,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   inputPrefix: {
     color: COLORS.textSecondary,
@@ -391,38 +488,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 14,
   },
-  stkButton: {
-    borderRadius: RADIUS.md,
-    overflow: 'hidden',
-  },
-  stkGradient: {
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 15,
-  },
-  stkText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  backBtn: {
-    alignItems: 'center',
+    gap: 6,
     paddingVertical: 10,
-    marginTop: 4,
   },
   backText: {
     color: COLORS.textSecondary,
     fontSize: 13,
-  },
-  dismissBtn: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginTop: 4,
-  },
-  dismissText: {
-    color: COLORS.textTertiary,
-    fontSize: 14,
   },
 });
