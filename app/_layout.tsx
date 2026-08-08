@@ -10,6 +10,7 @@ import { CartProvider } from '../src/contexts/CartContext';
 import { ProviderProvider } from '../src/contexts/ProviderContext';
 import { SubscriptionProvider, useSubscriptions } from '../src/contexts/SubscriptionContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { WebGlobalStyles } from '../src/components/WebGlobalStyles';
 import { TrialEndedModal } from '../src/components/TrialEndedModal';
 import { TrialNotification } from '../src/components/TrialNotification';
 import { loadUserCurrency } from '../src/utils/currency';
@@ -115,8 +116,9 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
     <GestureHandlerRootView style={styles.root}>
-      <SafeAreaProvider>
-        <AuthProvider>
+        <SafeAreaProvider>
+          <WebGlobalStyles />
+          <AuthProvider>
           <CartProvider>
             <ProviderProvider>
               <SubscriptionProvider>

@@ -35,6 +35,9 @@ export default {
       bundler: 'metro',
       output: 'single',
       favicon: './assets/icon.png',
+      meta: {
+        viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+      },
     },
     plugins: [
       'expo-router',
