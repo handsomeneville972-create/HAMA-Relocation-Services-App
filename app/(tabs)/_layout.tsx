@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { getUnreadCount } from '../../src/services/notificationService';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../../src/constants/theme';
+import { ResponsiveTabBar } from '../../src/components/ResponsiveTabBar';
+import { useResponsive } from '../../src/utils/responsive';
+import { COLORS } from '../../src/constants/theme';
 
 export default function TabLayout() {
   const { currentUserId } = useAuth();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const { isDesktop } = useResponsive();
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -26,12 +28,12 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarPosition: isDesktop ? 'top' : 'bottom',
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: 'rgba(255,255,255,0.65)',
         tabBarShowLabel: true,
-        tabBarLabelStyle: styles.tabLabel,
       }}
+      tabBar={(props) => <ResponsiveTabBar {...props} />}
     >
       <Tabs.Screen
         name="index"
@@ -87,7 +89,6 @@ export default function TabLayout() {
             </View>
           ),
           tabBarBadge: unreadNotifs > 0 ? unreadNotifs : undefined,
-          tabBarBadgeStyle: styles.badge,
         }}
       />
       <Tabs.Screen
@@ -106,22 +107,6 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderTopWidth: 0.5,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    height: 85,
-    paddingTop: 8,
-    paddingBottom: 28,
-    position: 'absolute',
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-  },
   tabIconContainer: {
     width: 36,
     height: 36,
@@ -131,13 +116,5 @@ const styles = StyleSheet.create({
   },
   tabIconActive: {
     backgroundColor: 'rgba(255, 107, 0, 0.15)',
-  },
-  badge: {
-    backgroundColor: COLORS.secondary,
-    fontSize: 10,
-    fontWeight: '700',
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
   },
 });
