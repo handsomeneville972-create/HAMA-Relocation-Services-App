@@ -345,6 +345,9 @@ const styles = StyleSheet.create({
   menuContainer: {
     paddingHorizontal: SPACING.md,
     marginTop: -SPACING.lg,
+    maxWidth: 720,
+    width: '100%',
+    alignSelf: 'center',
   },
   menuSection: {
     marginBottom: SPACING.lg,

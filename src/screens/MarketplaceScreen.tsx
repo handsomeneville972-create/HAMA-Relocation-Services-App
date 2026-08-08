@@ -6,10 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { useCart } from '../contexts/CartContext';
 import { PRODUCT_CATEGORIES } from '../constants/data';
 import { getProducts, getSellers } from '../services/productService';
 import { softSanitize } from '../utils/sanitize';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Product, Seller } from '../constants/types';
 
@@ -17,6 +20,7 @@ const PAGE_SIZE = 20;
 
 export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { isPhone, isTablet } = useResponsive();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -101,13 +105,15 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Categories */}
-        <View style={styles.section}>
-          <CategoryGrid
-            categories={PRODUCT_CATEGORIES}
-            selected={selectedCategory}
-            onSelect={(name) => setSelectedCategory(selectedCategory === name ? '' : name)}
-          />
-        </View>
+        <ResponsiveContainer style={styles.sectionNoPad}>
+          <View style={styles.section}>
+            <CategoryGrid
+              categories={PRODUCT_CATEGORIES}
+              selected={selectedCategory}
+              onSelect={(name) => setSelectedCategory(selectedCategory === name ? '' : name)}
+            />
+          </View>
+        </ResponsiveContainer>
 
         {/* Sellers Banner */}
         {loading ? (
@@ -142,55 +148,57 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
         )}
 
         {/* Products Grid */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedCategory || 'All Products'}
-            </Text>
-            <Text style={styles.productCount}>{loading ? '...' : filteredBySearch.length + ' items'}</Text>
-          </View>
-          {loading ? (
-            <View style={styles.productsGrid}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <View key={i} style={{ width: '48%' }}>
-                  <SkeletonLoader type="card" />
-                </View>
-              ))}
+        <ResponsiveContainer style={styles.sectionNoPad}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {selectedCategory || 'All Products'}
+              </Text>
+              <Text style={styles.productCount}>{loading ? '...' : filteredBySearch.length + ' items'}</Text>
             </View>
-          ) : (
-            <>
-              <View style={styles.productsGrid}>
-                {filteredBySearch.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
-                  />
+            {loading ? (
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <View key={i} style={{ width: '100%' }}>
+                    <SkeletonLoader type="card" />
+                  </View>
                 ))}
-              </View>
-              {filteredBySearch.length === 0 && (
-                <View style={styles.emptyState}>
-                  <Ionicons name="search-outline" size={48} color={COLORS.textTertiary} />
-                  <Text style={styles.emptyText}>No products found</Text>
-                </View>
-              )}
-              {!loading && filteredBySearch.length > 0 && hasMore && (
-                <TouchableOpacity
-                  style={styles.loadMoreBtn}
-                  onPress={handleLoadMore}
-                  disabled={loadingMore}
-                  activeOpacity={0.8}
-                >
-                  {loadingMore ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <Text style={styles.loadMoreText}>Load more</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </>
-          )}
-        </View>
+              </ResponsiveGrid>
+            ) : (
+              <>
+                <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+                  {filteredBySearch.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
+                    />
+                  ))}
+                </ResponsiveGrid>
+                {filteredBySearch.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Ionicons name="search-outline" size={48} color={COLORS.textTertiary} />
+                    <Text style={styles.emptyText}>No products found</Text>
+                  </View>
+                )}
+                {!loading && filteredBySearch.length > 0 && hasMore && (
+                  <TouchableOpacity
+                    style={styles.loadMoreBtn}
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                    activeOpacity={0.8}
+                  >
+                    {loadingMore ? (
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    ) : (
+                      <Text style={styles.loadMoreText}>Load more</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
+        </ResponsiveContainer>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -275,6 +283,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
   },
+  sectionNoPad: {
+    paddingHorizontal: 0,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -329,11 +340,6 @@ const styles = StyleSheet.create({
     color: COLORS.textTertiary,
     fontSize: 11,
     marginTop: 4,
-  },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   emptyState: {
     alignItems: 'center',

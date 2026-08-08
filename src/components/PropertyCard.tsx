@@ -6,15 +6,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Property } from '../constants/types';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width - SPACING.md * 2;
 
 interface PropertyCardProps {
   property: Property;
@@ -216,7 +212,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH,
+    width: '100%',
     marginBottom: SPACING.md,
   },
   touchable: {
@@ -224,7 +220,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardInner: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     backgroundColor: '#181818',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
@@ -234,8 +230,8 @@ const styles = StyleSheet.create({
   },
   // Image
   imageContainer: {
-    width: '38%',
-    aspectRatio: 0.85,
+    width: '100%',
+    height: 200,
     position: 'relative',
   },
   image: {
@@ -273,7 +269,7 @@ const styles = StyleSheet.create({
   // Info
   infoContainer: {
     flex: 1,
-    padding: SPACING.sm,
+    padding: SPACING.md,
     gap: 4,
   },
   featuredBadge: {

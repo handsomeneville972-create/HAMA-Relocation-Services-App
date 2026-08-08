@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { CommunityPostCard } from '../components/CommunityPost';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { getCommunityPosts } from '../services/communityService';
 import { getLocalPosts } from '../utils/localPosts';
+import { useResponsive } from '../utils/responsive';
 import type { CommunityPost } from '../constants/types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,12 +22,11 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'following', label: 'Following', icon: 'people' },
 ];
 
-const TAB_WIDTH = (Dimensions.get('window').width - 32) / 3;
-
 const PAGE_SIZE = 20;
 
 export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width, isPhone, isTablet } = useResponsive();
   const router = useRouter();
   const { currentUserId } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
@@ -35,6 +36,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const tabIndicator = useRef(new Animated.Value(0)).current;
+  const tabWidth = (width - 32) / 3;
 
   const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
     const { data } = await getCommunityPosts({
@@ -130,7 +132,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 transform: [{
                   translateX: tabIndicator.interpolate({
                     inputRange: [0, 1, 2],
-                    outputRange: [0, TAB_WIDTH, TAB_WIDTH * 2],
+                    outputRange: [0, tabWidth, tabWidth * 2],
                   })
                 }],
               },
@@ -153,9 +155,13 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         {/* Posts */}
         <View style={styles.postsContainer}>
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonLoader key={i} type="post" />
-            ))
+            <ResponsiveGrid columns={isPhone ? 1 : isTablet ? 2 : 3}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <View key={i} style={{ width: '100%' }}>
+                  <SkeletonLoader type="post" />
+                </View>
+              ))}
+            </ResponsiveGrid>
           ) : activeTab === 'following' ? (
             <View style={styles.emptyState}>
               <Ionicons name="people-outline" size={40} color={COLORS.textTertiary} />
@@ -171,13 +177,15 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
               <Text style={styles.emptyText}>Be the first to share something with the community!</Text>
             </View>
           ) : (
-            visiblePosts.map((post) => (
-              <CommunityPostCard
-                key={post.id}
-                post={post}
-                onPress={() => navigation.navigate('PostDetail', { postId: post.id })}
-              />
-            ))
+            <ResponsiveGrid columns={isPhone ? 1 : isTablet ? 2 : 3}>
+              {visiblePosts.map((post) => (
+                <CommunityPostCard
+                  key={post.id}
+                  post={post}
+                  onPress={() => navigation.navigate('PostDetail', { postId: post.id })}
+                />
+              ))}
+            </ResponsiveGrid>
           )}
           {!loading && visiblePosts.length > 0 && hasMore && (
             <TouchableOpacity
@@ -314,6 +322,9 @@ const styles = StyleSheet.create({
   },
   postsContainer: {
     paddingHorizontal: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   loadMoreBtn: {
     alignItems: 'center',

@@ -13,9 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useProvider } from '../contexts/ProviderContext';
 import { completionScore } from '../services/providerOnboardingService';
+import { useResponsive } from '../utils/responsive';
 import {
   CustomerRecord,
   JobItem,
@@ -70,6 +72,7 @@ function CountUp({ value, duration = 900, prefix = '', suffix = '', format }: {
 
 export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { isPhone } = useResponsive();
   const { provider, isProvider, getDashboardData, logoutProvider } = useProvider();
   const [tab, setTab] = useState<TabKey>('overview');
   const [loading, setLoading] = useState(true);
@@ -204,7 +207,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* KPI cards */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACING.md, paddingHorizontal: SPACING.md, paddingTop: 2 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACING.md, paddingHorizontal: SPACING.md, paddingTop: 2, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
         {kpis.map((k) => (
           <LinearGradient key={k.key} colors={['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.02)']} style={styles.kpiCard}>
             <View style={styles.kpiHeader}>
@@ -323,7 +326,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Quick actions */}
       <Text style={[styles.sectionTitle, { marginTop: SPACING.lg, marginBottom: SPACING.md }]}>Quick actions</Text>
-      <View style={styles.quickGrid}>
+      <ResponsiveGrid columns={isPhone ? 4 : 8}>
         {quickActions.map((a) => (
           <TouchableOpacity key={a.label} style={styles.quickAction} activeOpacity={0.7}>
             <View style={[styles.quickIcon, { backgroundColor: `${a.tint}1F` }]}>
@@ -332,7 +335,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.quickLabel}>{a.label}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ResponsiveGrid>
 
       {/* Reviews snapshot */}
       <View style={styles.sectionHeader}>
@@ -623,7 +626,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       ) : (
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 48 }}
+          contentContainerStyle={{ paddingBottom: 48, maxWidth: 1200, width: '100%', alignSelf: 'center' }}
           style={{ opacity: fadeAnim }}
         >
           {renderTab()}
@@ -637,14 +640,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   bg: { ...StyleSheet.absoluteFillObject },
   roundBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md },
+  header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   brandRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   brandLogo: { width: 40, height: 40, borderRadius: RADIUS.md },
   brandNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   brandName: { ...FONTS.h3, fontSize: 16, lineHeight: 20 },
   brandSub: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
   notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
-  tabsRow: { flexDirection: 'row', gap: SPACING.sm, paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
+  tabsRow: { flexDirection: 'row', gap: SPACING.sm, paddingHorizontal: SPACING.md, paddingBottom: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
   tabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   tabText: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
@@ -696,8 +699,7 @@ const styles = StyleSheet.create({
   kanbanColPreview: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
   kanbanColTitle: { ...FONTS.caption, fontSize: 11, fontWeight: '700' },
   kanbanColCount: { ...FONTS.h3, fontSize: 22, fontVariant: ['tabular-nums'] },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md, paddingHorizontal: SPACING.md },
-  quickAction: { width: (390 - SPACING.md * 3 - 32) / 4, alignItems: 'center', gap: 6 },
+  quickAction: { width: '100%', alignItems: 'center', gap: 6 },
   quickIcon: { width: 44, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   quickLabel: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary },
   reviewNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { useUserFavorites } from '../hooks/useUserData';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 type TabType = 'properties' | 'products' | 'posts';
@@ -16,13 +18,13 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'posts', label: 'Posts', icon: 'bookmark-outline' },
 ];
 
-const TAB_WIDTH = (Dimensions.get('window').width - 32) / 3;
-
 export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width, isPhone } = useResponsive();
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   const tabIndicator = useRef(new Animated.Value(0)).current;
   const [loading, setLoading] = useState(true);
+  const tabWidth = (width - 32) / 3;
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 600);
@@ -80,7 +82,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 transform: [{
                   translateX: tabIndicator.interpolate({
                     inputRange: [0, 1, 2],
-                    outputRange: [0, TAB_WIDTH, TAB_WIDTH * 2],
+                    outputRange: [0, tabWidth, tabWidth * 2],
                   })
                 }],
               },
@@ -131,7 +133,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             {savedProducts.length === 0 ? (
               <EmptyState icon="cart-outline" title="No saved products" subtitle="Tap the heart icon on any product to save it" />
             ) : (
-              <View style={styles.productsGrid}>
+              <ResponsiveGrid columns={isPhone ? 2 : 3}>
                 {savedProducts.map(product => (
                   <TouchableOpacity key={product.id} activeOpacity={0.9} style={styles.productCard} onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}>
                     <GlassCard noPadding>
@@ -150,7 +152,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                     </GlassCard>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ResponsiveGrid>
             )}
           </>
         )}
@@ -268,6 +270,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   // Saved Items
   savedItem: {
@@ -319,19 +324,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   // Products Grid
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
   productCard: {
-    width: (Dimensions.get('window').width - SPACING.md * 3) / 2,
+    width: '100%',
     marginBottom: SPACING.md,
     position: 'relative',
   },
   productImage: {
     width: '100%',
-    height: 120,
+    aspectRatio: 1.4,
     borderTopLeftRadius: RADIUS.lg,
     borderTopRightRadius: RADIUS.lg,
   },

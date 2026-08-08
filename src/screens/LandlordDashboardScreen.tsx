@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,15 +7,12 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useResponsive } from '../utils/responsive';
 import { formatPrice } from '../utils/currency';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SCREEN_PADDING = 24;
-const GAP = 16;
-const KPI_CARD_WIDTH = (SCREEN_WIDTH - SCREEN_PADDING - GAP) / 2;
 
 const CHECKLIST_STORAGE_KEY = 'hama_landlord_checklist_v1';
 
@@ -125,6 +122,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const { currentUser } = useAuth();
+  const { isPhone, isTablet } = useResponsive();
 
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<TabKey>('overview');
@@ -385,7 +383,11 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
       {renderWelcomeBanner()}
       {renderSetupChecklist()}
       {renderVerificationBanner()}
-      <View style={styles.kpiGrid}>{KPI_DATA.map((item, i) => renderKpiCard(item, i))}</View>
+      <View style={styles.kpiGrid}>
+        <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+          {KPI_DATA.map((item, i) => renderKpiCard(item, i))}
+        </ResponsiveGrid>
+      </View>
       {renderQuickActions()}
       {renderRevenueChart()}
       {renderRecentBookings()}
@@ -602,6 +604,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.md,
     marginBottom: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   backBtn: {
     width: 38,
@@ -636,6 +641,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     padding: 4,
     gap: 4,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   tab: {
     flex: 1,
@@ -653,7 +661,7 @@ const styles = StyleSheet.create({
   },
 
   // Content
-  scrollContent: { padding: SPACING.lg },
+  scrollContent: { padding: SPACING.lg, maxWidth: 1200, width: '100%', alignSelf: 'center' },
 
   // Welcome
   welcomeBanner: {
@@ -737,7 +745,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   kpiCard: {
-    width: KPI_CARD_WIDTH,
+    width: '100%',
     backgroundColor: COLORS.bgCard,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
@@ -766,7 +774,7 @@ const styles = StyleSheet.create({
   kpiChangeText: { color: COLORS.success, fontSize: 10, fontWeight: '700' },
 
   // Quick actions
-  quickActionsRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.md },
+  quickActionsRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   quickActionBtn: {
     flex: 1,
     backgroundColor: COLORS.bgCard,

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../constants/types';
@@ -7,16 +7,14 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { formatPrice } from '../utils/currency';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - SPACING.md * 3) / 2;
-
 interface ProductCardProps {
   product: Product;
   onPress?: () => void;
   featured?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, featured = false }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, featured = false, style }) => {
   const reducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -69,6 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, feat
       style={[
         styles.container,
         featured && styles.featuredContainer,
+        style,
         {
           opacity: fadeAnim,
           transform: [
@@ -134,7 +133,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, feat
 
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH,
+    width: '100%',
     marginBottom: SPACING.md,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.bgCard,
@@ -152,7 +151,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: CARD_WIDTH * 0.9,
+    aspectRatio: 1.11,
     position: 'relative',
   },
   image: {

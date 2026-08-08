@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { searchProperties } from '../services/propertyService';
 import { searchProducts } from '../services/productService';
 import { searchServiceProviders } from '../services/serviceProviderService';
 import { softSanitize } from '../utils/sanitize';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Property, Product, ServiceProvider } from '../constants/types';
 
@@ -23,6 +25,7 @@ const TABS: { key: SearchTab; label: string }[] = [
 
 export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { isPhone } = useResponsive();
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SearchTab>('all');
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
@@ -128,7 +131,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Popular Categories */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Popular Categories</Text>
-              <View style={styles.popularGrid}>
+              <ResponsiveGrid columns={isPhone ? 3 : 6}>
                 {[
                   { icon: 'bed-outline', label: 'Apartments', color: COLORS.primary },
                   { icon: 'cart-outline', label: 'Furniture', color: COLORS.secondary },
@@ -144,7 +147,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <Text style={styles.popularLabel}>{cat.label}</Text>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ResponsiveGrid>
             </View>
           </>
         ) : (
@@ -341,6 +344,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: SPACING.sm,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   section: {
     paddingHorizontal: SPACING.md,
@@ -371,13 +377,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   // Popular Categories
-  popularGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
   popularCard: {
-    width: (Dimensions.get('window').width - SPACING.md * 2 - 10) / 3,
+    width: '100%',
     alignItems: 'center',
     gap: 8,
     backgroundColor: COLORS.bgCard,

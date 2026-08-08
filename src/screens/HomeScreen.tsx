@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, Dimensions, TouchableOpacity, Image, Linking, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, Image, Linking, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,17 +8,19 @@ import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { StaggerItem } from '../components/StaggerItem';
 import { PaywallOverlay } from '../components/PaywallOverlay';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { useSubscriptions } from '../contexts/SubscriptionContext';
 import { getProducts } from '../services/productService';
 import { getProperties, getNeighborhoods } from '../services/propertyService';
 import { formatPrice } from '../utils/currency';
+import { useResponsive } from '../utils/responsive';
 import type { Product, Property, Neighborhood } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, DIMENSIONS } from '../constants/theme';
-
-const { width, height } = Dimensions.get('window');
+import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width, height, isPhone, isTablet } = useResponsive();
   const { isSeekerLocked } = useSubscriptions();
   const scrollY = useRef(new Animated.Value(0)).current;
   const heroScale = useRef(new Animated.Value(1)).current;
@@ -49,6 +51,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const recentProperties = properties;
 
+  const heroHeight = Math.min(height * 0.55, 520);
+
   // Parallax hero
   const heroTranslateY = scrollY.interpolate({
     inputRange: [0, 200],
@@ -74,7 +78,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         style={styles.scrollView}
       >
         {/* Hero Section */}
-        <Animated.View style={[styles.heroContainer, { transform: [{ translateY: heroTranslateY }], opacity: heroOpacity }]}>
+        <Animated.View style={[styles.heroContainer, { height: heroHeight, transform: [{ translateY: heroTranslateY }], opacity: heroOpacity }]}>
           {/* Skeleton shimmer while image loads */}
           {!heroImageLoaded && (
             <View style={styles.heroImageSkeleton}>
@@ -115,7 +119,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
             style={styles.heroContentOverlay}
           >
-            <View style={[styles.heroContent, { paddingTop: insets.top + SPACING.xl }]}>
+            <View style={[styles.heroContent, { paddingTop: insets.top + SPACING.xl, width: '100%', maxWidth: 1200, alignSelf: 'center' }]}>
               {/* Top Bar */}
               <View style={styles.topBar}>
                 <View style={styles.logoContainer}>
@@ -171,112 +175,150 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </Animated.View>
 
         {/* Properties Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Ionicons name="home-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>Featured Properties</Text>
+        <ResponsiveContainer>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="home-outline" size={18} color={COLORS.primary} />
+                <Text style={styles.sectionTitle}>Featured Properties</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                if (isSeekerLocked) { setPaywallVisible(true); return; }
+                navigation.navigate('FeaturedProperties');
+              }}>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => {
-              if (isSeekerLocked) { setPaywallVisible(true); return; }
-              navigation.navigate('FeaturedProperties');
-            }}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {loading ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <View key={i} style={{ width: 300 }}>
-                  <SkeletonLoader type="card" />
-                </View>
-              ))}
-            </ScrollView>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
-              {properties.map((property, i) => (
-                <StaggerItem key={property.id} index={i} style={styles.propertyCard}>
-                  <TouchableOpacity activeOpacity={0.9} onPress={() => {
-                    if (isSeekerLocked) { setPaywallVisible(true); return; }
-                    navigation.navigate('PropertyDetail', { propertyId: property.id });
-                  }}>
-                    <GlassCard>
-                      <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
-                      <View style={styles.propertyInfo}>
-                        <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
-                        <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
-                        <View style={styles.propertyMeta}>
-                          <Text style={styles.propertyMetaText}>{property.bedrooms} Bed • {property.bathrooms} Bath</Text>
-                          <Text style={styles.propertyLocation}>{property.location}</Text>
+            {loading ? (
+              isPhone ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <View key={i} style={{ width: 300 }}>
+                      <SkeletonLoader type="card" />
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <ResponsiveGrid columns={isTablet ? 2 : 3}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <View key={i} style={{ width: '100%' }}>
+                      <SkeletonLoader type="card" />
+                    </View>
+                  ))}
+                </ResponsiveGrid>
+              )
+            ) : isPhone ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertiesScroll}>
+                {properties.map((property, i) => (
+                  <StaggerItem key={property.id} index={i} style={styles.propertyCard}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => {
+                      if (isSeekerLocked) { setPaywallVisible(true); return; }
+                      navigation.navigate('PropertyDetail', { propertyId: property.id });
+                    }}>
+                      <GlassCard>
+                        <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
+                        <View style={styles.propertyInfo}>
+                          <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
+                          <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
+                          <View style={styles.propertyMeta}>
+                            <Text style={styles.propertyMetaText}>{property.bedrooms} Bed • {property.bathrooms} Bath</Text>
+                            <Text style={styles.propertyLocation}>{property.location}</Text>
+                          </View>
                         </View>
-                      </View>
-                    </GlassCard>
-                  </TouchableOpacity>
-                </StaggerItem>
-              ))}
-            </ScrollView>
-          )}
-        </View>
+                      </GlassCard>
+                    </TouchableOpacity>
+                  </StaggerItem>
+                ))}
+              </ScrollView>
+            ) : (
+              <ResponsiveGrid columns={isTablet ? 2 : 3}>
+                {properties.map((property, i) => (
+                  <StaggerItem key={property.id} index={i} style={{ width: '100%' }}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => {
+                      if (isSeekerLocked) { setPaywallVisible(true); return; }
+                      navigation.navigate('PropertyDetail', { propertyId: property.id });
+                    }}>
+                      <GlassCard>
+                        <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
+                        <View style={styles.propertyInfo}>
+                          <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
+                          <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
+                          <View style={styles.propertyMeta}>
+                            <Text style={styles.propertyMetaText}>{property.bedrooms} Bed • {property.bathrooms} Bath</Text>
+                            <Text style={styles.propertyLocation}>{property.location}</Text>
+                          </View>
+                        </View>
+                      </GlassCard>
+                    </TouchableOpacity>
+                  </StaggerItem>
+                ))}
+              </ResponsiveGrid>
+            )}
+          </View>
+        </ResponsiveContainer>
 
         {/* Marketplace Products */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Ionicons name="cart-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>Featured Products</Text>
+        <ResponsiveContainer>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="cart-outline" size={18} color={COLORS.primary} />
+                <Text style={styles.sectionTitle}>Featured Products</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                if (isSeekerLocked) { setPaywallVisible(true); return; }
+                navigation.navigate('Marketplace');
+              }}>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => {
-              if (isSeekerLocked) { setPaywallVisible(true); return; }
-              navigation.navigate('Marketplace');
-            }}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
+            {loading ? (
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <View key={i} style={{ width: '100%' }}>
+                    <SkeletonLoader type="card" />
+                  </View>
+                ))}
+              </ResponsiveGrid>
+            ) : (
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+                {featuredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    featured
+                    onPress={() => {
+                      if (isSeekerLocked) { setPaywallVisible(true); return; }
+                      navigation.navigate('ProductDetail', { productId: product.id });
+                    }}
+                  />
+                ))}
+              </ResponsiveGrid>
+            )}
           </View>
-          {loading ? (
-            <View style={styles.productsGrid}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <View key={i} style={{ width: '48%' }}>
-                  <SkeletonLoader type="card" />
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.productsGrid}>
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  featured
-                  onPress={() => {
-                    if (isSeekerLocked) { setPaywallVisible(true); return; }
-                    navigation.navigate('ProductDetail', { productId: product.id });
-                  }}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        </ResponsiveContainer>
 
         {/* Neighborhoods */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Ionicons name="map-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>Explore Neighborhoods</Text>
+        <ResponsiveContainer>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="map-outline" size={18} color={COLORS.primary} />
+                <Text style={styles.sectionTitle}>Explore Neighborhoods</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {loading ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.neighborhoodScroll}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <SkeletonLoader key={i} type="banner" width={200} />
-              ))}
-            </ScrollView>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.neighborhoodScroll}>
-              {neighborhoods.map((hood) => (
+            {loading ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.neighborhoodScroll}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonLoader key={i} type="banner" width={264} />
+                ))}
+              </ScrollView>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.neighborhoodScroll}>
+                {neighborhoods.map((hood) => (
                 <TouchableOpacity key={hood.id} activeOpacity={0.9} style={styles.neighborhoodCard}>
                   <Image source={{ uri: hood.image }} style={styles.neighborhoodImage} />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.9)']} style={styles.neighborhoodOverlay}>
@@ -290,7 +332,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               ))}
             </ScrollView>
           )}
-        </View>
+          </View>
+        </ResponsiveContainer>
 
         {/* Professional Footer */}
         <View style={styles.footerContainer}>
@@ -407,7 +450,6 @@ const styles = StyleSheet.create({
   },
   heroContainer: {
     overflow: 'hidden',
-    height: height * 0.55,
     position: 'relative',
   },
   heroImage: {
@@ -557,7 +599,6 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    paddingHorizontal: SPACING.md,
     marginBottom: SPACING.lg,
   },
   sectionHeader: {
@@ -620,18 +661,13 @@ const styles = StyleSheet.create({
     color: COLORS.textTertiary,
     fontSize: 11,
   },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
   neighborhoodScroll: {
     gap: 8,
     paddingRight: SPACING.md,
   },
   neighborhoodCard: {
-    width: 220,
-    height: 160,
+    width: 264,
+    height: 192,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },

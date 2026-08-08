@@ -648,6 +648,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.sm,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   searchBar: {
     flexDirection: 'row',
@@ -677,6 +680,9 @@ const styles = StyleSheet.create({
   // Categories
   categoryContainer: {
     paddingBottom: SPACING.sm,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   categoryScroll: {
     paddingHorizontal: SPACING.md,
@@ -710,6 +716,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.xxl,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   skeletonContainer: {
     marginBottom: SPACING.md,

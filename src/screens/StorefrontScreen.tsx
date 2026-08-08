@@ -1,18 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProductCard } from '../components/ProductCard';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { getSellerById, getProducts } from '../services/productService';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Seller, Product } from '../constants/types';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 
-const { width } = Dimensions.get('window');
 const BANNER_HEIGHT = 200;
 
 export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { sellerId } = route.params;
+  const { isPhone, isTablet } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [seller, setSeller] = useState<Seller | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -139,7 +141,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
         {/* Products */}
         <View style={styles.productsSection}>
           <Text style={styles.sectionTitle}>Products ({seller.products.length})</Text>
-          <View style={styles.productsGrid}>
+          <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -147,7 +149,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
                 onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}
               />
             ))}
-          </View>
+          </ResponsiveGrid>
         </View>
 
         <View style={{ height: 40 }} />
@@ -294,12 +296,9 @@ const styles = StyleSheet.create({
   productsSection: {
     paddingHorizontal: SPACING.md,
     marginTop: SPACING.lg,
-  },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: SPACING.sm,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   followBar: {
     position: 'absolute',

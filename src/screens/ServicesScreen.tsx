@@ -7,9 +7,12 @@ import { ServiceCard } from '../components/ServiceCard';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { PaywallOverlay } from '../components/PaywallOverlay';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { SERVICE_CATEGORIES } from '../constants/data';
 import { getServiceProviders } from '../services/serviceProviderService';
 import { softSanitize } from '../utils/sanitize';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { ServiceProvider } from '../constants/types';
 
@@ -22,6 +25,7 @@ const PAGE_SIZE = 20;
 
 export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSeekerLocked = false }) => {
   const insets = useSafeAreaInsets();
+  const { isPhone, isTablet } = useResponsive();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -89,90 +93,102 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Featured Banner */}
-        {loading ? (
-          <View style={styles.featuredBanner}>
-            <SkeletonLoader type="banner" />
-          </View>
-        ) : (
-          <View style={styles.featuredBanner}>
-            <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('BecomeProvider')}>
-              <LinearGradient colors={['rgba(255,107,0,0.22)', 'rgba(255,107,0,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerGradient}>
-                <View style={styles.bannerContent}>
-                  <View style={styles.bannerText}>
-                    <Text style={styles.bannerTitle}>Grow your business with HAMA</Text>
-                    <Text style={styles.bannerSubtitle}>Free to join — go live today and get found by nearby clients</Text>
+        <ResponsiveContainer padding={0}>
+          {loading ? (
+            <View style={styles.featuredBanner}>
+              <SkeletonLoader type="banner" />
+            </View>
+          ) : (
+            <View style={styles.featuredBanner}>
+              <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('BecomeProvider')}>
+                <LinearGradient colors={['rgba(255,107,0,0.22)', 'rgba(255,107,0,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerGradient}>
+                  <View style={styles.bannerContent}>
+                    <View style={styles.bannerText}>
+                      <Text style={styles.bannerTitle}>Grow your business with HAMA</Text>
+                      <Text style={styles.bannerSubtitle}>Free to join — go live today and get found by nearby clients</Text>
+                    </View>
+                    <View style={styles.bannerIcon}>
+                      <Ionicons name="storefront" size={34} color={COLORS.primary} />
+                    </View>
                   </View>
-                  <View style={styles.bannerIcon}>
-                    <Ionicons name="storefront" size={34} color={COLORS.primary} />
-                  </View>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ResponsiveContainer>
 
         {/* Categories */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-        </View>
-        {loading ? (
+        <ResponsiveContainer padding={0}>
           <View style={styles.section}>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: SPACING.md, marginBottom: SPACING.md }}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <View key={i} style={{ width: 60, alignItems: 'center' }}>
-                  <SkeletonLoader type="circle" />
-                </View>
-              ))}
-            </View>
+            <Text style={styles.sectionTitle}>Categories</Text>
           </View>
+        </ResponsiveContainer>
+        {loading ? (
+          <ResponsiveContainer padding={0}>
+            <View style={styles.section}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: SPACING.md, marginBottom: SPACING.md }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <View key={i} style={{ width: 60, alignItems: 'center' }}>
+                    <SkeletonLoader type="circle" />
+                  </View>
+                ))}
+              </View>
+            </View>
+          </ResponsiveContainer>
         ) : (
-          <CategoryGrid
-            categories={SERVICE_CATEGORIES}
-            selected={selectedCategory}
-            onSelect={(name) => setSelectedCategory(selectedCategory === name ? '' : name)}
-            variant="list"
-          />
+          <ResponsiveContainer padding={0}>
+            <CategoryGrid
+              categories={SERVICE_CATEGORIES}
+              selected={selectedCategory}
+              onSelect={(name) => setSelectedCategory(selectedCategory === name ? '' : name)}
+              variant="list"
+            />
+          </ResponsiveContainer>
         )}
 
         {/* Providers */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedCategory ? selectedCategory : 'All Providers'}
-            </Text>
-            <Text style={styles.providerCount}>{loading ? '...' : `${filteredProviders.length} available`}</Text>
+        <ResponsiveContainer padding={0}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {selectedCategory ? selectedCategory : 'All Providers'}
+              </Text>
+              <Text style={styles.providerCount}>{loading ? '...' : `${filteredProviders.length} available`}</Text>
+            </View>
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonLoader key={i} type="list" />
+              ))
+            ) : (
+              <ResponsiveGrid columns={isPhone ? 1 : isTablet ? 2 : 2}>
+                {filteredProviders.map((provider) => (
+                  <ServiceCard
+                    key={provider.id}
+                    provider={provider}
+                    onPress={() => {
+                      if (isSeekerLocked) { setPaywallVisible(true); return; }
+                      navigation.navigate('ServiceProviderProfile', { providerId: provider.id });
+                    }}
+                  />
+                ))}
+              </ResponsiveGrid>
+            )}
+            {!loading && filteredProviders.length > 0 && hasMore && (
+              <TouchableOpacity
+                style={styles.loadMoreBtn}
+                onPress={handleLoadMore}
+                disabled={loadingMore}
+                activeOpacity={0.8}
+              >
+                {loadingMore ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : (
+                  <Text style={styles.loadMoreText}>Load more</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
-          {loading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonLoader key={i} type="list" />
-            ))
-          ) : (
-            filteredProviders.map((provider) => (
-              <ServiceCard
-                key={provider.id}
-                provider={provider}
-                onPress={() => {
-                  if (isSeekerLocked) { setPaywallVisible(true); return; }
-                  navigation.navigate('ServiceProviderProfile', { providerId: provider.id });
-                }}
-              />
-            ))
-          )}
-          {!loading && filteredProviders.length > 0 && hasMore && (
-            <TouchableOpacity
-              style={styles.loadMoreBtn}
-              onPress={handleLoadMore}
-              disabled={loadingMore}
-              activeOpacity={0.8}
-            >
-              {loadingMore ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              ) : (
-                <Text style={styles.loadMoreText}>Load more</Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+        </ResponsiveContainer>
 
         <View style={{ height: 40 }} />
       </ScrollView>
