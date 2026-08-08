@@ -23,6 +23,7 @@ const ROUTE_PATHS: Record<string, string> = {
   AdminCenter: '/AdminCenter',
   LandlordOnboarding: '/LandlordOnboarding',
   LandlordDashboard: '/LandlordDashboard',
+  LandlordPlans: '/LandlordPlans',
   ServiceProviderOnboarding: '/ServiceProviderOnboarding',
   ServiceProviderProfile: '/ServiceProviderProfile',
   SellerDashboard: '/SellerDashboard',

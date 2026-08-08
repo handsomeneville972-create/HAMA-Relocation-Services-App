@@ -30,6 +30,14 @@ const MENU_SECTIONS = [
     ],
   },
   {
+    title: 'Landlord',
+    items: [
+      { icon: 'home-outline', label: 'Landlord Dashboard', color: COLORS.primary, route: 'LandlordDashboard' },
+      { icon: 'add-circle-outline', label: 'Add / Manage Properties', color: COLORS.accent, route: 'LandlordOnboarding' },
+      { icon: 'diamond-outline', label: 'Plans & Pricing', color: COLORS.secondary, route: 'LandlordPlans' },
+    ],
+  },
+  {
     title: 'Service Provider',
     items: [
       { icon: 'storefront-outline', label: 'Become a Service Provider', color: COLORS.primary, route: 'BecomeProvider' },
