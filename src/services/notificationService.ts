@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery } from './supabaseService';
+import { executeQuery, SEARCH_PAGE_SIZE } from './supabaseService';
 import { MOCK_NOTIFICATIONS } from '../constants/data';
 import type { Notification } from '../constants/types';
 
@@ -19,7 +19,8 @@ export async function getNotifications(
         .from('notifications')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as Notification[] | null, error };
     },
     MOCK_NOTIFICATIONS,

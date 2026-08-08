@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery } from './supabaseService';
+import { executeQuery, DEFAULT_PAGE_SIZE, SEARCH_PAGE_SIZE } from './supabaseService';
 import { MOCK_PROPERTIES, MOCK_PROPERTY_REVIEWS, MOCK_NEIGHBORHOODS } from '../constants/data';
 import type { Property, PropertyReview, Neighborhood } from '../constants/types';
 
@@ -48,9 +48,7 @@ export async function getProperties(params?: {
 
       query = query.order('created_at', { ascending: false });
 
-      if (params?.limit) {
-        query = query.limit(params.limit);
-      }
+      query = query.limit(params?.limit ?? DEFAULT_PAGE_SIZE);
 
       const { data, error } = await query;
       return { data: data as unknown as Property[] | null, error };
@@ -141,7 +139,8 @@ export async function searchProperties(
         .from('properties')
         .select('*, landlord:landlord_id(*)')
         .or(`title.ilike.%${searchLower}%,description.ilike.%${searchLower}%,location.ilike.%${searchLower}%`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as unknown as Property[] | null, error };
     },
     MOCK_PROPERTIES.filter(
@@ -163,7 +162,8 @@ export async function getPropertyReviews(
         .from('property_reviews')
         .select('*, user:user_id(*)')
         .eq('property_id', propertyId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(DEFAULT_PAGE_SIZE);
       return { data: data as unknown as PropertyReview[] | null, error };
     },
     MOCK_PROPERTY_REVIEWS.filter(r => r.propertyId === propertyId),
@@ -212,7 +212,8 @@ export async function getNeighborhoods(): Promise<{ data: Neighborhood[] | null;
       const { data, error } = await supabase
         .from('neighborhoods')
         .select('*')
-        .order('rating', { ascending: false });
+        .order('rating', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as Neighborhood[] | null, error };
     },
     MOCK_NEIGHBORHOODS,

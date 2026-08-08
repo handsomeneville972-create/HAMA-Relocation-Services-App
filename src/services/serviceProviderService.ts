@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery } from './supabaseService';
+import { executeQuery, DEFAULT_PAGE_SIZE, SEARCH_PAGE_SIZE } from './supabaseService';
 import { MOCK_SERVICE_PROVIDERS } from '../constants/data';
 import type { ProviderProfile, ServiceProvider } from '../constants/types';
 
@@ -34,6 +34,7 @@ export async function getProviderProfileByUserId(
 export async function getServiceProviders(params?: {
   category?: string;
   limit?: number;
+  offset?: number;
 }): Promise<{ data: ServiceProvider[] | null; error: string | null }> {
   return executeQuery<ServiceProvider[]>(
     async () => {
@@ -45,9 +46,10 @@ export async function getServiceProviders(params?: {
       if (params?.category) {
         query = query.eq('category', params.category);
       }
-      if (params?.limit) {
-        query = query.limit(params.limit);
-      }
+
+      const limit = params?.limit ?? DEFAULT_PAGE_SIZE;
+      const offset = params?.offset ?? 0;
+      query = query.range(offset, offset + limit - 1);
 
       const { data, error } = await query;
       return { data: data as ServiceProvider[] | null, error };
@@ -82,7 +84,8 @@ export async function searchServiceProviders(
         .from('service_providers')
         .select('*')
         .or(`name.ilike.%${searchLower}%,description.ilike.%${searchLower}%,category.ilike.%${searchLower}%,subcategory.ilike.%${searchLower}%`)
-        .order('rating', { ascending: false });
+        .order('rating', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as ServiceProvider[] | null, error };
     },
     MOCK_SERVICE_PROVIDERS.filter(

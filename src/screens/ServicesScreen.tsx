@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,20 +18,43 @@ interface ServicesScreenProps {
   isSeekerLocked?: boolean;
 }
 
+const PAGE_SIZE = 20;
+
 export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSeekerLocked = false }) => {
   const insets = useSafeAreaInsets();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
-  useEffect(() => {
-    getServiceProviders().then(({ data }) => {
-      if (data) setProviders(data);
-      setLoading(false);
+  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
+    const { data } = await getServiceProviders({
+      category: selectedCategory || undefined,
+      limit: PAGE_SIZE,
+      offset: (pageNum - 1) * PAGE_SIZE,
     });
-  }, []);
+    if (data) {
+      setProviders(prev => (append ? [...prev, ...data] : data));
+      setHasMore(data.length === PAGE_SIZE);
+    }
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchPage(1, false).finally(() => setLoading(false));
+  }, [fetchPage]);
+
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPage(nextPage, true).finally(() => setLoadingMore(false));
+  };
 
   const filteredProviders = selectedCategory
     ? providers.filter(p => p.category === selectedCategory)
@@ -134,6 +157,20 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
                 }}
               />
             ))
+          )}
+          {!loading && filteredProviders.length > 0 && hasMore && (
+            <TouchableOpacity
+              style={styles.loadMoreBtn}
+              onPress={handleLoadMore}
+              disabled={loadingMore}
+              activeOpacity={0.8}
+            >
+              {loadingMore ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Text style={styles.loadMoreText}>Load more</Text>
+              )}
+            </TouchableOpacity>
           )}
         </View>
 
@@ -252,5 +289,20 @@ const styles = StyleSheet.create({
   providerCount: {
     color: COLORS.textTertiary,
     fontSize: 13,
+  },
+  loadMoreBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+  },
+  loadMoreText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

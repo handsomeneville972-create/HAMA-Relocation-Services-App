@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery } from './supabaseService';
+import { executeQuery, DEFAULT_PAGE_SIZE, SEARCH_PAGE_SIZE } from './supabaseService';
 import { MOCK_COMMUNITY_POSTS } from '../constants/data';
 import type { CommunityPost, PostComment } from '../constants/types';
 
@@ -14,6 +14,7 @@ export async function getCommunityPosts(params?: {
   type?: string;
   userId?: string;
   limit?: number;
+  offset?: number;
   currentUserId?: string;
 }): Promise<{ data: CommunityPost[] | null; error: string | null }> {
   const postsResult = await executeQuery<CommunityPost[]>(
@@ -29,9 +30,10 @@ export async function getCommunityPosts(params?: {
       if (params?.userId) {
         query = query.eq('user_id', params.userId);
       }
-      if (params?.limit) {
-        query = query.limit(params.limit);
-      }
+
+      const limit = params?.limit ?? DEFAULT_PAGE_SIZE;
+      const offset = params?.offset ?? 0;
+      query = query.range(offset, offset + limit - 1);
 
       const { data, error } = await query;
       return { data: data as unknown as CommunityPost[] | null, error };
@@ -265,7 +267,8 @@ export async function getComments(
         .from('post_comments')
         .select('*, user:user_id(*)')
         .eq('post_id', postId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as unknown as PostComment[] | null, error };
     },
     [],

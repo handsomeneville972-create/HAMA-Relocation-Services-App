@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,8 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
 
 const TAB_WIDTH = (Dimensions.get('window').width - 32) / 3;
 
+const PAGE_SIZE = 20;
+
 export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -29,15 +31,41 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const tabIndicator = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    getCommunityPosts({ currentUserId }).then(({ data }) => {
-      const local = getLocalPosts();
-      setPosts([...local, ...(data ?? [])]);
-      setLoading(false);
+  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
+    const { data } = await getCommunityPosts({
+      currentUserId,
+      limit: PAGE_SIZE,
+      offset: (pageNum - 1) * PAGE_SIZE,
     });
+    if (data) {
+      setPosts(prev => {
+        if (!append) {
+          return [...getLocalPosts(), ...data];
+        }
+        const seen = new Set(prev.map(p => p.id));
+        return [...prev, ...data.filter(p => !seen.has(p.id))];
+      });
+      setHasMore(data.length === PAGE_SIZE);
+    }
   }, [currentUserId]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchPage(1, false).finally(() => setLoading(false));
+  }, [fetchPage]);
+
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPage(nextPage, true).finally(() => setLoadingMore(false));
+  };
 
   const handleTabChange = (tab: TabType, index: number) => {
     setActiveTab(tab);
@@ -150,6 +178,20 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                 onPress={() => navigation.navigate('PostDetail', { postId: post.id })}
               />
             ))
+          )}
+          {!loading && visiblePosts.length > 0 && hasMore && (
+            <TouchableOpacity
+              style={styles.loadMoreBtn}
+              onPress={handleLoadMore}
+              disabled={loadingMore}
+              activeOpacity={0.8}
+            >
+              {loadingMore ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Text style={styles.loadMoreText}>Load more</Text>
+              )}
+            </TouchableOpacity>
           )}
         </View>
 
@@ -272,6 +314,22 @@ const styles = StyleSheet.create({
   },
   postsContainer: {
     paddingHorizontal: SPACING.md,
+  },
+  loadMoreBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+  },
+  loadMoreText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',

@@ -6,9 +6,11 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery } from './supabaseService';
+import { executeQuery, DEFAULT_PAGE_SIZE } from './supabaseService';
 import { MOCK_CONVERSATIONS } from '../constants/data';
 import type { Conversation, Message } from '../constants/types';
+
+const MAX_MESSAGES_PER_CONVERSATION = 50;
 
 export async function getUserConversations(
   userId: string,
@@ -22,17 +24,50 @@ export async function getUserConversations(
 
       const conversationIds = participantData?.map(d => d.conversation_id) ?? [];
 
+      if (conversationIds.length === 0) {
+        return { data: [], error: null };
+      }
+
       const { data, error } = await supabase
         .from('conversations')
         .select(`
           *,
-          participants:conversation_participants(user:user_id(*)),
-          messages:messages(*)
+          participants:conversation_participants(user:user_id(*))
         `)
         .in('id', conversationIds)
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false })
+        .limit(DEFAULT_PAGE_SIZE);
 
-      return { data: data as unknown as Conversation[] | null, error };
+      if (error || !data) {
+        return { data: data as unknown as Conversation[] | null, error };
+      }
+
+      // Attach the latest message per conversation with a bounded fetch
+      const convIds = (data as unknown as Array<{ id: string }>).map(c => c.id);
+      const { data: latestMessages } = await supabase
+        .from('messages')
+        .select('*')
+        .in('conversation_id', convIds)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      const latestByConversation = new Map<string, { text: string; created_at: string }>();
+      for (const msg of (latestMessages ?? []) as Array<{ conversation_id: string; text: string; created_at: string }>) {
+        if (!latestByConversation.has(msg.conversation_id)) {
+          latestByConversation.set(msg.conversation_id, msg);
+        }
+      }
+
+      const enriched = (data as unknown as Array<Record<string, unknown>>).map(c => {
+        const latest = latestByConversation.get(c.id as string);
+        return {
+          ...c,
+          last_message: latest?.text ?? '',
+          last_message_time: latest?.created_at ?? c.updated_at,
+        };
+      });
+
+      return { data: enriched as unknown as Conversation[], error: null };
     },
     MOCK_CONVERSATIONS.filter(c => c.participants.some(p => p.id === userId)),
   );
@@ -47,12 +82,30 @@ export async function getConversationById(
         .from('conversations')
         .select(`
           *,
-          participants:conversation_participants(user:user_id(*)),
-          messages:messages(*)
+          participants:conversation_participants(user:user_id(*))
         `)
         .eq('id', conversationId)
         .single();
-      return { data: data as unknown as Conversation | null, error };
+
+      if (error || !data) {
+        return { data: data as unknown as Conversation | null, error };
+      }
+
+      // Fetch only the most recent messages (bounded), newest last
+      const { data: messageRows } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .limit(MAX_MESSAGES_PER_CONVERSATION);
+
+      return {
+        data: {
+          ...(data as object),
+          messages: (messageRows ?? []).slice().reverse(),
+        } as unknown as Conversation,
+        error: null,
+      };
     },
     MOCK_CONVERSATIONS.find(c => c.id === conversationId) ?? MOCK_CONVERSATIONS[0],
   );
@@ -67,8 +120,9 @@ export async function getMessages(
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-      return { data: data as Message[] | null, error };
+        .order('created_at', { ascending: false })
+        .limit(MAX_MESSAGES_PER_CONVERSATION);
+      return { data: (data ?? []).slice().reverse() as Message[] | null, error };
     },
     MOCK_CONVERSATIONS.find(c => c.id === conversationId)?.messages ?? [],
   );

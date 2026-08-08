@@ -7,7 +7,7 @@
  */
 
 import { supabase } from '../utils/supabaseClient';
-import { executeQuery, paginate, type PaginationParams, type SortParams } from './supabaseService';
+import { executeQuery, paginate, DEFAULT_PAGE_SIZE, SEARCH_PAGE_SIZE, type PaginationParams, type SortParams } from './supabaseService';
 import { MOCK_PRODUCTS, MOCK_SELLERS } from '../constants/data';
 import type { Product, Seller, ProductCategory } from '../constants/types';
 
@@ -19,7 +19,8 @@ export async function getSellers(): Promise<{ data: Seller[] | null; error: stri
       const { data, error } = await supabase
         .from('sellers')
         .select('*')
-        .order('rating', { ascending: false });
+        .order('rating', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as Seller[] | null, error };
     },
     MOCK_SELLERS,
@@ -81,10 +82,8 @@ export async function getProducts(params?: {
       const sortAsc = params?.sort?.ascending ?? false;
       query = query.order(sortCol, { ascending: sortAsc });
 
-      if (params?.pagination) {
-        const { from, to } = paginate(params.pagination.page, params.pagination.pageSize);
-        query = query.range(from, to);
-      }
+      const { from, to } = paginate(params?.pagination?.page ?? 1, params?.pagination?.pageSize ?? DEFAULT_PAGE_SIZE);
+      query = query.range(from, to);
 
       const { data, error } = await query;
       return { data: data as unknown as Product[] | null, error };
@@ -117,7 +116,8 @@ export async function searchProducts(
         .from('products')
         .select('*, seller:seller_id(*)')
         .or(`name.ilike.%${searchLower}%,description.ilike.%${searchLower}%,category.ilike.%${searchLower}%`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as unknown as Product[] | null, error };
     },
     MOCK_PRODUCTS.filter(
@@ -136,7 +136,8 @@ export async function getProductCategories(): Promise<{ data: ProductCategory[] 
       const { data, error } = await supabase
         .from('product_categories')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('display_order', { ascending: true })
+        .limit(SEARCH_PAGE_SIZE);
       return { data: data as unknown as ProductCategory[] | null, error };
     },
     null as any,

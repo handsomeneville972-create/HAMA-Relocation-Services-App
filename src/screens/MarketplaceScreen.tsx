@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,8 @@ import { softSanitize } from '../utils/sanitize';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Product, Seller } from '../constants/types';
 
+const PAGE_SIZE = 20;
+
 export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -20,20 +22,35 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [products, setProducts] = useState<Product[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const { totalQuantity } = useCart();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [prodRes, sellRes] = await Promise.all([
-        getProducts(),
-        getSellers(),
-      ]);
-      if (prodRes.data) setProducts(prodRes.data);
-      if (sellRes.data) setSellers(sellRes.data);
-      setLoading(false);
-    };
-    fetchData();
+  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
+    const [prodRes, sellRes] = await Promise.all([
+      getProducts({ pagination: { page: pageNum, pageSize: PAGE_SIZE } }),
+      pageNum === 1 ? getSellers() : Promise.resolve({ data: null, error: null }),
+    ]);
+    const newProducts = prodRes.data;
+    if (newProducts) {
+      setProducts(prev => (append ? [...prev, ...newProducts] : newProducts));
+      setHasMore(newProducts.length === PAGE_SIZE);
+    }
+    if (sellRes.data) setSellers(sellRes.data);
   }, []);
+
+  useEffect(() => {
+    fetchPage(1, false).finally(() => setLoading(false));
+  }, [fetchPage]);
+
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPage(nextPage, true).finally(() => setLoadingMore(false));
+  };
 
   const filteredProducts = selectedCategory
     ? products.filter(p => p.category === selectedCategory)
@@ -156,6 +173,20 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
                   <Ionicons name="search-outline" size={48} color={COLORS.textTertiary} />
                   <Text style={styles.emptyText}>No products found</Text>
                 </View>
+              )}
+              {!loading && filteredBySearch.length > 0 && hasMore && (
+                <TouchableOpacity
+                  style={styles.loadMoreBtn}
+                  onPress={handleLoadMore}
+                  disabled={loadingMore}
+                  activeOpacity={0.8}
+                >
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  ) : (
+                    <Text style={styles.loadMoreText}>Load more</Text>
+                  )}
+                </TouchableOpacity>
               )}
             </>
           )}
@@ -312,5 +343,20 @@ const styles = StyleSheet.create({
   emptyText: {
     color: COLORS.textTertiary,
     fontSize: 16,
+  },
+  loadMoreBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+  },
+  loadMoreText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

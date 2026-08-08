@@ -11,6 +11,12 @@ import { supabase } from '../utils/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 import { toCamelCase } from '../utils/transform';
 
+/** Default page size for list queries. */
+export const DEFAULT_PAGE_SIZE = 20;
+
+/** Default page size for search queries. */
+export const SEARCH_PAGE_SIZE = 50;
+
 /** Generic Supabase response wrapper */
 export interface ServiceResponse<T> {
   data: T | null;
