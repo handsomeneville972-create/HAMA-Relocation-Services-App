@@ -48,6 +48,7 @@ const MENU_SECTIONS = [
   {
     title: 'Activity',
     items: [
+      { icon: 'notifications-outline', label: 'Notifications', color: COLORS.warning, route: 'Notifications' },
       { icon: 'chatbubble-outline', label: 'Messages', color: COLORS.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
       { icon: 'chatbubble-outline', label: 'My Reviews', color: COLORS.warning, badgeKey: 'myReviews' },
       { icon: 'newspaper-outline', label: 'My Posts', color: COLORS.secondary, route: 'MyPosts' },

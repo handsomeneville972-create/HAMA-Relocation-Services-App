@@ -13,6 +13,7 @@ const ROUTE_PATHS: Record<string, string> = {
   Login: '/Login',
   Subscriptions: '/Subscriptions',
   Settings: '/Settings',
+  Notifications: '/(tabs)/notifications',
   PaymentMethods: '/PaymentMethods',
   BillingHistory: '/BillingHistory',
   WhatsNew: '/WhatsNew',

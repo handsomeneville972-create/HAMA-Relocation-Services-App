@@ -20,6 +20,13 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
 
+  const visibleRoutes = state.routes.filter((route) => {
+    const style = descriptors[route.key]?.options.tabBarItemStyle as
+      | { display?: string }
+      | undefined;
+    return style?.display !== 'none';
+  });
+
   const renderTab = (
     route: (typeof state.routes)[number],
     index: number,
@@ -123,7 +130,7 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
             <Text style={styles.brandText}>HAMA</Text>
           </View>
           <View style={styles.topTabs}>
-            {state.routes.map((route, index) => renderTab(route, index, { compact: false }))}
+            {visibleRoutes.map((route, index) => renderTab(route, index, { compact: false }))}
           </View>
         </View>
       </LinearGradient>
@@ -132,7 +139,7 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
 
   return (
     <View style={[styles.bottomBar, { paddingBottom: 28, height: 85 }]}>
-      {state.routes.map((route, index) => renderTab(route, index, { compact: true }))}
+      {visibleRoutes.map((route, index) => renderTab(route, index, { compact: true }))}
     </View>
   );
 };

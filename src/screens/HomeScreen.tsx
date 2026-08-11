@@ -131,10 +131,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <Text style={styles.logoSlogan}>Need a house homie? We've got you!</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.notifButton} onPress={() => navigation.navigate('Notifications')}>
-                  <Ionicons name="notifications" size={22} color={COLORS.text} />
-                  <View style={styles.notifDot} />
-                </TouchableOpacity>
               </View>
 
               {/* Search Bar */}
@@ -532,25 +528,6 @@ const styles = StyleSheet.create({
   logoSlogan: {
     color: COLORS.textSecondary,
     fontSize: 11,
-  },
-  notifButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.secondary,
   },
   searchBar: {
     flexDirection: 'row',

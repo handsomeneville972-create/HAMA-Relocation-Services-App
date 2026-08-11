@@ -1,28 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getUnreadCount } from '../../src/services/notificationService';
-import { useAuth } from '../../src/contexts/AuthContext';
 import { ResponsiveTabBar } from '../../src/components/ResponsiveTabBar';
 import { useResponsive } from '../../src/utils/responsive';
 import { COLORS } from '../../src/constants/theme';
 
 export default function TabLayout() {
-  const { currentUserId } = useAuth();
-  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { isDesktop } = useResponsive();
-
-  useEffect(() => {
-    const fetchUnread = async () => {
-      if (!currentUserId) return;
-      const { data } = await getUnreadCount(currentUserId);
-      if (data !== null) setUnreadNotifs(data);
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
-  }, [currentUserId]);
 
   return (
     <Tabs
@@ -80,15 +65,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="featured"
         options={{
-          title: 'Alerts',
+          title: 'Featured',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.tabIconContainer, focused && styles.tabIconActive]}>
-              <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={22} color={color} />
+              <Ionicons name={focused ? 'grid' : 'grid-outline'} size={22} color={color} />
             </View>
           ),
-          tabBarBadge: unreadNotifs > 0 ? unreadNotifs : undefined,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
