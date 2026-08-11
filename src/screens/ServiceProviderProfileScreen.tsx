@@ -280,7 +280,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
       Alert.alert('Error', 'Please log in to chat with this provider.');
       return;
     }
-    const { data, error } = await findOrCreateConversation(currentUserId, profile.id);
+    const { data, error } = await findOrCreateConversation(currentUserId, profile.id, { serviceProviderId: profile.id });
     if (data) {
       navigation.navigate('Chat', { conversationId: data.conversationId });
     } else {

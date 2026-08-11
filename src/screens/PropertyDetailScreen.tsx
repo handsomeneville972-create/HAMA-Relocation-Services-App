@@ -210,7 +210,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
         Alert.alert('Error', 'Please log in to chat with the landlord.');
         return;
       }
-      const { data, error } = await findOrCreateConversation(currentUserId, property.landlord.id);
+      const { data, error } = await findOrCreateConversation(currentUserId, property.landlord.id, { propertyId: property.id });
       if (data) {
         navigation.navigate('Chat', { conversationId: data.conversationId });
       } else {

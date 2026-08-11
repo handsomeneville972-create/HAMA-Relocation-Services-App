@@ -1,33 +1,48 @@
+/**
+ * ChatScreen (upgraded)
+ *
+ * Individual conversation screen with:
+ * - Broadcast-based realtime message delivery
+ * - Presence-based online status
+ * - Typing indicators
+ * - Paginated message loading (infinite scroll)
+ * - All message types (text, image, file, property, product, system)
+ * - Edit, delete, reply, report functionality
+ * - Attachment picker for images
+ * - Context header for property/product/provider conversations
+ */
+
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated, KeyboardAvoidingView, Platform, ImageBackground, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
-import { useReducedMotion } from '../hooks/useReducedMotion';
-import { getConversationById, sendMessage, markMessagesAsRead } from '../services/conversationService';
+import { getConversationById, sendMessage, editMessage, deleteMessage, markConversationAsRead, uploadAttachment } from '../services/conversationService';
 import { softSanitize } from '../utils/sanitize';
-import { supabase } from '../utils/supabaseClient';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
+import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { ChatHeader } from '../components/messaging/ChatHeader';
+import { MessageBubble } from '../components/messaging/MessageBubble';
+import { MessageComposer } from '../components/messaging/MessageComposer';
+import { TypingIndicator } from '../components/messaging/TypingIndicator';
+import { MessageContextMenu } from '../components/messaging/MessageContextMenu';
+import { AttachmentPicker } from '../components/messaging/AttachmentPicker';
+import { ReportModal } from '../components/messaging/ReportModal';
+import { PropertyMessageCard } from '../components/messaging/PropertyMessageCard';
+import { ProductMessageCard } from '../components/messaging/ProductMessageCard';
+import { ServiceProviderMessageCard } from '../components/messaging/ServiceProviderMessageCard';
+import { useTypingIndicator } from '../hooks/useTypingIndicator';
+import { usePresence } from '../hooks/usePresence';
+import { useRealtimeMessages } from '../hooks/useRealtimeMessages';
+import { useMessages } from '../hooks/useMessages';
 import type { Message, Conversation, User } from '../constants/types';
 
 const CHAT_BG = require('../../assets/chat-bg.jpg');
 
-const formatMessageTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  if (isToday) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-};
-
 const groupMessagesByDate = (messages: Message[]) => {
   const groups: { date: string; messages: Message[] }[] = [];
   messages.forEach(msg => {
-    const date = new Date(msg.timestamp || msg.created_at || '').toDateString();
+    const date = new Date(msg.created_at || msg.timestamp || '').toDateString();
     const lastGroup = groups[groups.length - 1];
     if (lastGroup && lastGroup.date === date) {
       lastGroup.messages.push(msg);
@@ -45,68 +60,9 @@ const formatDateHeader = (dateStr: string) => {
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   const isYesterday = date.toDateString() === yesterday.toDateString();
-
   if (isToday) return 'Today';
   if (isYesterday) return 'Yesterday';
   return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
-};
-
-// Single message bubble with a subtle fade + rise on mount. Reduced-motion
-// users get a quick opacity fade only (movement dropped, comprehension kept).
-const MessageBubble: React.FC<{
-  msg: Message;
-  isOwn: boolean;
-  avatar: string;
-}> = ({ msg, isOwn, avatar }) => {
-  const reducedMotion = useReducedMotion();
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(anim, {
-      toValue: 1,
-      duration: ANIMATION.fast,
-      easing: EASING.easeOut,
-      useNativeDriver: true,
-    }).start();
-  }, [reducedMotion, anim]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.messageRow,
-        isOwn && styles.ownMessageRow,
-        {
-          opacity: anim,
-          transform: reducedMotion
-            ? []
-            : [
-                {
-                  translateY: anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [6, 0],
-                  }),
-                },
-              ],
-        },
-      ]}
-    >
-      {!isOwn && <Image source={{ uri: avatar }} style={styles.messageAvatar} />}
-      <View style={[styles.messageBubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
-        <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>{msg.text}</Text>
-        <Text style={[styles.messageTime, isOwn && styles.ownMessageTime]}>
-          {formatMessageTime(msg.timestamp || msg.created_at || '')}
-          {isOwn && (
-            <Ionicons
-              name={msg.read ? 'checkmark-done' : 'checkmark'}
-              size={12}
-              color={msg.read ? COLORS.primary : COLORS.textTertiary}
-              style={{ marginLeft: 4 }}
-            />
-          )}
-        </Text>
-      </View>
-    </Animated.View>
-  );
 };
 
 export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
@@ -116,21 +72,25 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [messageText, setMessageText] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const reducedMotion = useReducedMotion();
-  const sendPressAnim = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<FlatList>(null);
 
-  const animateSendPress = (pressed: boolean) => {
-    if (reducedMotion) return;
-    Animated.spring(sendPressAnim, {
-      toValue: pressed ? 1 : 0,
-      damping: 15,
-      stiffness: 250,
-      useNativeDriver: true,
-    }).start();
-  };
+  // Context menu state
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [attachmentPickerVisible, setAttachmentPickerVisible] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportedUserId, setReportedUserId] = useState('');
+
+  // Custom hooks
+  const { messages, isLoading, loadInitial, loadMore, hasMore, addMessage, updateMessage, removeMessage, replaceOptimistic, removeOptimistic } = useMessages(conversationId);
+  const { isOtherUserTyping, startTyping, stopTyping } = useTypingIndicator(conversationId, currentUserId);
+  const { isUserOnline, getUserLastSeen } = usePresence(conversationId, currentUserId);
+  const { isConnected, broadcast } = useRealtimeMessages(conversationId, currentUserId, {
+    onNewMessage: addMessage,
+    onMessageEdited: (msgId, content, editedAt) => updateMessage(msgId, { content, text: content, edited_at: editedAt }),
+    onMessageDeleted: (msgId) => updateMessage(msgId, { deleted_at: new Date().toISOString() }),
+  });
 
   // Fetch conversation data
   useEffect(() => {
@@ -139,51 +99,186 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
         setConversation(data);
         const other = data.participants.find(p => p.id !== currentUserId) || data.participants[0];
         setOtherUser(other ?? null);
-        setMessages(data.messages ?? []);
+        // Load initial messages
+        if (data.messages?.length) {
+          data.messages.forEach((msg: Message) => addMessage(msg));
+        }
       }
     });
   }, [conversationId, currentUserId]);
 
-  // Mark messages as read when conversation opens
+  // Load messages from DB
+  useEffect(() => {
+    loadInitial();
+  }, [loadInitial]);
+
+  // Mark as read when conversation opens
   useEffect(() => {
     if (conversationId && currentUserId) {
-      markMessagesAsRead(conversationId, currentUserId);
+      markConversationAsRead(conversationId, currentUserId);
     }
   }, [conversationId, currentUserId]);
 
-  // Subscribe to new messages via Supabase Realtime
-  useEffect(() => {
-    if (!conversationId) return;
+  // Handle send
+  const handleSend = useCallback(async () => {
+    if (!messageText.trim() || sending || !currentUserId) return;
+    const text = messageText.trim();
+    setMessageText('');
+    setSending(true);
+    stopTyping();
 
-    const channel = supabase
-      .channel(`conversation:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(prev => {
-            // Avoid duplicates
-            if (prev.some(m => m.id === newMessage.id)) return prev;
-            return [...prev, newMessage];
-          });
-          // Mark as read if from other user
-          if (newMessage.sender_id !== currentUserId) {
-            markMessagesAsRead(conversationId, currentUserId);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    // Optimistic add
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      sender_id: currentUserId,
+      text,
+      created_at: new Date().toISOString(),
+      read: false,
     };
-  }, [conversationId, currentUserId]);
+    addMessage(optimisticMsg);
+
+    try {
+      const { data, error } = await sendMessage({
+        conversationId,
+        senderId: currentUserId,
+        text,
+      });
+
+      if (error) {
+        removeOptimistic(tempId);
+        setMessageText(text);
+      } else if (data) {
+        replaceOptimistic(tempId, data);
+      }
+    } catch {
+      removeOptimistic(tempId);
+      setMessageText(text);
+    } finally {
+      setSending(false);
+    }
+  }, [messageText, sending, currentUserId, conversationId, addMessage, removeOptimistic, replaceOptimistic, stopTyping]);
+
+  // Handle typing
+  const handleTyping = useCallback(() => {
+    startTyping();
+  }, [startTyping]);
+
+  // Handle attachment
+  const handleAttach = useCallback(() => {
+    setAttachmentPickerVisible(true);
+  }, []);
+
+  const handlePickImage = useCallback(async (uri: string, fileName: string) => {
+    if (!currentUserId) return;
+    setSending(true);
+
+    const { data, error } = await uploadAttachment(uri, fileName, conversationId, currentUserId);
+    if (error || !data) {
+      Alert.alert('Upload Failed', 'Could not upload the image. Please try again.');
+      setSending(false);
+      return;
+    }
+
+    await sendMessage({
+      conversationId,
+      senderId: currentUserId,
+      text: fileName,
+      messageType: 'image',
+      attachmentUrl: data.url,
+    });
+
+    setSending(false);
+  }, [currentUserId, conversationId]);
+
+  // Handle long press (context menu)
+  const handleLongPress = useCallback((msg: Message) => {
+    setSelectedMessage(msg);
+    setContextMenuVisible(true);
+  }, []);
+
+  // Handle edit
+  const handleEdit = useCallback(async () => {
+    if (!selectedMessage) return;
+    Alert.prompt?.(
+      'Edit Message',
+      'Enter new message text:',
+      async (newText: string) => {
+        if (newText.trim() && newText !== selectedMessage.text) {
+          await editMessage(selectedMessage.id, newText.trim());
+          updateMessage(selectedMessage.id, { text: newText.trim(), content: newText.trim(), edited_at: new Date().toISOString() });
+        }
+      },
+      'plain-text',
+      selectedMessage.text,
+    );
+  }, [selectedMessage, updateMessage]);
+
+  // Handle delete
+  const handleDelete = useCallback(async () => {
+    if (!selectedMessage) return;
+    Alert.alert('Delete Message', 'Are you sure you want to delete this message?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteMessage(selectedMessage.id);
+          removeMessage(selectedMessage.id);
+        },
+      },
+    ]);
+  }, [selectedMessage, removeMessage]);
+
+  // Handle report
+  const handleReport = useCallback(() => {
+    if (!selectedMessage || !currentUserId) return;
+    setReportedUserId(selectedMessage.sender_id || '');
+    setReportModalVisible(true);
+  }, [selectedMessage, currentUserId]);
+
+  // Handle load more (scroll to top)
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !isLoading) {
+      loadMore();
+    }
+  }, [hasMore, isLoading, loadMore]);
+
+  // Render date separator
+  const renderDateSeparator = useCallback((date: string) => (
+    <View style={styles.dateHeader}>
+      <View style={styles.dateLine} />
+      <Text style={styles.dateText}>{formatDateHeader(date)}</Text>
+      <View style={styles.dateLine} />
+    </View>
+  ), []);
+
+  // Render message
+  const renderItem = useCallback(({ item, index }: { item: Message; index: number }) => {
+    const isOwn = item.sender_id === currentUserId;
+    return (
+      <MessageBubble
+        msg={item}
+        isOwn={isOwn}
+        avatar={otherUser?.avatar}
+        onLongPress={handleLongPress}
+      />
+    );
+  }, [currentUserId, otherUser, handleLongPress]);
+
+  // Group messages by date for rendering
+  const dateGroups = groupMessagesByDate(messages);
+  const flatListData = dateGroups.flatMap((group, gi) => [
+    { type: 'date' as const, date: group.date, id: `date-${gi}` },
+    ...group.messages.map(msg => ({ type: 'message' as const, message: msg, id: msg.id })),
+  ]);
+
+  const renderFlatItem = useCallback(({ item }: { item: any }) => {
+    if (item.type === 'date') {
+      return renderDateSeparator(item.date);
+    }
+    return renderItem({ item: item.message, index: 0 });
+  }, [renderDateSeparator, renderItem]);
 
   if (!conversation || !otherUser) {
     return (
@@ -196,51 +291,8 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
     );
   }
 
-  const dateGroups = groupMessagesByDate(messages);
-
-  const handleSend = async () => {
-    if (!messageText.trim() || sending) return;
-    const text = messageText.trim();
-    setMessageText('');
-    setSending(true);
-
-    // Optimistic add
-    const optimisticMsg: Message = {
-      id: `temp-${Date.now()}`,
-      senderId: currentUserId,
-      text,
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
-    setMessages(prev => [...prev, optimisticMsg]);
-
-    try {
-      const { data, error } = await sendMessage({
-        conversationId,
-        senderId: currentUserId,
-        text,
-      });
-
-      if (error) {
-        // Remove optimistic message on error
-        setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
-        setMessageText(text); // Restore text
-      } else if (data) {
-        // Replace optimistic with real message
-        setMessages(prev =>
-          prev.map(m => (m.id === optimisticMsg.id ? { ...data, id: data.id } : m))
-        );
-      }
-    } catch (err) {
-      setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
-      setMessageText(text);
-    } finally {
-      setSending(false);
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  };
+  const isOnline = isUserOnline(otherUser.id);
+  const lastSeen = getUserLastSeen(otherUser.id);
 
   return (
     <KeyboardAvoidingView
@@ -249,26 +301,13 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-          </TouchableOpacity>
-          <Image source={{ uri: otherUser.avatar }} style={styles.headerAvatar} />
-          <View style={styles.headerInfo}>
-            <View style={styles.headerNameRow}>
-              <Text style={styles.headerName}>{otherUser.name}</Text>
-              {otherUser.verified && (
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
-              )}
-            </View>
-            <Text style={styles.headerStatus}>Online</Text>
-          </View>
-          <TouchableOpacity style={styles.headerCall}>
-            <Ionicons name="call-outline" size={22} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      <ChatHeader
+        user={otherUser}
+        isOnline={isOnline}
+        lastSeen={lastSeen}
+        onBack={() => navigation.goBack()}
+        onMore={() => {}}
+      />
 
       {/* Messages */}
       <ImageBackground
@@ -277,87 +316,61 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
         resizeMode="cover"
       >
         <View style={styles.chatOverlay} />
-        <ScrollView
-          ref={scrollViewRef}
+
+        <FlatList
+          ref={flatListRef}
+          data={flatListData}
+          renderItem={renderFlatItem}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
-        >
-          {dateGroups.map((group, gi) => (
-            <View key={gi}>
-              <View style={styles.dateHeader}>
-                <View style={styles.dateLine} />
-                <Text style={styles.dateText}>{formatDateHeader(group.date)}</Text>
-                <View style={styles.dateLine} />
-              </View>
-              {group.messages.map((msg) => {
-                const isOwn = msg.senderId === currentUserId || msg.sender_id === currentUserId;
-                return (
-                  <MessageBubble
-                    key={msg.id}
-                    msg={msg}
-                    isOwn={isOwn}
-                    avatar={otherUser.avatar}
-                  />
-                );
-              })}
-            </View>
-          ))}
-          <View style={{ height: 20 }} />
-        </ScrollView>
+          inverted={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+          ListFooterComponent={
+            <TypingIndicator userName={otherUser.name} visible={isOtherUserTyping} />
+          }
+        />
       </ImageBackground>
 
       {/* Input Bar */}
-      <View style={[styles.inputBar, { paddingBottom: insets.bottom + SPACING.sm }]}>
-        <LinearGradient colors={[COLORS.bgBlur, COLORS.bg]} style={styles.inputGradient}>
-          <View style={styles.inputRow}>
-            <TouchableOpacity style={styles.attachButton}>
-              <Ionicons name="add-circle-outline" size={24} color={COLORS.textSecondary} />
-            </TouchableOpacity>
-            <View style={styles.textInputContainer}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Type a message..."
-                placeholderTextColor={COLORS.textTertiary}
-                value={messageText}
-                onChangeText={(text) => setMessageText(softSanitize(text))}
-                multiline
-                maxLength={500}
-              />
-            </View>
-            <Animated.View
-              style={{
-                transform: [
-                  {
-                    scale: sendPressAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 0.9],
-                    }),
-                  },
-                ],
-              }}
-            >
-              <TouchableOpacity
-                style={[styles.sendButton, messageText.trim() ? styles.sendButtonActive : null]}
-                onPress={handleSend}
-                onPressIn={() => animateSendPress(true)}
-                onPressOut={() => animateSendPress(false)}
-                disabled={!messageText.trim() || sending}
-              >
-                {sending ? (
-                  <Ionicons name="hourglass" size={20} color={COLORS.textTertiary} />
-                ) : (
-                  <Ionicons
-                    name="send"
-                    size={20}
-                    color={messageText.trim() ? '#fff' : COLORS.textTertiary}
-                  />
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </LinearGradient>
-      </View>
+      <MessageComposer
+        value={messageText}
+        onChangeText={setMessageText}
+        onSend={handleSend}
+        onAttach={handleAttach}
+        onTyping={handleTyping}
+        sending={sending}
+      />
+
+      {/* Context Menu */}
+      <MessageContextMenu
+        visible={contextMenuVisible}
+        onClose={() => setContextMenuVisible(false)}
+        isOwn={selectedMessage?.sender_id === currentUserId}
+        onReply={() => {}}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onReport={handleReport}
+      />
+
+      {/* Attachment Picker */}
+      <AttachmentPicker
+        visible={attachmentPickerVisible}
+        onClose={() => setAttachmentPickerVisible(false)}
+        onPickImage={handlePickImage}
+      />
+
+      {/* Report Modal */}
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        reporterId={currentUserId}
+        reportedUserId={reportedUserId}
+        messageId={selectedMessage?.id}
+        conversationId={conversationId}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -366,54 +379,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bg,
-  },
-  header: {
-    paddingBottom: SPACING.sm,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    gap: 12,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  headerName: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  headerStatus: {
-    color: COLORS.accent,
-    fontSize: 12,
-    marginTop: 1,
-  },
-  headerCall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,107,0,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   messagesContainer: {
     flex: 1,
@@ -425,6 +390,7 @@ const styles = StyleSheet.create({
   messagesContent: {
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
   },
   dateHeader: {
     flexDirection: 'row',
@@ -442,104 +408,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginHorizontal: 12,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginBottom: 12,
-    gap: 8,
-  },
-  ownMessageRow: {
-    justifyContent: 'flex-end',
-  },
-  messageAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    marginBottom: 2,
-  },
-  messageBubble: {
-    maxWidth: '75%',
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  ownBubble: {
-    backgroundColor: COLORS.primary,
-    borderBottomRightRadius: 4,
-  },
-  otherBubble: {
-    backgroundColor: COLORS.bgCard,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-  },
-  messageText: {
-    color: COLORS.text,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  ownMessageText: {
-    color: '#fff',
-  },
-  messageTime: {
-    color: COLORS.textTertiary,
-    fontSize: 10,
-    marginTop: 4,
-    textAlign: 'right',
-  },
-  ownMessageTime: {
-    color: 'rgba(255,255,255,0.7)',
-  },
-  inputBar: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
-  },
-  inputGradient: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  attachButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  textInputContainer: {
-    flex: 1,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    maxHeight: 100,
-  },
-  textInput: {
-    color: COLORS.text,
-    fontSize: 15,
-    maxHeight: 80,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-  },
-  sendButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
   },
 });

@@ -158,7 +158,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
                 Alert.alert('Error', 'Please log in to contact the seller.');
                 return;
               }
-              const { data, error } = await findOrCreateConversation(currentUserId, product.seller.id);
+              const { data, error } = await findOrCreateConversation(currentUserId, product.seller.id, { productId: product.id });
               if (data) {
                 navigation.navigate('Chat', { conversationId: data.conversationId });
               } else {
