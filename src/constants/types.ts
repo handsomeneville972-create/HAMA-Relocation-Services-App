@@ -628,6 +628,10 @@ export interface Message {
   edited_at?: string | null;
   deleted_at?: string | null;
   reply_to_id?: string | null;
+  /** Context FK fields (present when the message references a listing) */
+  property_id?: string | null;
+  product_id?: string | null;
+  service_provider_id?: string | null;
   /** Computed fields (not always present) */
   sender?: User;
   reply_to?: Message;

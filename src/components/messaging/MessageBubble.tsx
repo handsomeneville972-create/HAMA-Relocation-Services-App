@@ -209,10 +209,10 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   otherBubble: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   messageText: {
     ...FONTS.body,

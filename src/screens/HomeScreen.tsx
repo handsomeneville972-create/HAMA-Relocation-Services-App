@@ -269,7 +269,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             {loading ? (
-              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+              <ResponsiveGrid columns={2}>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <View key={i} style={{ width: '100%' }}>
                     <SkeletonLoader type="card" />
@@ -277,7 +277,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 ))}
               </ResponsiveGrid>
             ) : (
-              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
+              <ResponsiveGrid columns={2}>
                 {featuredProducts.map((product) => (
                   <ProductCard
                     key={product.id}

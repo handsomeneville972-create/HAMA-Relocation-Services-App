@@ -16,6 +16,7 @@ export default function HomeTab() {
       else if (route === 'ServiceDetail') router.push({ pathname: '/ServiceDetail', params });
       else if (route === 'PropertyDetail') router.push({ pathname: '/PropertyDetail', params });
       else if (route === 'FeaturedProperties') router.push('/FeaturedProperties');
+      else if (route === 'Faq') router.push('/Faq');
     },
   };
 
