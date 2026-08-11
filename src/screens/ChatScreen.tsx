@@ -282,12 +282,10 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 
   if (!conversation || !otherUser) {
     return (
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <ImageBackground source={CHAT_BG} style={styles.bgImage} resizeMode="cover">
+        <View style={styles.bgOverlay} />
         <SkeletonLoader type="chat" />
-      </KeyboardAvoidingView>
+      </ImageBackground>
     );
   }
 
@@ -295,28 +293,27 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
   const lastSeen = getUserLastSeen(otherUser.id);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'android' ? 'height' : 'padding'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    <ImageBackground
+      source={CHAT_BG}
+      style={styles.bgImage}
+      resizeMode="cover"
     >
-      {/* Header */}
-      <ChatHeader
-        user={otherUser}
-        isOnline={isOnline}
-        lastSeen={lastSeen}
-        onBack={() => navigation.goBack()}
-        onMore={() => {}}
-      />
-
-      {/* Messages */}
-      <ImageBackground
-        source={CHAT_BG}
-        style={styles.messagesContainer}
-        resizeMode="cover"
+      <View style={styles.bgOverlay} />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'android' ? 'height' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <View style={styles.chatOverlay} />
+        {/* Header */}
+        <ChatHeader
+          user={otherUser}
+          isOnline={isOnline}
+          lastSeen={lastSeen}
+          onBack={() => navigation.goBack()}
+          onMore={() => {}}
+        />
 
+        {/* Messages */}
         <FlatList
           ref={flatListRef}
           data={flatListData}
@@ -332,17 +329,17 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
             <TypingIndicator userName={otherUser.name} visible={isOtherUserTyping} />
           }
         />
-      </ImageBackground>
 
-      {/* Input Bar */}
-      <MessageComposer
-        value={messageText}
-        onChangeText={setMessageText}
-        onSend={handleSend}
-        onAttach={handleAttach}
-        onTyping={handleTyping}
-        sending={sending}
-      />
+        {/* Input Bar */}
+        <MessageComposer
+          value={messageText}
+          onChangeText={setMessageText}
+          onSend={handleSend}
+          onAttach={handleAttach}
+          onTyping={handleTyping}
+          sending={sending}
+        />
+      </KeyboardAvoidingView>
 
       {/* Context Menu */}
       <MessageContextMenu
@@ -371,21 +368,21 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
         messageId={selectedMessage?.id}
         conversationId={conversationId}
       />
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  bgImage: {
     flex: 1,
     backgroundColor: COLORS.bg,
   },
-  messagesContainer: {
-    flex: 1,
-  },
-  chatOverlay: {
+  bgOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  container: {
+    flex: 1,
   },
   messagesContent: {
     paddingHorizontal: SPACING.md,
