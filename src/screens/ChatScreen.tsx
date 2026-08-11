@@ -282,7 +282,7 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 
   if (!conversation || !otherUser) {
     return (
-      <ImageBackground source={CHAT_BG} style={styles.bgImage} resizeMode="cover">
+      <ImageBackground source={CHAT_BG} style={styles.bgImage} resizeMode="contain" imageStyle={styles.bgImageStyle}>
         <View style={styles.bgOverlay} />
         <SkeletonLoader type="chat" />
       </ImageBackground>
@@ -296,7 +296,8 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
     <ImageBackground
       source={CHAT_BG}
       style={styles.bgImage}
-      resizeMode="cover"
+      resizeMode="contain"
+      imageStyle={styles.bgImageStyle}
     >
       <View style={styles.bgOverlay} />
       <KeyboardAvoidingView
@@ -375,11 +376,16 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 const styles = StyleSheet.create({
   bgImage: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: '#1a1a2e',
+  },
+  bgImageStyle: {
+    width: '100%',
+    height: '100%',
+    alignSelf: 'center',
   },
   bgOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   container: {
     flex: 1,
