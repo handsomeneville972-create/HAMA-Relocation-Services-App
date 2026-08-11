@@ -51,6 +51,13 @@ export default {
           microphonePermission: false,
         },
       ],
+      [
+        'expo-notifications',
+        {
+          icon: './assets/icon.png',
+          color: '#FF6B00',
+        },
+      ],
     ],
     extra: {
       supabaseUrl: SUPABASE_URL,

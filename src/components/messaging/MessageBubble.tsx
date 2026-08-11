@@ -11,6 +11,9 @@ import { View, Text, StyleSheet, Animated, Image, TouchableOpacity } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING, FONTS, ANIMATION, EASING } from '../../constants/theme';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { PropertyMessageCard } from './PropertyMessageCard';
+import { ProductMessageCard } from './ProductMessageCard';
+import { ServiceProviderMessageCard } from './ServiceProviderMessageCard';
 import type { Message } from '../../constants/types';
 
 interface MessageBubbleProps {
@@ -88,10 +91,27 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         );
 
       case 'property':
+        return msg.property_id ? (
+          <PropertyMessageCard propertyId={msg.property_id} />
+        ) : (
+          <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
+            {msg.text || msg.content}
+          </Text>
+        );
+
       case 'product':
+        return msg.product_id ? (
+          <ProductMessageCard productId={msg.product_id} />
+        ) : (
+          <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
+            {msg.text || msg.content}
+          </Text>
+        );
+
       case 'service_provider':
-        // Rich cards are rendered by parent component
-        return (
+        return msg.service_provider_id ? (
+          <ServiceProviderMessageCard serviceProviderId={msg.service_provider_id} />
+        ) : (
           <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
             {msg.text || msg.content}
           </Text>

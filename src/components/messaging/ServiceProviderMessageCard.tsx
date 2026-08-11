@@ -2,29 +2,50 @@
  * ServiceProviderMessageCard
  *
  * Rich card for sharing a service provider profile inside a conversation.
- * Shows provider image, name, category, rating, and a CTA to view.
+ * Loads provider data by ID and shows avatar, name, category, rating, and a CTA to view.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../../constants/theme';
+import { getServiceProviderById } from '../../services/serviceProviderService';
 
 interface ServiceProviderMessageCardProps {
-  name: string;
-  category: string;
-  rating?: number;
-  imageUrl?: string;
+  serviceProviderId: string;
   onPress?: () => void;
 }
 
 export const ServiceProviderMessageCard: React.FC<ServiceProviderMessageCardProps> = ({
-  name,
-  category,
-  rating,
-  imageUrl,
+  serviceProviderId,
   onPress,
 }) => {
+  const [provider, setProvider] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getServiceProviderById(serviceProviderId).then(({ data }) => {
+      setProvider(data);
+      setLoading(false);
+    });
+  }, [serviceProviderId]);
+
+  if (loading || !provider) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <View style={styles.avatarSkeleton} />
+          <View style={styles.content}>
+            <View style={styles.skeletonLine} />
+            <View style={[styles.skeletonLine, { width: '60%' }]} />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  const imageUrl = provider.avatar || provider.images?.[0];
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.row}>
@@ -32,12 +53,12 @@ export const ServiceProviderMessageCard: React.FC<ServiceProviderMessageCardProp
           <Image source={{ uri: imageUrl }} style={styles.avatar} resizeMode="cover" />
         )}
         <View style={styles.content}>
-          <Text style={styles.name} numberOfLines={1}>{name}</Text>
-          <Text style={styles.category} numberOfLines={1}>{category}</Text>
-          {rating != null && rating > 0 && (
+          <Text style={styles.name} numberOfLines={1}>{provider.name || provider.business_name}</Text>
+          <Text style={styles.category} numberOfLines={1}>{provider.category || provider.service_category}</Text>
+          {provider.rating != null && provider.rating > 0 && (
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={12} color={COLORS.warning} />
-              <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+              <Text style={styles.rating}>{provider.rating.toFixed(1)}</Text>
             </View>
           )}
         </View>
@@ -71,9 +92,21 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.bgElevated,
   },
+  avatarSkeleton: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.glassBorder,
+  },
   content: {
     flex: 1,
     gap: 2,
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: COLORS.glassBorder,
+    width: '80%',
   },
   name: {
     ...FONTS.bodySmall,

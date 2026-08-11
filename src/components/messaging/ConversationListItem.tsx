@@ -64,7 +64,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
             source={{ uri: otherUser?.avatar || 'https://i.pravatar.cc/150?u=default' }}
             style={styles.avatar}
           />
-          {unreadCount > 0 && <View style={styles.onlineDot} />}
+          {unreadCount > 0 && <View style={styles.unreadDot} />}
         </View>
 
         <View style={styles.content}>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: COLORS.bgCard,
   },
-  onlineDot: {
+  unreadDot: {
     position: 'absolute',
     bottom: 1,
     right: 1,

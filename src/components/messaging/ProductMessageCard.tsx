@@ -2,32 +2,48 @@
  * ProductMessageCard
  *
  * Rich card for sharing a marketplace product inside a conversation.
- * Shows product image, name, price, seller, and a CTA to view.
+ * Loads product data by ID and shows image, name, price, seller, and a CTA to view.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../../constants/theme';
+import { getProductById } from '../../services/productService';
 
 interface ProductMessageCardProps {
-  name: string;
-  price: number;
-  imageUrl?: string;
-  seller?: string;
-  condition?: string;
+  productId: string;
   onPress?: () => void;
 }
 
 export const ProductMessageCard: React.FC<ProductMessageCardProps> = ({
-  name,
-  price,
-  imageUrl,
-  seller,
-  condition,
+  productId,
   onPress,
 }) => {
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProductById(productId).then(({ data }) => {
+      setProduct(data);
+      setLoading(false);
+    });
+  }, [productId]);
+
+  if (loading || !product) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.imageSkeleton} />
+        <View style={styles.content}>
+          <View style={styles.skeletonLine} />
+          <View style={[styles.skeletonLine, { width: '50%' }]} />
+        </View>
+      </View>
+    );
+  }
+
   const formatPrice = (p: number) => `KSh ${p.toLocaleString()}`;
+  const imageUrl = product.images?.[0] || product.imageUrl;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -35,11 +51,13 @@ export const ProductMessageCard: React.FC<ProductMessageCardProps> = ({
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
       )}
       <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        {seller && <Text style={styles.seller} numberOfLines={1}>by {seller}</Text>}
+        <Text style={styles.name} numberOfLines={1}>{product.name || product.title}</Text>
+        {product.seller?.name && (
+          <Text style={styles.seller} numberOfLines={1}>by {product.seller.name}</Text>
+        )}
         <View style={styles.bottomRow}>
-          <Text style={styles.price}>{formatPrice(price)}</Text>
-          {condition && <Text style={styles.condition}>{condition}</Text>}
+          <Text style={styles.price}>{formatPrice(product.price)}</Text>
+          {product.condition && <Text style={styles.condition}>{product.condition}</Text>}
         </View>
         <View style={styles.ctaRow}>
           <Ionicons name="open-outline" size={12} color={COLORS.primary} />
@@ -65,9 +83,20 @@ const styles = StyleSheet.create({
     height: 110,
     backgroundColor: COLORS.bgElevated,
   },
+  imageSkeleton: {
+    width: '100%',
+    height: 110,
+    backgroundColor: COLORS.bgElevated,
+  },
   content: {
     padding: SPACING.sm,
     gap: 3,
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: COLORS.glassBorder,
+    width: '80%',
   },
   name: {
     ...FONTS.bodySmall,
