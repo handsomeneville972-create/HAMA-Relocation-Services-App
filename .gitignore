@@ -167,6 +167,11 @@ tmp/
 temp/
 out/
 tsc_output.txt
+tsc_out.txt
+metro_log.txt
+metro_err.txt
+web_export.txt
+web_export_err.txt
 
 # =============================================================================
 # Project-specific build output
