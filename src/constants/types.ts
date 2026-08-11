@@ -611,24 +611,76 @@ export type UserType = 'seeker' | 'landlord' | 'seller' | 'service_provider';
 
 // ============ CHAT / MESSAGING TYPES ============
 
+export type MessageType = 'text' | 'image' | 'file' | 'property' | 'product' | 'service_provider' | 'location' | 'system';
+
 export interface Message {
   id: string;
-  senderId: string;
   text: string;
-  timestamp: string;
   read: boolean;
-  /** Snake-case aliases returned directly by Supabase rows (cast to Message). */
+  /** Core fields (optional for mock data / optimistic messages) */
   sender_id?: string;
   created_at?: string;
+  conversation_id?: string;
+  message_type?: MessageType;
+  content?: string | null;
+  attachment_url?: string | null;
+  updated_at?: string;
+  edited_at?: string | null;
+  deleted_at?: string | null;
+  reply_to_id?: string | null;
+  /** Computed fields (not always present) */
+  sender?: User;
+  reply_to?: Message;
+  /** Legacy aliases */
+  senderId?: string;
+  timestamp?: string;
 }
 
 export interface Conversation {
   id: string;
+  created_at?: string;
+  updated_at?: string;
+  last_message_id?: string | null;
+  property_id?: string | null;
+  product_id?: string | null;
+  service_provider_id?: string | null;
   participants: User[];
   messages: Message[];
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
+  /** Computed from context FKs */
+  property?: any;
+  product?: any;
+  service_provider?: any;
+}
+
+export interface UserPresence {
+  user_id: string;
+  last_seen_at: string;
+  is_online?: boolean;
+}
+
+export interface Block {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+}
+
+export type ReportCategory = 'spam' | 'harassment' | 'scam' | 'inappropriate' | 'other';
+export type ReportStatus = 'pending' | 'reviewed' | 'resolved';
+
+export interface MessageReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  message_id: string | null;
+  conversation_id: string | null;
+  category: ReportCategory;
+  description: string | null;
+  status: ReportStatus;
+  created_at: string;
 }
 
 export interface SubscriptionPlan {

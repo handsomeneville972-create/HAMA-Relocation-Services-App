@@ -27,7 +27,7 @@ const formatMessageTime = (timestamp: string) => {
 const groupMessagesByDate = (messages: Message[]) => {
   const groups: { date: string; messages: Message[] }[] = [];
   messages.forEach(msg => {
-    const date = new Date(msg.timestamp).toDateString();
+    const date = new Date(msg.timestamp || msg.created_at || '').toDateString();
     const lastGroup = groups[groups.length - 1];
     if (lastGroup && lastGroup.date === date) {
       lastGroup.messages.push(msg);
