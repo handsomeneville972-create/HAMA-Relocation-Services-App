@@ -379,9 +379,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a2e',
   },
   bgImageStyle: {
-    width: '100%',
-    height: '100%',
     alignSelf: 'center',
+    opacity: 1,
   },
   bgOverlay: {
     ...StyleSheet.absoluteFillObject,
