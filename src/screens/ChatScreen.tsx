@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Animated, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import { supabase } from '../utils/supabaseClient';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Message, Conversation, User } from '../constants/types';
+
+const CHAT_BG = require('../../assets/chat-bg.jpg');
 
 const formatMessageTime = (timestamp: string) => {
   const date = new Date(timestamp);
@@ -269,35 +271,41 @@ export const ChatScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
       </LinearGradient>
 
       {/* Messages */}
-      <ScrollView
-        ref={scrollViewRef}
+      <ImageBackground
+        source={CHAT_BG}
         style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+        resizeMode="cover"
       >
-        {dateGroups.map((group, gi) => (
-          <View key={gi}>
-            <View style={styles.dateHeader}>
-              <View style={styles.dateLine} />
-              <Text style={styles.dateText}>{formatDateHeader(group.date)}</Text>
-              <View style={styles.dateLine} />
+        <View style={styles.chatOverlay} />
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+        >
+          {dateGroups.map((group, gi) => (
+            <View key={gi}>
+              <View style={styles.dateHeader}>
+                <View style={styles.dateLine} />
+                <Text style={styles.dateText}>{formatDateHeader(group.date)}</Text>
+                <View style={styles.dateLine} />
+              </View>
+              {group.messages.map((msg) => {
+                const isOwn = msg.senderId === currentUserId || msg.sender_id === currentUserId;
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    msg={msg}
+                    isOwn={isOwn}
+                    avatar={otherUser.avatar}
+                  />
+                );
+              })}
             </View>
-            {group.messages.map((msg) => {
-              const isOwn = msg.senderId === currentUserId || msg.sender_id === currentUserId;
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  msg={msg}
-                  isOwn={isOwn}
-                  avatar={otherUser.avatar}
-                />
-              );
-            })}
-          </View>
-        ))}
-        <View style={{ height: 20 }} />
-      </ScrollView>
+          ))}
+          <View style={{ height: 20 }} />
+        </ScrollView>
+      </ImageBackground>
 
       {/* Input Bar */}
       <View style={[styles.inputBar, { paddingBottom: insets.bottom + SPACING.sm }]}>
@@ -409,6 +417,10 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
+  },
+  chatOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
   },
   messagesContent: {
     paddingHorizontal: SPACING.md,
