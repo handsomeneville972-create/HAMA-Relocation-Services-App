@@ -80,7 +80,7 @@ export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
   return (
     <View style={styles.container}>
       {showTip && (
-        <Animated.View style={[styles.tipBubble, { maxWidth: Math.min(width * 0.65, 360) }]}>
+        <Animated.View style={styles.tipBubble}>
           <Text style={styles.tipText}>{TIPS[tipIndex]}</Text>
         </Animated.View>
       )}
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.glassBorder,
     padding: SPACING.sm,
     marginBottom: 8,
+    maxWidth: width * 0.65,
     ...SHADOWS.md,
   },
   tipText: {

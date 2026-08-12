@@ -9,7 +9,6 @@ import { getPropertyById, getPropertyReviews } from '../services/propertyService
 import { findOrCreateConversation } from '../services/conversationService';
 import { useAuth } from '../contexts/AuthContext';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -153,7 +152,6 @@ const AnimatedCollapsible: React.FC<{
 
 export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { propertyId } = route.params;
-  const { isDesktop } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [property, setProperty] = useState<Property | null>(null);
   const [reviews, setReviews] = useState<PropertyReview[]>([]);
@@ -221,142 +219,6 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
     }
   };
 
-  const heroGallery = (
-    <Animated.View style={[styles.imageContainer, isDesktop && styles.imageContainerDesktop, { transform: [{ translateY: imageTranslateY }, { scale: imageScale }] }]}>
-      <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
-      <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.saveButton}>
-        <Ionicons name="heart-outline" size={24} color="#fff" />
-      </TouchableOpacity>
-      {/* Gallery dots */}
-      <View style={styles.galleryDots}>
-        {property.images.map((_, i) => (
-          <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
-        ))}
-      </View>
-      {/* Availability badge */}
-      <View style={[styles.availBadge, property.available ? styles.availAvailable : styles.availUnavailable]}>
-        <Text style={styles.availText}>{property.available ? 'Available' : 'Rented'}</Text>
-      </View>
-    </Animated.View>
-  );
-
-  const summaryCards = (
-    <View style={styles.summaryCards}>
-      {/* ===== PROPERTY INFO ===== */}
-      <GlassCard>
-        <View style={styles.propertyHeader}>
-          <Text style={styles.propertyTitle}>{property.title}</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>{formatPrice(property.price)}</Text>
-            <Text style={styles.perMonth}>/month</Text>
-          </View>
-        </View>
-
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Ionicons name="bed-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.metaText}>{property.bedrooms} Bed</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <Ionicons name="water-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.metaText}>{property.bathrooms} Bath</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <Ionicons name="expand-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.metaText}>{property.size} m²</Text>
-          </View>
-        </View>
-
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={16} color={COLORS.primary} />
-          <Text style={styles.locationText}>{property.location}</Text>
-        </View>
-
-        <Text style={styles.description}>{property.description}</Text>
-
-        {/* Amenities */}
-        <Text style={styles.sectionLabel}>Amenities</Text>
-        <View style={styles.amenitiesGrid}>
-          {property.amenities.map((amenity, i) => (
-            <StaggerItem key={i} index={i} style={styles.amenityTag}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
-              <Text style={styles.amenityText}>{amenity}</Text>
-            </StaggerItem>
-          ))}
-          {property.furnished && (
-            <StaggerItem
-              index={property.amenities.length}
-              style={styles.amenityTag}
-            >
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
-              <Text style={styles.amenityText}>Furnished</Text>
-            </StaggerItem>
-          )}
-        </View>
-      </GlassCard>
-
-      {/* ===== LANDLORD PROFILE ===== */}
-      <GlassCard>
-        <Text style={styles.sectionTitle}>Landlord</Text>
-        <View style={styles.landlordHeader}>
-          <Image source={{ uri: property.landlord.avatar }} style={styles.landlordAvatar} />
-          <View style={styles.landlordInfo}>
-            <View style={styles.landlordNameRow}>
-              <Text style={styles.landlordName}>{property.landlord.name}</Text>
-              {property.landlord.verified && (
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
-                  <Text style={styles.verifiedText}>Verified</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.landlordMeta}>
-              Response Rate: {property.landlord.responseRate} • Avg: 15 min
-            </Text>
-            <Text style={styles.landlordMeta}>
-              {property.landlord.properties} Properties Listed • 2 years on HAMA
-            </Text>
-          </View>
-        </View>
-      </GlassCard>
-
-      {/* ===== PRIMARY CONTACT ACTIONS ===== */}
-      <GlassCard>
-        <Text style={styles.sectionTitle}>Contact Options</Text>
-        <View style={styles.primaryActions}>
-          <ActionButton icon="chatbubble-ellipses" label="Chat" variant="primary" onPress={() => handleAction('Chat with Landlord')} />
-          <ActionButton icon="call" label="Call Now" onPress={() => handleAction('Call Landlord')} />
-          <ActionButton icon="logo-whatsapp" label="WhatsApp" onPress={() => handleAction('WhatsApp Landlord')} />
-        </View>
-
-        {/* Secondary Actions */}
-        <View style={styles.secondaryActions}>
-          <ActionButton icon="calendar-outline" label="Schedule Viewing" onPress={() => handleAction('Schedule Viewing')} />
-          <ActionButton icon="videocam-outline" label="Virtual Tour" onPress={() => handleAction('Request Virtual Tour')} />
-        </View>
-
-        {/* Booking Options */}
-        <View style={styles.secondaryActions}>
-          <ActionButton icon="bookmark-outline" label="Reserve Interest" onPress={() => handleAction('Reserve Interest')} />
-          <ActionButton icon="document-text-outline" label="Pre-Book Unit" onPress={() => handleAction('Pre-Book Unit')} />
-        </View>
-
-        {/* Relocation Support */}
-        <Text style={styles.sectionLabel}>Relocation Support</Text>
-        <View style={styles.secondaryActions}>
-          <ActionButton icon="car-outline" label="Estimate Moving Cost" onPress={() => handleAction('Estimate Moving Cost')} />
-          <ActionButton icon="truck" label="Move Here" onPress={() => handleAction('Move with Hamisha Squad')} />
-        </View>
-      </GlassCard>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <Animated.ScrollView
@@ -367,19 +229,138 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
         )}
         scrollEventThrottle={16}
       >
-        {isDesktop ? (
-          <View style={styles.desktopRow}>
-            <View style={styles.desktopGallery}>{heroGallery}</View>
-            <View style={styles.desktopSummary}>{summaryCards}</View>
+        {/* ===== HERO GALLERY ===== */}
+        <Animated.View style={[styles.imageContainer, { transform: [{ translateY: imageTranslateY }, { scale: imageScale }] }]}>
+          <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
+          <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton}>
+            <Ionicons name="heart-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+          {/* Gallery dots */}
+          <View style={styles.galleryDots}>
+            {property.images.map((_, i) => (
+              <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
+            ))}
           </View>
-        ) : (
-          <>
-            {heroGallery}
-            <View style={styles.content}>{summaryCards}</View>
-          </>
-        )}
+          {/* Availability badge */}
+          <View style={[styles.availBadge, property.available ? styles.availAvailable : styles.availUnavailable]}>
+            <Text style={styles.availText}>{property.available ? 'Available' : 'Rented'}</Text>
+          </View>
+        </Animated.View>
 
-        <View style={[styles.content, isDesktop && styles.contentNoOverlap]}>
+        <View style={styles.content}>
+          {/* ===== PROPERTY INFO ===== */}
+          <GlassCard>
+            <View style={styles.propertyHeader}>
+              <Text style={styles.propertyTitle}>{property.title}</Text>
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{formatPrice(property.price)}</Text>
+                <Text style={styles.perMonth}>/month</Text>
+              </View>
+            </View>
+
+            <View style={styles.metaRow}>
+              <View style={styles.metaItem}>
+                <Ionicons name="bed-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.metaText}>{property.bedrooms} Bed</Text>
+              </View>
+              <View style={styles.metaDivider} />
+              <View style={styles.metaItem}>
+                <Ionicons name="water-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.metaText}>{property.bathrooms} Bath</Text>
+              </View>
+              <View style={styles.metaDivider} />
+              <View style={styles.metaItem}>
+                <Ionicons name="expand-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.metaText}>{property.size} m²</Text>
+              </View>
+            </View>
+
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={16} color={COLORS.primary} />
+              <Text style={styles.locationText}>{property.location}</Text>
+            </View>
+
+            <Text style={styles.description}>{property.description}</Text>
+
+            {/* Amenities */}
+            <Text style={styles.sectionLabel}>Amenities</Text>
+            <View style={styles.amenitiesGrid}>
+              {property.amenities.map((amenity, i) => (
+                <StaggerItem key={i} index={i} style={styles.amenityTag}>
+                  <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
+                  <Text style={styles.amenityText}>{amenity}</Text>
+                </StaggerItem>
+              ))}
+              {property.furnished && (
+                <StaggerItem
+                  index={property.amenities.length}
+                  style={styles.amenityTag}
+                >
+                  <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
+                  <Text style={styles.amenityText}>Furnished</Text>
+                </StaggerItem>
+              )}
+            </View>
+          </GlassCard>
+
+          {/* ===== LANDLORD PROFILE ===== */}
+          <GlassCard>
+            <Text style={styles.sectionTitle}>Landlord</Text>
+            <View style={styles.landlordHeader}>
+              <Image source={{ uri: property.landlord.avatar }} style={styles.landlordAvatar} />
+              <View style={styles.landlordInfo}>
+                <View style={styles.landlordNameRow}>
+                  <Text style={styles.landlordName}>{property.landlord.name}</Text>
+                  {property.landlord.verified && (
+                    <View style={styles.verifiedBadge}>
+                      <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+                      <Text style={styles.verifiedText}>Verified</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.landlordMeta}>
+                  Response Rate: {property.landlord.responseRate} • Avg: 15 min
+                </Text>
+                <Text style={styles.landlordMeta}>
+                  {property.landlord.properties} Properties Listed • 2 years on HAMA
+                </Text>
+              </View>
+            </View>
+          </GlassCard>
+
+          {/* ===== PRIMARY CONTACT ACTIONS ===== */}
+          <GlassCard>
+            <Text style={styles.sectionTitle}>Contact Options</Text>
+            <View style={styles.primaryActions}>
+              <ActionButton icon="chatbubble-ellipses" label="Chat" variant="primary" onPress={() => handleAction('Chat with Landlord')} />
+              <ActionButton icon="call" label="Call Now" onPress={() => handleAction('Call Landlord')} />
+              <ActionButton icon="logo-whatsapp" label="WhatsApp" onPress={() => handleAction('WhatsApp Landlord')} />
+            </View>
+
+            {/* Secondary Actions */}
+            <View style={styles.secondaryActions}>
+              <ActionButton icon="calendar-outline" label="Schedule Viewing" onPress={() => handleAction('Schedule Viewing')} />
+              <ActionButton icon="videocam-outline" label="Virtual Tour" onPress={() => handleAction('Request Virtual Tour')} />
+            </View>
+
+            {/* Booking Options */}
+            <View style={styles.secondaryActions}>
+              <ActionButton icon="bookmark-outline" label="Reserve Interest" onPress={() => handleAction('Reserve Interest')} />
+              <ActionButton icon="document-text-outline" label="Pre-Book Unit" onPress={() => handleAction('Pre-Book Unit')} />
+            </View>
+
+            {/* Relocation Support */}
+            <Text style={styles.sectionLabel}>Relocation Support</Text>
+            <View style={styles.secondaryActions}>
+              <ActionButton icon="car-outline" label="Estimate Moving Cost" onPress={() => handleAction('Estimate Moving Cost')} />
+              <ActionButton icon="truck" label="Move Here" onPress={() => handleAction('Move with Hamisha Squad')} />
+            </View>
+          </GlassCard>
+
           {/* ===== QUICK QUESTIONS ===== */}
           <GlassCard>
             <TouchableOpacity
@@ -565,34 +546,6 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     width: '100%',
     alignSelf: 'center',
-  },
-  imageContainerDesktop: {
-    height: 480,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-    alignSelf: 'stretch',
-    maxWidth: '100%',
-  },
-  desktopRow: {
-    flexDirection: 'row',
-    gap: SPACING.lg,
-    padding: SPACING.md,
-    maxWidth: 1200,
-    width: '100%',
-    alignSelf: 'center',
-    alignItems: 'flex-start',
-  },
-  desktopGallery: {
-    flex: 1.2,
-  },
-  desktopSummary: {
-    flex: 1,
-  },
-  summaryCards: {
-    gap: SPACING.md,
-  },
-  contentNoOverlap: {
-    marginTop: 0,
   },
   heroImage: {
     width: '100%',

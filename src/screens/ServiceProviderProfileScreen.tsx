@@ -394,7 +394,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180 }}>
           <SkeletonLoader type="detail-hero" />
           <View style={{ paddingHorizontal: SPACING.md, gap: SPACING.md }}>
             <SkeletonLoader type="detail-section" />
@@ -409,7 +409,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180 }}>
         {/* Cover */}
         <View style={styles.coverWrap}>
           <Image source={{ uri: profile.coverImage }} style={styles.cover} />

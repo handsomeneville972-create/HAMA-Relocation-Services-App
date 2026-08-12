@@ -994,7 +994,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         {/* Content */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: SPACING.md, paddingBottom: 180, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+          contentContainerStyle={{ padding: SPACING.md, paddingBottom: 180 }}
           keyboardShouldPersistTaps="handled"
         >
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
