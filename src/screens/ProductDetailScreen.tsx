@@ -7,6 +7,7 @@ import { getProductById } from '../services/productService';
 import { findOrCreateConversation } from '../services/conversationService';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useResponsive } from '../utils/responsive';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -14,6 +15,7 @@ import type { Product } from '../constants/types';
 
 export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { productId } = route.params;
+  const { isDesktop } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,77 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
     extrapolate: 'clamp',
   });
 
+  const hero = (
+    <Animated.View style={[styles.imageContainer, isDesktop && styles.imageContainerDesktop, { opacity: imageOpacity }]}>
+      <Image source={{ uri: product.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
+      <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
+      {/* Back button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+      {/* Image gallery dots */}
+      <View style={styles.galleryDots}>
+        {(product.images ?? []).map((_, i) => (
+          <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
+        ))}
+      </View>
+    </Animated.View>
+  );
+
+  const summary = (
+    <View style={styles.summaryCards}>
+      {/* Product Info */}
+      <View style={styles.titleSection}>
+        <Text style={styles.productName}>{product.name}</Text>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{formatPrice(product.price)}</Text>
+          {product.originalPrice && (
+            <Text style={styles.originalPrice}>{formatPrice(product.originalPrice)}</Text>
+          )}
+          {product.originalPrice && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountText}>
+                -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Seller Info */}
+      <TouchableOpacity style={styles.sellerSection}>
+        <Image source={{ uri: product.seller?.logo ?? 'https://i.pravatar.cc/100?u=seller' }} style={styles.sellerLogo} />
+        <View style={styles.sellerInfo}>
+          <Text style={styles.sellerName}>{product.seller.name}</Text>
+          <View style={styles.sellerRating}>
+            <Ionicons name="star" size={14} color={COLORS.warning} />
+            <Text style={styles.sellerRatingText}>{product.seller.rating}</Text>
+            <Text style={styles.sellerReviewCount}>({product.seller.reviewCount} reviews)</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+      </TouchableOpacity>
+
+      {/* Description */}
+      <GlassCard>
+        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.descriptionText}>{product.description}</Text>
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Ionicons name="pricetag-outline" size={16} color={COLORS.textSecondary} />
+            <Text style={styles.metaLabel}>Condition: </Text>
+            <Text style={styles.metaValue}>{product.condition}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
+            <Text style={styles.metaLabel}>Location: </Text>
+            <Text style={styles.metaValue}>{product.location}</Text>
+          </View>
+        </View>
+      </GlassCard>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Animated.ScrollView
@@ -58,73 +131,19 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
         )}
         scrollEventThrottle={16}
       >
-        {/* Hero Image */}
-        <Animated.View style={[styles.imageContainer, { opacity: imageOpacity }]}>
-          <Image source={{ uri: product.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
-          <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
-          {/* Back button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          {/* Image gallery dots */}
-          <View style={styles.galleryDots}>
-            {(product.images ?? []).map((_, i) => (
-              <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
-            ))}
+        {isDesktop ? (
+          <View style={styles.desktopRow}>
+            <View style={styles.desktopGallery}>{hero}</View>
+            <View style={styles.desktopSummary}>{summary}</View>
           </View>
-        </Animated.View>
+        ) : (
+          <>
+            {hero}
+            <View style={styles.content}>{summary}</View>
+          </>
+        )}
 
-        <View style={styles.content}>
-          {/* Product Info */}
-          <View style={styles.titleSection}>
-            <Text style={styles.productName}>{product.name}</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatPrice(product.price)}</Text>
-              {product.originalPrice && (
-                <Text style={styles.originalPrice}>{formatPrice(product.originalPrice)}</Text>
-              )}
-              {product.originalPrice && (
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>
-                    -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Seller Info */}
-          <TouchableOpacity style={styles.sellerSection}>
-            <Image source={{ uri: product.seller?.logo ?? 'https://i.pravatar.cc/100?u=seller' }} style={styles.sellerLogo} />
-            <View style={styles.sellerInfo}>
-              <Text style={styles.sellerName}>{product.seller.name}</Text>
-              <View style={styles.sellerRating}>
-                <Ionicons name="star" size={14} color={COLORS.warning} />
-                <Text style={styles.sellerRatingText}>{product.seller.rating}</Text>
-                <Text style={styles.sellerReviewCount}>({product.seller.reviewCount} reviews)</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
-          </TouchableOpacity>
-
-          {/* Description */}
-          <GlassCard>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.descriptionText}>{product.description}</Text>
-            <View style={styles.metaRow}>
-              <View style={styles.metaItem}>
-                <Ionicons name="pricetag-outline" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.metaLabel}>Condition: </Text>
-                <Text style={styles.metaValue}>{product.condition}</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.metaLabel}>Location: </Text>
-                <Text style={styles.metaValue}>{product.location}</Text>
-              </View>
-            </View>
-          </GlassCard>
-
+        <View style={[styles.content, isDesktop && styles.contentNoOverlap]}>
           {/* Reviews */}
           <GlassCard>
             <View style={styles.reviewHeader}>
@@ -195,6 +214,34 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     width: '100%',
     alignSelf: 'center',
+  },
+  imageContainerDesktop: {
+    height: 460,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    alignSelf: 'stretch',
+    maxWidth: '100%',
+  },
+  desktopRow: {
+    flexDirection: 'row',
+    gap: SPACING.lg,
+    padding: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
+    alignItems: 'flex-start',
+  },
+  desktopGallery: {
+    flex: 1.2,
+  },
+  desktopSummary: {
+    flex: 1,
+  },
+  summaryCards: {
+    gap: SPACING.md,
+  },
+  contentNoOverlap: {
+    marginTop: 0,
   },
   heroImage: {
     width: '100%',
@@ -378,6 +425,9 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     gap: 12,
     paddingBottom: 30,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   contactButton: {
     flex: 1,

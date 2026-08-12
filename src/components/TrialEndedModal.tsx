@@ -323,6 +323,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingTop: 10,
     maxHeight: '88%',
+    maxWidth: 680,
+    width: '100%',
+    alignSelf: 'center',
   },
   handle: {
     width: 36,
