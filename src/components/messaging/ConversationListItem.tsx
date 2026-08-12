@@ -16,6 +16,7 @@ interface ConversationListItemProps {
   currentUserId: string;
   onPress: () => void;
   index?: number;
+  active?: boolean;
 }
 
 export const ConversationListItem: React.FC<ConversationListItemProps> = ({
@@ -23,6 +24,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   currentUserId,
   onPress,
   index = 0,
+  active = false,
 }) => {
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -58,7 +60,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
 
   return (
     <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
-      <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity style={[styles.container, active && styles.containerActive]} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.avatarContainer}>
           <Image
             source={{ uri: otherUser?.avatar || 'https://i.pravatar.cc/150?u=default' }}
@@ -104,6 +106,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm + 2,
     gap: SPACING.sm + 4,
+  },
+  containerActive: {
+    backgroundColor: 'rgba(255,107,0,0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
+    paddingLeft: SPACING.md - 3,
   },
   avatarContainer: {
     position: 'relative',
