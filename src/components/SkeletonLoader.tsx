@@ -1,9 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Animated, StyleSheet, Dimensions } from 'react-native';
+import { View, Animated, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, RADIUS, SPACING } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
 
 interface SkeletonLoaderProps {
   type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat' | 'text' | 'liquid-card' | 'featured-property-card';

@@ -24,8 +24,6 @@ import { getFeaturedProperties, searchProperties } from '../services/propertySer
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Property } from '../constants/types';
 
-const { width } = Dimensions.get('window');
-
 // ============================================================
 // CATEGORIES
 // ============================================================

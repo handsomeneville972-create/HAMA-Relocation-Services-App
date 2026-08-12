@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Dimensions, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
@@ -13,8 +13,6 @@ import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../c
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Property, PropertyReview } from '../constants/types';
-
-const { width } = Dimensions.get('window');
 
 const QUICK_QUESTIONS = [
   'Is this property still available?',
@@ -545,6 +543,9 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: 300,
     position: 'relative',
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   heroImage: {
     width: '100%',
@@ -619,6 +620,9 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginTop: -SPACING.xl,
     gap: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   // Property Info
   propertyHeader: {

@@ -1,10 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, RADIUS, SPACING, SHADOWS } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../utils/responsive';
 
 const TIPS = [
   "Hey, I'm Homie. Let's find something perfect for your budget.",
@@ -19,6 +18,7 @@ interface HomieAssistantProps {
 }
 
 export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
+  const { width } = useResponsive();
   const floatAnim = useRef(new Animated.Value(0)).current;
   const breatheAnim = useRef(new Animated.Value(1)).current;
   const [tipIndex, setTipIndex] = useState(0);
@@ -80,7 +80,7 @@ export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
   return (
     <View style={styles.container}>
       {showTip && (
-        <Animated.View style={styles.tipBubble}>
+        <Animated.View style={[styles.tipBubble, { maxWidth: Math.min(width * 0.65, 360) }]}>
           <Text style={styles.tipText}>{TIPS[tipIndex]}</Text>
         </Animated.View>
       )}
@@ -135,7 +135,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.glassBorder,
     padding: SPACING.sm,
     marginBottom: 8,
-    maxWidth: width * 0.65,
     ...SHADOWS.md,
   },
   tipText: {

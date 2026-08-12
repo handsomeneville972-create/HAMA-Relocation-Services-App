@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,8 +9,7 @@ import { LandlordUploadSuccessPopup } from '../components/LandlordUploadSuccessP
 import { LandlordSubscriptionModal } from '../components/LandlordSubscriptionModal';
 import { loadLandlordUploads, incrementPropertyCount, getLandlordUploadState } from '../utils/landlordUploads';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../utils/responsive';
 
 type OnboardingStep =
   | 'personal'
@@ -82,6 +81,7 @@ const INITIAL_PROPERTY: PropertyDraft = {
 
 export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width } = useResponsive();
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
 
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 10, color: COLORS.textTertiary, fontWeight: '500' },
   stepLabelActive: { color: COLORS.primary },
   body: { flex: 1 },
-  bodyContent: { padding: SPACING.lg, paddingBottom: 100 },
+  bodyContent: { padding: SPACING.lg, paddingBottom: 100, maxWidth: 720, width: '100%', alignSelf: 'center' },
   stepContent: { gap: SPACING.lg },
   stepTitle: { ...FONTS.h2, color: COLORS.text },
   stepSubtitle: { ...FONTS.caption, color: COLORS.textSecondary, marginTop: -SPACING.sm },

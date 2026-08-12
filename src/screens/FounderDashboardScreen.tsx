@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,8 +20,6 @@ import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { featureRequestService } from '../services/earlyAccessService';
 import { formatPrice } from '../utils/currency';
-
-const { width } = Dimensions.get('window');
 
 // ===== Mock Analytics Data =====
 // In production, these would come from a backend analytics service
@@ -222,6 +220,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: SPACING.md,
     gap: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   sectionTitle: {
     ...FONTS.h3,

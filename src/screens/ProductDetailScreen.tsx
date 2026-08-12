@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
@@ -11,8 +11,6 @@ import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Product } from '../constants/types';
-
-const { width } = Dimensions.get('window');
 
 export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { productId } = route.params;
@@ -194,6 +192,9 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: 350,
     position: 'relative',
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   heroImage: {
     width: '100%',
@@ -238,6 +239,9 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginTop: -SPACING.xl,
     gap: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   titleSection: {
     marginBottom: SPACING.sm,
