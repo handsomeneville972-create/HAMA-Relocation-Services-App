@@ -275,7 +275,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
 
   if (!conversation || !otherUser) {
     return (
-      <ImageBackground source={CHAT_BG} style={styles.bgImage} resizeMode="contain" imageStyle={styles.bgImageStyle}>
+      <ImageBackground source={CHAT_BG} style={styles.bgImage} resizeMode="cover">
         <View style={styles.bgOverlay} />
         <SkeletonLoader type="chat" />
       </ImageBackground>
@@ -289,15 +289,15 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
     <ImageBackground
       source={CHAT_BG}
       style={styles.bgImage}
-      resizeMode="contain"
-      imageStyle={styles.bgImageStyle}
+      resizeMode="cover"
     >
       <View style={styles.bgOverlay} />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'android' ? 'height' : 'padding'}
-        keyboardVerticalOffset={0}
-      >
+      <View style={styles.threadColumn}>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'android' ? 'height' : 'padding'}
+          keyboardVerticalOffset={0}
+        >
         {/* Header */}
         <ChatHeader
           user={otherUser}
@@ -333,7 +333,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
           onTyping={handleTyping}
           sending={sending}
         />
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
 
       {/* Context Menu */}
       <MessageContextMenu
@@ -371,13 +372,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a2e',
   },
-  bgImageStyle: {
-    alignSelf: 'center',
-    opacity: 1,
-  },
   bgOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  threadColumn: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
   },
   container: {
     flex: 1,

@@ -62,10 +62,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: COLORS.bg,
+    backgroundColor: 'rgba(10, 10, 15, 0.55)',
     paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   content: {
     flexDirection: 'row',

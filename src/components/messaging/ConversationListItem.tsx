@@ -1,8 +1,9 @@
 /**
  * ConversationListItem
  *
- * Renders a single conversation row in the inbox.
- * Shows avatar, name, last message, timestamp, unread badge, online indicator.
+ * TikTok-style user profile row for the inbox:
+ * large avatar with an online ring, name + verified badge, role chip,
+ * media-type icon for non-text messages, timestamp, and unread badge.
  */
 
 import React, { useRef, useEffect } from 'react';
@@ -11,12 +12,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
 import type { Conversation, User } from '../../constants/types';
 
+const ROLE_CHIPS: Record<string, { label: string; color: string; icon: string }> = {
+  landlord: { label: 'Landlord', color: '#FF6B00', icon: 'home-outline' },
+  seller: { label: 'Seller', color: '#00D4AA', icon: 'pricetag-outline' },
+  service_provider: { label: 'Provider', color: '#8B5CF6', icon: 'construct-outline' },
+};
+
+const MESSAGE_TYPE_ICONS: Record<string, string> = {
+  image: 'image-outline',
+  file: 'document-outline',
+  property: 'home-outline',
+  product: 'pricetag-outline',
+  service_provider: 'construct-outline',
+  location: 'location-outline',
+  system: 'megaphone-outline',
+};
+
 interface ConversationListItemProps {
   conversation: Conversation;
   currentUserId: string;
   onPress: () => void;
   index?: number;
-  active?: boolean;
+  isOnline?: boolean;
 }
 
 export const ConversationListItem: React.FC<ConversationListItemProps> = ({
@@ -24,26 +41,29 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   currentUserId,
   onPress,
   index = 0,
-  active = false,
+  isOnline = false,
 }) => {
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(anim, {
       toValue: 1,
-      duration: 300,
-      delay: index * 50,
+      duration: 280,
+      delay: Math.min(index, 6) * 45,
       useNativeDriver: true,
     }).start();
   }, [anim, index]);
 
-  const otherUser = conversation.participants?.find(
-    (p) => p.id !== currentUserId,
-  ) || conversation.participants?.[0];
+  const otherUser: User | undefined =
+    conversation.participants?.find((p) => p.id !== currentUserId) ||
+    conversation.participants?.[0];
 
   const lastMessage = conversation.lastMessage || '';
   const lastMessageTime = conversation.lastMessageTime || '';
   const unreadCount = conversation.unreadCount || 0;
+  const messageType = conversation.messages?.[conversation.messages.length - 1]?.message_type;
+  const typeIcon = messageType ? MESSAGE_TYPE_ICONS[messageType] : null;
+  const roleChip = otherUser ? ROLE_CHIPS[otherUser.role] : undefined;
 
   const formatTime = (timestamp: string) => {
     if (!timestamp) return '';
@@ -58,29 +78,54 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
+  const previewPrefix = typeIcon ? (
+    <Ionicons name={typeIcon as any} size={14} color={COLORS.textTertiary} style={styles.previewIcon} />
+  ) : null;
+
   return (
-    <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
-      <TouchableOpacity style={[styles.container, active && styles.containerActive]} onPress={onPress} activeOpacity={0.7}>
-        <View style={styles.avatarContainer}>
+    <Animated.View
+      style={{
+        opacity: anim,
+        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+      }}
+    >
+      <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+        {/* Avatar with online ring */}
+        <View style={[styles.avatarWrap, isOnline && styles.avatarWrapOnline]}>
           <Image
             source={{ uri: otherUser?.avatar || 'https://i.pravatar.cc/150?u=default' }}
             style={styles.avatar}
           />
-          {unreadCount > 0 && <View style={styles.unreadDot} />}
+          {isOnline && <View style={styles.onlineDot} />}
         </View>
 
         <View style={styles.content}>
           <View style={styles.topRow}>
-            <Text style={[styles.name, unreadCount > 0 && styles.nameBold]} numberOfLines={1}>
+            <Text
+              style={[styles.name, unreadCount > 0 && styles.nameBold]}
+              numberOfLines={1}
+            >
               {otherUser?.name || 'Unknown User'}
             </Text>
             {otherUser?.verified && (
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} style={styles.verifiedBadge} />
+              <Ionicons name="checkmark-circle" size={15} color={COLORS.primary} />
             )}
-            <Text style={styles.time}>{formatTime(lastMessageTime)}</Text>
+            <View style={styles.timeBox}>
+              <Text style={styles.time}>{formatTime(lastMessageTime)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.midRow}>
+            {roleChip && (
+              <View style={[styles.roleChip, { backgroundColor: roleChip.color + '1F' }]}>
+                <Ionicons name={roleChip.icon as any} size={10} color={roleChip.color} />
+                <Text style={[styles.roleText, { color: roleChip.color }]}>{roleChip.label}</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.bottomRow}>
+            {previewPrefix}
             <Text
               style={[styles.lastMessage, unreadCount > 0 && styles.lastMessageBold]}
               numberOfLines={1}
@@ -105,16 +150,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm + 2,
-    gap: SPACING.sm + 4,
+    gap: SPACING.md,
   },
-  containerActive: {
-    backgroundColor: 'rgba(255,107,0,0.08)',
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.primary,
-    paddingLeft: SPACING.md - 3,
+  avatarWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
   },
-  avatarContainer: {
-    position: 'relative',
+  avatarWrapOnline: {
+    borderColor: COLORS.success,
   },
   avatar: {
     width: 52,
@@ -122,20 +171,20 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: COLORS.bgCard,
   },
-  unreadDot: {
+  onlineDot: {
     position: 'absolute',
-    bottom: 1,
-    right: 1,
+    bottom: 2,
+    right: 2,
     width: 14,
     height: 14,
     borderRadius: 7,
     backgroundColor: COLORS.success,
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: COLORS.bg,
   },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   topRow: {
     flexDirection: 'row',
@@ -150,17 +199,36 @@ const styles = StyleSheet.create({
   nameBold: {
     fontWeight: '700',
   },
-  verifiedBadge: {
-    marginLeft: 2,
+  timeBox: {
+    marginLeft: 'auto',
   },
   time: {
     ...FONTS.caption,
     color: COLORS.textTertiary,
   },
+  midRow: {
+    flexDirection: 'row',
+  },
+  roleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
+    alignSelf: 'flex-start',
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: 4,
+  },
+  previewIcon: {
+    marginRight: 1,
   },
   lastMessage: {
     ...FONTS.bodySmall,
