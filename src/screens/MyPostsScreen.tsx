@@ -198,9 +198,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  scrollContent: {
-    padding: SPACING.md,
-  },
+scrollContent: {
+      padding: SPACING.md,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   cardWrap: {
     marginBottom: SPACING.sm,
   },

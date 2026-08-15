@@ -288,9 +288,12 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 32,
   },
-  scrollContent: {
-    paddingTop: 13,
-  },
+scrollContent: {
+      paddingTop: 13,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   scaledContent: {
     flex: 1,
   },

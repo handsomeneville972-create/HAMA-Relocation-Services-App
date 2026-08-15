@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: SPACING.md, gap: SPACING.md },
   headerBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { ...FONTS.h3, fontSize: 16, lineHeight: 20 },
-  content: { padding: SPACING.md, paddingBottom: 60 },
+  content: { padding: SPACING.md, paddingBottom: 60, maxWidth: 720, width: '100%', alignSelf: 'center' },
   hero: { alignItems: 'center', paddingVertical: SPACING.lg },
   heroIconWrap: { width: 88, height: 88, borderRadius: RADIUS.xxl, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.lg },
   eyebrow: { ...FONTS.caption, color: COLORS.primary, fontWeight: '800', letterSpacing: 1.5, marginBottom: SPACING.sm },

@@ -138,34 +138,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Ionicons name="search" size={20} color="rgba(255,255,255,0.7)" />
                 <Text style={styles.searchPlaceholder}>Search homes, products, services...</Text>
               </TouchableOpacity>
-
-              {/* Quick Actions */}
-              <View style={styles.quickActions}>
-                <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Marketplace')}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="cart" size={22} color={COLORS.primary} />
-                  </View>
-                  <Text style={styles.quickActionText}>Marketplace</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Services')}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="construct" size={22} color={COLORS.accent} />
-                  </View>
-                  <Text style={styles.quickActionText}>Services</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Community')}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="people" size={22} color={COLORS.secondary} />
-                  </View>
-                  <Text style={styles.quickActionText}>Community</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate('Subscriptions')}>
-                  <View style={styles.quickActionIcon}>
-                    <Ionicons name="star" size={22} color={COLORS.warning} />
-                  </View>
-                  <Text style={styles.quickActionText}>Premium</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </LinearGradient>
         </Animated.View>
@@ -545,34 +517,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 15,
     flex: 1,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  quickAction: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: RADIUS.md,
-    paddingVertical: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  quickActionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickActionText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
   },
 
   section: {

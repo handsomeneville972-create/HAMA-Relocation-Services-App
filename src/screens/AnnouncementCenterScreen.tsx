@@ -244,10 +244,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  scrollContent: {
-    padding: SPACING.md,
-    gap: SPACING.md,
-  },
+scrollContent: {
+      padding: SPACING.md,
+      gap: SPACING.md,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',

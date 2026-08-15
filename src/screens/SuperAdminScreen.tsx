@@ -987,7 +987,7 @@ const styles = StyleSheet.create({
   tabItemActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   tabLabel: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '500' },
   tabLabelActive: { color: '#fff', fontWeight: '600' },
-  scrollContent: { padding: SPACING.md, gap: SPACING.md },
+  scrollContent: { padding: SPACING.md, gap: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   sectionTitle: { ...FONTS.h3, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginTop: SPACING.xs, marginBottom: -4 },
   metricsGrid: { flexDirection: 'row', gap: 8 },
   metricCard: { flex: 1, padding: SPACING.sm, alignItems: 'center', gap: 2 },

@@ -167,10 +167,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
-  scrollContent: {
-    padding: SPACING.md,
-    gap: SPACING.md,
-  },
+scrollContent: {
+      padding: SPACING.md,
+      gap: SPACING.md,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   currentVersionBanner: {
     borderRadius: RADIUS.lg,
     borderWidth: 1,

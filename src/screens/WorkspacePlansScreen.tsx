@@ -536,9 +536,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    padding: SPACING.lg,
-  },
+scrollContent: {
+      padding: SPACING.lg,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   section: {
     marginBottom: SPACING.xl,
   },

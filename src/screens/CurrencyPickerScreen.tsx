@@ -179,9 +179,12 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  scrollContent: {
-    paddingTop: SPACING.md,
-  },
+scrollContent: {
+      paddingTop: SPACING.md,
+      maxWidth: 720,
+      width: '100%',
+      alignSelf: 'center',
+    },
   // Current selection
   currentSection: {
     paddingHorizontal: SPACING.md,

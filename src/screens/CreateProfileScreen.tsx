@@ -282,9 +282,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  scrollContent: {
-    paddingHorizontal: SPACING.lg,
-  },
+scrollContent: {
+      paddingHorizontal: SPACING.lg,
+      maxWidth: 720,
+      width: '100%',
+      alignSelf: 'center',
+    },
   photoSection: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,

@@ -291,10 +291,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  scrollContent: {
-    padding: SPACING.md,
-    gap: SPACING.lg,
-  },
+scrollContent: {
+      padding: SPACING.md,
+      gap: SPACING.lg,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
   pageTitle: {
     ...FONTS.h2,
     color: COLORS.text,

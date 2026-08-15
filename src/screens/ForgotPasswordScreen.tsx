@@ -202,10 +202,13 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.xl,
+content: {
+      flex: 1,
+      paddingHorizontal: SPACING.md,
+      paddingTop: SPACING.xl,
+      maxWidth: 720,
+      width: '100%',
+      alignSelf: 'center',
     gap: SPACING.lg,
   },
   iconContainer: {

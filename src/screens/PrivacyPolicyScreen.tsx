@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#fff', fontSize: 17, fontWeight: '700' },
 
-  scrollContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg },
+  scrollContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, maxWidth: 1200, width: '100%', alignSelf: 'center' },
 
   // Hero
   heroSection: { alignItems: 'center', marginBottom: SPACING.lg, paddingHorizontal: SPACING.md },

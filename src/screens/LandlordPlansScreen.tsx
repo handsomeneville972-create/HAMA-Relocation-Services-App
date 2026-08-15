@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     borderColor: '#1A1A1A',
   },
   headerTitle: { ...FONTS.h3, color: COLORS.text },
-  scrollContent: { padding: SPACING.lg },
+  scrollContent: { padding: SPACING.lg, maxWidth: 1200, width: '100%', alignSelf: 'center' },
 
   hero: { alignItems: 'center', marginBottom: SPACING.xl },
   heroIcon: { marginBottom: SPACING.md },

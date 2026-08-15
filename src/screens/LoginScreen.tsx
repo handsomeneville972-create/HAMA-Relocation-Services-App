@@ -280,10 +280,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-  scrollContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: 32,
-    gap: 10,
+scrollContent: {
+      paddingHorizontal: SPACING.lg,
+      paddingBottom: 32,
+      gap: 10,
+      maxWidth: 720,
+      width: '100%',
+      alignSelf: 'center',
   },
   formTitle: {
     fontSize: 20,
