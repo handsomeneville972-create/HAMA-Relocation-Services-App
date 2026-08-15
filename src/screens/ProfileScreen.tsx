@@ -10,7 +10,6 @@ import { useProfileBadges } from '../hooks/useUserData';
 import { getCommunityPosts } from '../services/communityService';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { navigateToRoute } from '../utils/navigation';
-import { getActiveWorkspaces, subscribeWorkspaces, type WorkspaceRole } from '../utils/workspaces';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 
 const MENU_SECTIONS = [
@@ -19,31 +18,6 @@ const MENU_SECTIONS = [
     items: [
       { icon: 'person-outline', label: 'Edit Profile', color: COLORS.primary, route: 'EditProfile' },
       { icon: 'bookmark-outline', label: 'Saved', color: COLORS.accent, route: 'Favorites' },
-    ],
-  },
-  {
-    title: 'Subscriptions',
-    items: [
-      { icon: 'pricetag-outline', label: 'Pricing', color: COLORS.primary, route: 'Subscriptions' },
-      { icon: 'star-outline', label: 'My Plan', color: COLORS.primary, badgeKey: 'myPlan', route: 'WorkspacePlans' },
-      { icon: 'card-outline', label: 'Payment Methods', color: COLORS.accent, route: 'PaymentMethods' },
-      { icon: 'receipt-outline', label: 'Billing History', color: COLORS.textSecondary, route: 'BillingHistory' },
-    ],
-  },
-  {
-    title: 'Landlord',
-    items: [
-      { icon: 'home-outline', label: 'Landlord Dashboard', color: COLORS.primary, route: 'LandlordDashboard' },
-      { icon: 'add-circle-outline', label: 'Add / Manage Properties', color: COLORS.accent, route: 'LandlordOnboarding' },
-      { icon: 'diamond-outline', label: 'Plans & Pricing', color: COLORS.secondary, route: 'LandlordPlans' },
-    ],
-  },
-  {
-    title: 'Service Provider',
-    items: [
-      { icon: 'storefront-outline', label: 'Become a Service Provider', color: COLORS.primary, route: 'BecomeProvider' },
-      { icon: 'analytics-outline', label: 'Seller Dashboard', color: COLORS.accent, route: 'SellerDashboard' },
-      { icon: 'ribbon-outline', label: 'View My Public Profile', color: COLORS.textSecondary, route: 'ServiceProviderProfile' },
     ],
   },
   {
@@ -65,24 +39,12 @@ const MENU_SECTIONS = [
   },
 ];
 
-const ACTIVE_WORKSPACE_BADGES: Record<WorkspaceRole, string> = {
-  house_seeker: 'Free',
-  landlord: 'Landlord',
-  seller: 'Seller',
-  service_provider: 'Provider',
-};
-
 export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
   const [postCount, setPostCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeWorkspaces, setActiveWorkspaces] = useState<WorkspaceRole[]>(getActiveWorkspaces());
-
-  useEffect(() => {
-    return subscribeWorkspaces(setActiveWorkspaces);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -180,10 +142,7 @@ export const ProfileScreen: React.FC = () => {
                 {section.items.map((item, itemIndex) => {
                   let badgeText: string | undefined = (item as any).badge;
                   const badgeKey = (item as any).badgeKey;
-                  if (badgeKey === 'myPlan') {
-                    const extras = activeWorkspaces.filter((w) => w !== 'house_seeker');
-                    badgeText = extras.length > 0 ? extras.map((w) => ACTIVE_WORKSPACE_BADGES[w]).join(' · ') : 'Free';
-                  } else if (badgeKey) {
+                  if (badgeKey) {
                     badgeText = dynamicBadges[badgeKey];
                   }
                   return (
