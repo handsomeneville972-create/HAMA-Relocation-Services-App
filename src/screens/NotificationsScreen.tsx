@@ -156,6 +156,9 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.lg,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   sectionLabel: {
     color: COLORS.textTertiary,

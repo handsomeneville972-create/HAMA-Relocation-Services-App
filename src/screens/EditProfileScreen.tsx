@@ -346,6 +346,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     gap: SPACING.md,
     paddingBottom: SPACING.xxl,
+    maxWidth: 720,
+    width: '100%',
+    alignSelf: 'center',
   },
   fieldRow: {
     paddingVertical: SPACING.sm,

@@ -758,6 +758,7 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     paddingHorizontal: SPACING.md, alignItems: 'center', paddingTop: 100,
+    maxWidth: 1200, width: '100%', alignSelf: 'center',
   },
   brandIcon: {
     width: 64, height: 64, borderRadius: 18,
@@ -780,6 +781,7 @@ const styles = StyleSheet.create({
   // ---- Sections ----
   section: {
     paddingHorizontal: SPACING.md, marginBottom: SPACING.md,
+    maxWidth: 1200, width: '100%', alignSelf: 'center',
   },
   // ---- Who We Are ----
   whoWeAreContent: {

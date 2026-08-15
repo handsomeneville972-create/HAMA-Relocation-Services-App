@@ -48,7 +48,8 @@ export const ServiceDetailScreen: React.FC<{ route: any; navigation: any }> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Provider Info */}
+        <View style={styles.content}>
+          {/* Provider Info */}
         <View style={styles.providerInfo}>
           <Image source={{ uri: provider.logo }} style={styles.providerLogo} />
           <View style={styles.providerText}>
@@ -136,6 +137,7 @@ export const ServiceDetailScreen: React.FC<{ route: any; navigation: any }> = ({
         </GlassCard>
 
         <View style={{ height: 100 }} />
+        </View>
       </ScrollView>
 
       {/* Bottom CTA */}
@@ -194,6 +196,11 @@ const styles = StyleSheet.create({
     marginTop: -30,
     gap: 16,
     zIndex: 1,
+  },
+  content: {
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   providerLogo: {
     width: 64,
@@ -306,6 +313,9 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     gap: 12,
     paddingBottom: 30,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   callButton: {
     width: 60,
