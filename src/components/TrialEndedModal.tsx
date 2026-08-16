@@ -4,7 +4,7 @@
  * 3-step renewal flow shown when a seeker's 7-day free trial has ended
  * or their paid subscription has expired.
  *
- * Step 1 (Renewal): Plan info + KSh 170 + "Pay" / "Nah, not today"
+ * Step 1 (Renewal): Plan info + KSh 199 + "Pay" / "Nah, not today"
  * Step 2 (Miss-out): Feature loss list + "Pay now" / "Am good"
  * Step 3 (Phone): M-Pesa STK push flow
  * Step 4 (Success): Animated confirmation
@@ -73,7 +73,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
       planId: 'sub2',
       tier: 'Premium',
       userType: 'seeker',
-      price: 170,
+      price: 199,
       status: 'active',
       startedAt: new Date().toISOString(),
       expiresAt,
@@ -89,7 +89,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
     setStep('phone');
     mpesa.startPayment({
       phoneNumber: '0' + phoneNumber,
-      amount: 170,
+      amount: 199,
       currency: 'KSh',
       planName: 'Premium - seeker',
       accountReference: 'HAMA-Premium-seeker',
@@ -125,7 +125,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
 
                   <Text style={styles.title}>Your free trial has ended</Text>
                   <Text style={styles.subtitle}>
-                    Subscribe to our plan of only KSh 170 to continue enjoying Hama's great features!
+                    Subscribe to our plan of only KSh 199 to continue enjoying Hama's great features!
                   </Text>
 
                   {/* Plan Card */}
@@ -138,7 +138,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                       <Text style={styles.planDesc}>Full access to all house seeker features</Text>
                     </View>
                     <View style={styles.planPriceWrap}>
-                      <Text style={styles.planPrice}>KSh 170</Text>
+                      <Text style={styles.planPrice}>KSh 199</Text>
                       <Text style={styles.planPeriod}>/month</Text>
                     </View>
                   </View>
@@ -234,7 +234,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     </View>
                   </View>
 
-                  <Text style={styles.title}>Pay KSh 170</Text>
+                  <Text style={styles.title}>Pay KSh 199</Text>
                   <Text style={styles.subtitle}>Enter your M-Pesa phone number</Text>
 
                   <View style={styles.inputRow}>

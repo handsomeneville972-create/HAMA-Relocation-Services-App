@@ -26,7 +26,7 @@ export default function MarketplaceTab() {
         <View style={styles.blurOverlay}>
           <View style={styles.blurCard}>
             <Text style={styles.blurMessage}>
-              YOU CURRENTLY HAVE NO ACCESS TO THIS FEATURE AND MANY OTHERS. PAY KSH 170 TO UNLOCK ALL FEATURES!
+              YOU CURRENTLY HAVE NO ACCESS TO THIS FEATURE AND MANY OTHERS. PAY KSH 199 TO UNLOCK ALL FEATURES!
             </Text>
           </View>
         </View>

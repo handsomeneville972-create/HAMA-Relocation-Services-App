@@ -8,7 +8,7 @@
  *
  * House seeker flow:
  *   1. 7-day free trial → Premium features unlocked
- *   2. Trial ends → user must pay KSh 170/month
+ *   2. Trial ends → user must pay KSh 199/month
  *   3. isSeekerLocked = !trialActive && !isSubscribed
  *      When true: Marketplace blurred, Services gated, Home cards gated
  */

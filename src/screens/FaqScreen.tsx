@@ -71,7 +71,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         question: 'What happens when my free trial ends?',
-        answer: 'You can continue on the Free plan (basic search, up to 20 saved properties) or choose a Premium or Pro plan to keep full access.',
+        answer: 'Subscribe to Premium (KSh 199/month) to keep full access to all house seeker features.',
       },
     ],
   },
@@ -83,7 +83,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     items: [
       {
         question: 'How do I sell products on HAMA?',
-        answer: 'Activate the Seller workspace in My Plan, then create your storefront and add products. Basic (KSh 399/mo) includes 25 products; higher plans add featured store and analytics.',
+        answer: 'Activate the Seller workspace in My Plan, then create your storefront and add products. Sellers get 5 free product uploads; Basic (KSh 399/mo) includes up to 20 products, and Premium (KSh 599/mo) unlocks unlimited products and a featured store.',
       },
       {
         question: 'What commission does HAMA charge?',
@@ -107,7 +107,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         question: 'How does ranking work?',
-        answer: 'Providers are ranked by relevance and plan boost. Basic plans get a standard boost, Premium plans get top-of-search priority, and verified providers rank higher.',
+        answer: 'Providers are ranked by relevance and plan boost. All providers on the Premium plan (KSh 299/month) get top-of-search priority, and verified providers rank higher.',
       },
       {
         question: 'How do I receive quotes and jobs?',
@@ -127,7 +127,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         question: 'Is there a free plan?',
-        answer: 'Yes. Every role has a Free plan. Seeker Free includes basic search and up to 20 saved properties; seller/provider Free lets you browse but requires a paid plan to sell or list services.',
+        answer: 'House Seekers subscribe to a single Premium plan (KSh 199/month) with a 7-day free trial. Sellers get 5 free product uploads before choosing Basic or Premium, and Service Providers have a single Premium plan (KSh 299/month).',
       },
       {
         question: 'When does my subscription renew?',

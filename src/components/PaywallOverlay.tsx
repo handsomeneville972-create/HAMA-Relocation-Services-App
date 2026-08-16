@@ -30,7 +30,7 @@ interface PaywallOverlayProps {
 export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
   visible,
   onDismiss,
-  message = "YOU CURRENTLY HAVE NO ACCESS TO THIS FEATURE AND MANY OTHERS. PAY KSH 170 TO UNLOCK ALL FEATURES!",
+  message = "YOU CURRENTLY HAVE NO ACCESS TO THIS FEATURE AND MANY OTHERS. PAY KSH 199 TO UNLOCK ALL FEATURES!",
 }) => {
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
@@ -63,7 +63,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
       planId: 'sub2',
       tier: 'Premium',
       userType: 'seeker',
-      price: 170,
+      price: 199,
       status: 'active',
       startedAt: new Date().toISOString(),
       expiresAt,
@@ -79,7 +79,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
     setShowPhone(false);
     mpesa.startPayment({
       phoneNumber: '0' + phoneNumber,
-      amount: 170,
+      amount: 199,
       currency: 'KSh',
       planName: 'Premium - seeker',
       accountReference: 'HAMA-Premium-seeker',
@@ -164,7 +164,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
                     end={{ x: 1, y: 0 }}
                     style={styles.payGradient}
                   >
-                    <Text style={styles.payText}>Pay KSh 170</Text>
+                    <Text style={styles.payText}>Pay KSh 199</Text>
                   </LinearGradient>
                 </TouchableOpacity>
 

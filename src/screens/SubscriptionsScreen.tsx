@@ -11,7 +11,7 @@ import { useMpesaPayment } from '../hooks/useMpesaPayment';
 import { usePaystackPayment } from '../hooks/usePaystackPayment';
 import { useStripePayment } from '../hooks/useStripePayment';
 import { getSubscriptionPlans, purchaseSubscription } from '../services/subscriptionService';
-import { getSeekerTrialPlan, getPlansForRole } from '../constants/plans';
+import { getPlansForRole } from '../constants/plans';
 import { getEnabledPaymentMethods } from '../config/payments';
 import { formatPrice } from '../utils/currency';
 import { trackFreemiumPlanViewed } from '../utils/analytics';
@@ -73,10 +73,9 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
     }
   }, [selectedUserType, loading]);
 
-  // Seeker's Free plan is displayed as the 7-day free trial of Premium
+  // Seeker plans display the single Premium plan with a 7-day free trial attached
   const plans: SubscriptionPlan[] = (allPlans.length > 0 ? allPlans : getPlansForRole(selectedUserType))
-    .filter(p => p.userType === selectedUserType)
-    .map(p => (p.userType === 'seeker' && p.tier === 'Free' ? getSeekerTrialPlan() : p));
+    .filter(p => p.userType === selectedUserType);
 
   // Determine which payment flow is active
   const isPaying = mpesa.step !== 'idle' || paystack.step !== 'idle' || stripe.step !== 'idle';
@@ -119,14 +118,25 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
 
   /** Handle tapping a plan card */
   const handlePlanSelect = useCallback((plan: SubscriptionPlan) => {
-    if (plan.tier === 'Free') {
+    if (plan.userType === 'seeker') {
       if (trial.status === 'none') {
         startTrial();
-        Alert.alert('Free Trial Started', 'Your 7-day free trial of Premium is now active. Enjoy everything in Premium — no card required.');
+        Alert.alert('Free Trial Started', 'Your 7-day free trial of Premium (KSh 199/month) is now active. Enjoy everything in Premium — no card required.');
       } else if (trial.status === 'active') {
         Alert.alert('Trial Active', `Your Premium trial is active with ${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left.`);
       } else {
-        Alert.alert('Trial Ended', 'Your free trial has ended. Choose a plan below to continue enjoying Premium features.');
+        Alert.alert('Trial Ended', 'Your free trial has ended. Subscribe below to continue enjoying Premium features.');
+        setSelectedPlan(plan);
+        setShowPaymentSheet(true);
+        setPaymentMethod(null);
+      }
+      return;
+    }
+    if (plan.tier === 'Free') {
+      if (plan.userType === 'seller') {
+        Alert.alert('Free Plan', 'Your Free plan includes 5 product uploads. Upgrade to Basic (KSh 399/month, up to 20 products) or Premium (KSh 599/month, unlimited products) to list more.');
+      } else {
+        Alert.alert('Free Plan', 'This free plan is included with your account.');
       }
       return;
     }
@@ -199,18 +209,18 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                     plan={plan}
                     index={index}
                     trial={
-                      plan.userType === 'seeker' && plan.tier === 'Free'
+                      plan.userType === 'seeker'
                         ? { active: trial.status === 'active', daysLeft: trial.daysLeft }
                         : undefined
                     }
                     ctaLabel={
-                      plan.tier === 'Free' && plan.userType === 'seeker'
+                      plan.userType === 'seeker'
                         ? trial.status === 'active'
                           ? 'Trial active'
                           : 'Start 7-Day Free Trial'
                         : undefined
                     }
-                    badgeLabel={plan.tier === 'Free' && plan.userType === 'seeker' ? 'TRIAL' : undefined}
+                    badgeLabel={plan.userType === 'seeker' ? 'TRIAL' : undefined}
                     onSelect={() => handlePlanSelect(plan)}
                   />
                 ))}

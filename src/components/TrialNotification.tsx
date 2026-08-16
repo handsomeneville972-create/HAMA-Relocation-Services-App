@@ -80,7 +80,7 @@ export const TrialNotification: React.FC = () => {
 
           {/* Content */}
           <Text style={styles.message}>
-            You are currently on a 7 days free trial. After 7 days Subscribe to our plan of only KSh 170 to continue enjoying Hama's great features!
+            You are currently on a 7 days free trial. After 7 days Subscribe to our plan of only KSh 199 to continue enjoying Hama's great features!
           </Text>
 
           {/* Green "Got it!" button */}

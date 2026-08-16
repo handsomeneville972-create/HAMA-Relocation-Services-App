@@ -113,7 +113,7 @@ const EMPTY_PROFILE: ProviderProfile = {
   faqs: [],
   promotions: [],
   status: 'draft',
-  plan: 'Basic',
+  plan: 'Premium',
   subscriptionExpiry: null,
   completedSteps: [],
   keywords: [],
@@ -570,7 +570,7 @@ export function rankProviders(
     const recentActivity = profile.updatedAt
       ? Math.max(0, 1 - (now - new Date(profile.updatedAt).getTime()) / (30 * 86400000))
       : 0.2;
-    const subscriptionBoost = profile.plan === 'Premium' ? 1 : profile.plan === 'Basic' ? 0.6 : 0.2;
+    const subscriptionBoost = 1;
 
     const score =
       weights.categoryRelevance * categoryRelevance +
@@ -614,18 +614,14 @@ export { PROVIDER_PLANS } from '../constants/plans';
 
 /**
  * Maps legacy plan values onto the canonical scale.
- * 'Standard' was the old name for the provider Basic tier.
+ * Service providers now have a single Premium plan (KSh 299/month).
  */
 export function normalizeProviderPlan(plan: string | null | undefined): ProviderPlanTier {
-  if (plan === 'Standard') return 'Basic';
-  if (plan === 'Basic' || plan === 'Premium' || plan === 'House Seeker') return plan;
-  return 'Basic';
+  return 'Premium';
 }
 
 export function getPlanBoost(plan: ProviderPlanTier): number {
-  if (plan === 'Premium') return 1;
-  if (plan === 'Basic') return 0.6;
-  return 0.2;
+  return 1;
 }
 
 // ---------------- Demo analytics generator (deterministic) ----------------
