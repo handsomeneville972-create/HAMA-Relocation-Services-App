@@ -187,10 +187,13 @@ export const ProfileScreen: React.FC = () => {
         </View>
 
         {/* HAMA Footer */}
-      <View style={styles.footer}>
+        <View style={styles.footer}>
           <Text style={styles.footerBrand}>HAMA™</Text>
           <Text style={styles.footerVersion}>Version 2.1.0</Text>
           <Text style={styles.footerTagline}>Need a house homie? We've got you!</Text>
+          <TouchableOpacity onPress={() => navigateToRoute('Blog')} style={styles.footerLink} activeOpacity={0.7}>
+            <Text style={styles.footerLinkText}>Blog</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
@@ -387,5 +390,17 @@ const styles = StyleSheet.create({
   footerTagline: {
     color: COLORS.textTertiary,
     fontSize: 12,
+  },
+  footerLink: {
+    marginTop: SPACING.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: RADIUS.full,
+    backgroundColor: 'rgba(255, 107, 0, 0.12)',
+  },
+  footerLinkText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
