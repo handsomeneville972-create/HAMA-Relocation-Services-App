@@ -1,6 +1,6 @@
 -- Create community-posts storage bucket for community media (images + videos)
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('community-posts', 'community-posts', true, 2147483648, array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime', 'video/x-m4v', 'video/webm', 'video/x-msvideo', 'video/x-matroska'])
+values ('community-posts', 'community-posts', true, 52428800, array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime', 'video/x-m4v', 'video/webm', 'video/x-msvideo', 'video/x-matroska'])
 on conflict (id) do nothing;
 
 -- Allow authenticated users to upload their own community media
