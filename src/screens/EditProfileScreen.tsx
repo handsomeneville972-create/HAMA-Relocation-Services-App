@@ -169,15 +169,15 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
           {/* Fields */}
           <View style={styles.form}>
             <LiquidGlass variant="elevated">
-              {/* Display Name */}
+              {/* Account Name */}
               <View style={styles.fieldRow}>
-                <Text style={styles.fieldLabel}>Name</Text>
+                <Text style={styles.fieldLabel}>Account Name</Text>
                 <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
                   <TextInput
                     style={styles.input}
                     value={displayName}
                     onChangeText={setDisplayName}
-                    placeholder="Your display name"
+                    placeholder="Your account name"
                     placeholderTextColor={COLORS.textTertiary}
                     autoCapitalize="words"
                     maxLength={50}
@@ -253,7 +253,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
               <View style={styles.infoRow}>
                 <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
                 <Text style={styles.infoText}>
-                  Your name, @username, bio, and photo are visible to other users on the platform.
+                  Your account name, @username, bio, and photo are visible to other users on the platform. Your email stays private.
                 </Text>
               </View>
             </GlassCard>

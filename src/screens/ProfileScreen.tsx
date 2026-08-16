@@ -21,6 +21,12 @@ const MENU_SECTIONS = [
     ],
   },
   {
+    title: 'Discover',
+    items: [
+      { icon: 'compass-outline', label: 'Discover', color: COLORS.primary, route: 'Blog' },
+    ],
+  },
+  {
     title: 'Activity',
     items: [
       { icon: 'notifications-outline', label: 'Notifications', color: COLORS.warning, route: 'Notifications' },
@@ -88,7 +94,12 @@ export const ProfileScreen: React.FC = () => {
             </LinearGradient>
             <View style={styles.profileText}>
               <Text style={styles.profileName}>{currentUser.name}</Text>
-              <Text style={styles.profileEmail}>{currentUser.email}</Text>
+              {currentUser.username ? (
+                <Text style={styles.profileUsername}>
+                  <Text style={styles.atSign}>@</Text>
+                  {currentUser.username}
+                </Text>
+              ) : null}
 
               {/* Role Badge */}
               <View style={styles.badgesRow}>
@@ -198,38 +209,44 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
   },
   profileInfo: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 16,
+    gap: 14,
     marginBottom: SPACING.lg,
   },
   avatarBorder: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     padding: 3,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   profileText: {
-    flex: 1,
+    alignItems: 'center',
   },
   profileName: {
     ...FONTS.h2,
     color: COLORS.text,
+    textAlign: 'center',
   },
-  profileEmail: {
+  profileUsername: {
     color: COLORS.textSecondary,
-    fontSize: 14,
+    fontSize: 15,
     marginTop: 2,
+  },
+  atSign: {
+    color: COLORS.primary,
+    fontWeight: '700',
   },
   badgesRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 6,
     gap: 6,
   },

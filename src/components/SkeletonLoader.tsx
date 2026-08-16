@@ -176,13 +176,11 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', c
       case 'profile-header':
         return (
           <View style={styles.profileHeaderContainer}>
-            <View style={styles.profileHeaderRow}>
+            <View style={styles.profileHeaderColumn}>
               <ShimmerBlock style={styles.profileAvatar} />
-              <View style={styles.profileTextArea}>
-                <ShimmerBlock style={styles.profileName} />
-                <ShimmerBlock style={styles.profileEmail} />
-                <ShimmerBlock style={styles.profileBadge} />
-              </View>
+              <ShimmerBlock style={styles.profileName} />
+              <ShimmerBlock style={styles.profileUsername} />
+              <ShimmerBlock style={styles.profileBadge} />
             </View>
             <View style={styles.profileStatsRow}>
               <ShimmerBlock style={styles.profileStat} />
@@ -701,32 +699,30 @@ const styles = StyleSheet.create({
   profileHeaderContainer: {
     gap: SPACING.lg,
   },
-  profileHeaderRow: {
-    flexDirection: 'row',
+  profileHeaderColumn: {
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 16,
+    gap: 8,
   },
   profileAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  profileTextArea: {
-    flex: 1,
-    gap: 6,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   profileName: {
     height: 22,
-    width: '60%',
+    width: '50%',
+    marginTop: 4,
   },
-  profileEmail: {
+  profileUsername: {
     height: 14,
-    width: '75%',
+    width: '35%',
   },
   profileBadge: {
     height: 24,
     width: 80,
     borderRadius: RADIUS.full,
+    marginTop: 2,
   },
   profileStatsRow: {
     flexDirection: 'row',
