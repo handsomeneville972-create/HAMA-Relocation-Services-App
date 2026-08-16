@@ -35,6 +35,8 @@ import { router } from 'expo-router';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
 import { publishLocalPost } from '../src/utils/localPosts';
 import { useAuth } from '../src/contexts/AuthContext';
+import { uploadFile, COMMUNITY_BUCKET } from '../src/services/uploadService';
+import { createPost } from '../src/services/communityService';
 import type { CommunityPost, User } from '../src/constants/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -131,7 +133,7 @@ const FadeInView: React.FC<{ children: React.ReactNode; delay?: number; style?: 
 
 export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { currentUser } = useAuth();
+  const { currentUser, currentUserId } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState<PostFormData>({
@@ -299,17 +301,75 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!formData.title.trim()) {
       Alert.alert('Title Required', 'Please add a title to your post.');
       return;
     }
+    if (!currentUserId) {
+      Alert.alert('Sign In Required', 'Please sign in before publishing a post.');
+      return;
+    }
     setPublishing(true);
-    setTimeout(() => {
+    try {
+      const isVideo = formData.type === 'video' || formData.type === 'short';
+
+      // Upload selected media to Supabase Storage (if any).
+      let imageUrl: string | undefined;
+      let videoUrl: string | undefined;
+      if (selectedMedia) {
+        const res = await uploadFile(COMMUNITY_BUCKET, currentUserId, selectedMedia.uri);
+        if ('error' in res) {
+          Alert.alert('Upload Failed', res.error);
+          setPublishing(false);
+          return;
+        }
+        if (isVideo) videoUrl = res.url;
+        else imageUrl = res.url;
+      }
+
+      const content = [formData.title, formData.description].filter(Boolean).join('\n\n');
+      const { data, error } = await createPost({
+        userId: currentUserId,
+        type: isVideo ? 'video' : 'photo',
+        content,
+        imageUrl,
+        videoUrl,
+        tags: formData.tags,
+      });
+
+      if (error || !data) {
+        Alert.alert('Publish Failed', error || 'Could not publish your post. Please try again.');
+        setPublishing(false);
+        return;
+      }
+
+      const post: CommunityPost = {
+        id: data.id,
+        user: currentUser,
+        type: isVideo ? 'video' : 'photo',
+        content,
+        image: imageUrl,
+        video: videoUrl,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        bookmarks: 0,
+        views: 1,
+        isLiked: false,
+        isBookmarked: false,
+        createdAt: new Date().toISOString(),
+        tags: formData.tags,
+      };
+      publishedPostRef.current = post;
+      publishLocalPost(post);
       setPublishing(false);
       setPublished(true);
-      publishedPostRef.current = buildPost();
-    }, 2000);
+    } catch (err: any) {
+      console.error('[CreatePost] Publish failed:', err?.message ?? err);
+      Alert.alert('Publish Failed', err?.message ?? 'Something went wrong. Please try again.');
+      setPublishing(false);
+    }
   };
 
   // The post created at publish time (used by View Post and Share).

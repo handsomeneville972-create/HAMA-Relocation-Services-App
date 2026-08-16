@@ -3,11 +3,13 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
 const AVATARS_BUCKET = 'avatars';
+export const COMMUNITY_BUCKET = 'community-posts';
 const isWeb = Platform.OS === 'web';
 
 export type UploadResult = { url: string; fileName: string } | { error: string };
 
-const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'];
+const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'];
+const VIDEO_EXTS = ['mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'];
 
 const getPublicUrl = (bucket: string, filePath: string): string => {
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
@@ -36,7 +38,8 @@ export const uploadFile = async (
     const fileName = `${Date.now()}.${ext}`;
     const filePath = `${folder}/${fileName}`;
     const isPdf = ext === 'pdf';
-    const type = isPdf ? 'application/pdf' : `image/${ext}`;
+    const isVideo = VIDEO_EXTS.includes(ext);
+    const type = isPdf ? 'application/pdf' : isVideo ? `video/${ext}` : `image/${ext}`;
 
     if (isWeb) {
       const response = await fetch(uri);
