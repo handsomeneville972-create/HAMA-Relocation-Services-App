@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +11,8 @@ import { searchProducts } from '../services/productService';
 import { searchServiceProviders } from '../services/serviceProviderService';
 import { softSanitize } from '../utils/sanitize';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Property, Product, ServiceProvider } from '../constants/types';
 
 type SearchTab = 'all' | 'properties' | 'products' | 'services';
@@ -24,6 +25,8 @@ const TABS: { key: SearchTab; label: string }[] = [
 ];
 
 export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { isPhone } = useResponsive();
   const [query, setQuery] = useState('');
@@ -71,25 +74,25 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Search Bar Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.searchRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color={COLORS.textTertiary} />
+            <Ionicons name="search" size={20} color={colors.textTertiary} />
             <TextInput
               ref={inputRef}
               style={styles.searchInput}
               placeholder="Search properties, products, services..."
-              placeholderTextColor={COLORS.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               value={query}
               onChangeText={(text) => setQuery(softSanitize(text))}
               returnKeyType="search"
             />
             {query ? (
               <TouchableOpacity onPress={() => setQuery('')}>
-                <Ionicons name="close-circle" size={20} color={COLORS.textTertiary} />
+                <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -121,9 +124,9 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Recent Searches</Text>
               {RecentSearches.map((search, i) => (
                 <TouchableOpacity key={i} style={styles.recentItem} onPress={() => setQuery(search)}>
-                  <Ionicons name="time-outline" size={18} color={COLORS.textTertiary} />
+                  <Ionicons name="time-outline" size={18} color={colors.textTertiary} />
                   <Text style={styles.recentText}>{search}</Text>
-                  <Ionicons name="arrow-up" size={16} color={COLORS.textTertiary} style={{ transform: [{ rotate: '45deg' }] }} />
+                  <Ionicons name="arrow-up" size={16} color={colors.textTertiary} style={{ transform: [{ rotate: '45deg' }] }} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -133,12 +136,12 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Popular Categories</Text>
               <ResponsiveGrid columns={isPhone ? 3 : 6}>
                 {[
-                  { icon: 'bed-outline', label: 'Apartments', color: COLORS.primary },
-                  { icon: 'cart-outline', label: 'Furniture', color: COLORS.secondary },
-                  { icon: 'construct-outline', label: 'Services', color: COLORS.accent },
-                  { icon: 'school-outline', label: 'Student Housing', color: COLORS.warning },
-                  { icon: 'location-outline', label: 'Neighborhoods', color: COLORS.info },
-                  { icon: 'car-outline', label: 'Moving', color: COLORS.primaryLight },
+                  { icon: 'bed-outline', label: 'Apartments', color: colors.primary },
+                  { icon: 'cart-outline', label: 'Furniture', color: colors.secondary },
+                  { icon: 'construct-outline', label: 'Services', color: colors.accent },
+                  { icon: 'school-outline', label: 'Student Housing', color: colors.warning },
+                  { icon: 'location-outline', label: 'Neighborhoods', color: colors.info },
+                  { icon: 'car-outline', label: 'Moving', color: colors.primaryLight },
                 ].map((cat, i) => (
                   <TouchableOpacity key={i} style={styles.popularCard} onPress={() => setQuery(cat.label)}>
                     <View style={[styles.popularIcon, { backgroundColor: cat.color + '20' }]}>
@@ -167,7 +170,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {(activeTab === 'all' || activeTab === 'properties') && filteredProperties.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
-                  <Ionicons name="home-outline" size={17} color={COLORS.primary} />
+                  <Ionicons name="home-outline" size={17} color={colors.primary} />
                   <Text style={styles.sectionTitle}>Properties ({filteredProperties.length})</Text>
                 </View>
                 {filteredProperties.slice(0, 3).map(property => (
@@ -196,7 +199,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {(activeTab === 'all' || activeTab === 'products') && filteredProducts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
-                  <Ionicons name="cart-outline" size={17} color={COLORS.primary} />
+                  <Ionicons name="cart-outline" size={17} color={colors.primary} />
                   <Text style={styles.sectionTitle}>Products ({filteredProducts.length})</Text>
                 </View>
                 {filteredProducts.slice(0, 3).map(product => (
@@ -225,7 +228,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {(activeTab === 'all' || activeTab === 'services') && filteredServices.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionTitleRow}>
-                  <Ionicons name="construct-outline" size={17} color={COLORS.primary} />
+                  <Ionicons name="construct-outline" size={17} color={colors.primary} />
                   <Text style={styles.sectionTitle}>Services ({filteredServices.length})</Text>
                 </View>
                 {filteredServices.slice(0, 3).map(service => (
@@ -236,7 +239,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         <View style={styles.resultInfo}>
                           <Text style={styles.resultTitle} numberOfLines={1}>{service.name}</Text>
                           <View style={styles.resultRating}>
-                            <Ionicons name="star" size={12} color={COLORS.warning} />
+                            <Ionicons name="star" size={12} color={colors.warning} />
                             <Text style={styles.resultRatingText}>{service.rating}</Text>
                           </View>
                           <Text style={styles.resultMeta}>{service.subcategory} • {service.location}</Text>
@@ -257,7 +260,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {totalResults === 0 && (
               <View style={styles.noResults}>
                 <View style={styles.noResultsIcon}>
-                  <Ionicons name="search-outline" size={48} color={COLORS.textTertiary} />
+                  <Ionicons name="search-outline" size={48} color={colors.textTertiary} />
                 </View>
                 <Text style={styles.noResultsTitle}>No results found</Text>
                 <Text style={styles.noResultsSubtitle}>Try adjusting your search terms or browse categories</Text>
@@ -274,10 +277,11 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: SPACING.sm,
@@ -293,7 +297,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -301,17 +305,17 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.full,
     paddingHorizontal: 16,
     gap: 10,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     height: 44,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
   },
   tabRow: {
@@ -325,16 +329,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   activeTab: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tabLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -354,7 +358,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -369,11 +373,11 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   recentText: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   // Popular Categories
@@ -381,11 +385,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingVertical: 16,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   popularIcon: {
     width: 44,
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   popularLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
@@ -406,7 +410,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   resultText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   resultItem: {
@@ -426,19 +430,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   resultPrice: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 2,
   },
   resultMeta: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   resultRating: {
@@ -448,20 +452,20 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   resultRatingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 12,
     fontWeight: '600',
   },
   seeAllBtn: {
     alignItems: 'center',
     paddingVertical: 10,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   seeAllText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -475,17 +479,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
   noResultsTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   noResultsSubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 40,

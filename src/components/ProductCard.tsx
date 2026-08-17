@@ -1,11 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../constants/types';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { formatPrice } from '../utils/currency';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING, type ThemeColors } from '../constants/theme';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +16,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, featured = false, style }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const reducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -119,7 +122,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, feat
           </View>
           <View style={styles.metaRow}>
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={12} color={COLORS.warning} />
+              <Ionicons name="star" size={12} color={colors.warning} />
               <Text style={styles.rating}>{product.rating}</Text>
             </View>
             <Text style={styles.location}>{product.location}</Text>
@@ -131,19 +134,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, feat
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     width: '100%',
     marginBottom: SPACING.md,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
     ...SHADOWS.sm,
   },
   featuredContainer: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderWidth: 1.5,
   },
   touchable: {
@@ -174,7 +178,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   discountBadge: {
-    backgroundColor: COLORS.error,
+    backgroundColor: colors.error,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.sm,
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
   },
   name: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 4,
@@ -212,12 +216,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   price: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '700',
   },
   originalPrice: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     textDecorationLine: 'line-through',
   },
@@ -232,16 +236,16 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   rating: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 12,
     fontWeight: '600',
   },
   location: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   featuredBadge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,

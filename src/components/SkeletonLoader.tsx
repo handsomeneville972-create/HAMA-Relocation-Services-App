@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING } from '../constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SkeletonLoaderProps {
   type?: 'card' | 'list' | 'banner' | 'circle' | 'detail-hero' | 'detail-section' | 'post' | 'notification' | 'pricing-card' | 'storefront-card' | 'profile-header' | 'chat' | 'text' | 'liquid-card' | 'featured-property-card';
@@ -11,6 +12,8 @@ interface SkeletonLoaderProps {
 }
 
 export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', count = 1, width, style }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -255,12 +258,12 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type = 'card', c
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     gap: SPACING.sm,
   },
   block: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
   },
@@ -275,13 +278,13 @@ const styles = StyleSheet.create({
   },
   shimmer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   // Card skeleton
   card: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     marginBottom: SPACING.md,
   },
   cardImage: {
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
   // Featured property card skeleton
   featuredPropertyCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.xl,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
@@ -355,7 +358,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     marginBottom: SPACING.sm,
   },
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
   // Detail section skeleton
   detailSection: {
     padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     gap: 8,
     marginBottom: SPACING.md,
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
   // Post skeleton
   postContainer: {
     padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     marginBottom: SPACING.md,
     gap: 8,
@@ -477,7 +480,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     marginBottom: SPACING.sm,
   },
@@ -510,7 +513,7 @@ const styles = StyleSheet.create({
   pricingCard: {
     width: 280,
     padding: SPACING.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.xl,
     gap: 10,
     marginRight: SPACING.md,
@@ -547,7 +550,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     marginBottom: SPACING.sm,
   },
@@ -575,7 +578,7 @@ const styles = StyleSheet.create({
   // Chat skeleton
   chatContainer: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   chatHeader: {
     flexDirection: 'row',
@@ -583,7 +586,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     gap: 12,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     paddingBottom: 14,
   },
   chatBackBtn: {
@@ -678,7 +681,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
   },
   chatAttachBtn: {
     width: 36,

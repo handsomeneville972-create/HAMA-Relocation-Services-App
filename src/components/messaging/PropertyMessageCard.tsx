@@ -5,10 +5,11 @@
  * Loads property data by ID and shows image, title, location, price, and a CTA to view.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getPropertyById } from '../../services/propertyService';
 
 interface PropertyMessageCardProps {
@@ -20,6 +21,9 @@ export const PropertyMessageCard: React.FC<PropertyMessageCardProps> = ({
   propertyId,
   onPress,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +57,7 @@ export const PropertyMessageCard: React.FC<PropertyMessageCardProps> = ({
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>{property.title}</Text>
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={12} color={COLORS.textTertiary} />
+          <Ionicons name="location-outline" size={12} color={colors.textTertiary} />
           <Text style={styles.location} numberOfLines={1}>{property.location}</Text>
         </View>
         <View style={styles.bottomRow}>
@@ -67,7 +71,7 @@ export const PropertyMessageCard: React.FC<PropertyMessageCardProps> = ({
           )}
         </View>
         <View style={styles.ctaRow}>
-          <Ionicons name="open-outline" size={12} color={COLORS.primary} />
+          <Ionicons name="open-outline" size={12} color={colors.primary} />
           <Text style={styles.cta}>View Property</Text>
         </View>
       </View>
@@ -75,25 +79,26 @@ export const PropertyMessageCard: React.FC<PropertyMessageCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     width: 220,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
     ...SHADOWS.sm,
   },
   image: {
     width: '100%',
     height: 120,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   imageSkeleton: {
     width: '100%',
     height: 120,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   content: {
     padding: SPACING.sm,
@@ -102,13 +107,13 @@ const styles = StyleSheet.create({
   skeletonLine: {
     height: 12,
     borderRadius: 4,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     width: '80%',
   },
   title: {
     ...FONTS.bodySmall,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   locationRow: {
     flexDirection: 'row',
@@ -117,7 +122,7 @@ const styles = StyleSheet.create({
   },
   location: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     flex: 1,
   },
   bottomRow: {
@@ -127,12 +132,12 @@ const styles = StyleSheet.create({
   },
   price: {
     ...FONTS.price,
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
   },
   details: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   ctaRow: {
     flexDirection: 'row',
@@ -142,7 +147,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     ...FONTS.caption,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

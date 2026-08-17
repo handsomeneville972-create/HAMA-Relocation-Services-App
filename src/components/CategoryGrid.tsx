@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING } from '../constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Category {
   name: string;
@@ -18,6 +19,9 @@ interface CategoryGridProps {
 }
 
 export const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, selected, onSelect, variant = 'grid' }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (variant === 'list') {
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listContainer}>
@@ -29,7 +33,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, selected
           >
             <View style={[styles.listItem, selected === cat.name && styles.listItemSelected]}>
               <LinearGradient
-                colors={selected === cat.name ? [COLORS.primary, COLORS.primaryLight] : COLORS.gradientCard}
+                colors={selected === cat.name ? [colors.primary, colors.primaryLight] : colors.gradientCard}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.listGradient}
@@ -55,7 +59,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, selected
           style={[styles.gridItem, selected === cat.name && styles.gridItemSelected]}
         >
           <LinearGradient
-            colors={selected === cat.name ? [COLORS.primary, COLORS.primaryDark] : COLORS.gradientCard}
+            colors={selected === cat.name ? [colors.primary, colors.primaryDark] : colors.gradientCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gridGradient}
@@ -63,7 +67,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, selected
             <Ionicons
               name={(cat.icon || 'grid-outline') as any}
               size={24}
-              color={selected === cat.name ? '#fff' : COLORS.primaryLight}
+              color={selected === cat.name ? '#fff' : colors.primaryLight}
             />
             <Text style={[styles.gridLabel, selected === cat.name && styles.gridLabelSelected]}>
               {cat.name}
@@ -75,7 +79,8 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, selected
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -88,10 +93,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   gridItemSelected: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderWidth: 1.5,
   },
   gridGradient: {
@@ -101,7 +106,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   gridLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -118,17 +123,17 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   listItemSelected: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   listGradient: {
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   listItemText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
   },

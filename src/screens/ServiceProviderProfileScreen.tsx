@@ -19,7 +19,8 @@ import * as Clipboard from 'expo-clipboard';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { GiveReviewComposer } from '../components/ReviewSection';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useProvider } from '../contexts/ProviderContext';
 import { useAuth } from '../contexts/AuthContext';
 import { findOrCreateConversation } from '../services/conversationService';
@@ -213,6 +214,8 @@ function enrichMock(sp: ServiceProvider): ProviderProfile {
 }
 
 export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { provider: ownProfile } = useProvider();
   const { currentUserId } = useAuth();
@@ -323,7 +326,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
 
   const stat = (icon: keyof typeof Ionicons.glyphMap, value: string, label: string) => (
     <View style={styles.statItem}>
-      <Ionicons name={icon} size={16} color={COLORS.primary} />
+      <Ionicons name={icon} size={16} color={colors.primary} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -337,7 +340,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           <Text style={styles.reviewName}>{r.customerName}</Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((s) => (
-              <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={12} color={COLORS.primary} />
+              <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={12} color={colors.primary} />
             ))}
             <Text style={styles.reviewDate}>{r.date}</Text>
           </View>
@@ -378,7 +381,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           <Text style={styles.reviewName}>{r.customerName}</Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((s) => (
-              <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={12} color={COLORS.primary} />
+              <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={12} color={colors.primary} />
             ))}
             <Text style={styles.reviewDate}>{r.date}</Text>
           </View>
@@ -393,7 +396,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+        <LinearGradient colors={colors.gradientNight} style={styles.bg} />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
           <SkeletonLoader type="detail-hero" />
           <View style={{ paddingHorizontal: SPACING.md, gap: SPACING.md }}>
@@ -408,7 +411,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+      <LinearGradient colors={colors.gradientNight} style={styles.bg} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 180, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
         {/* Cover */}
         <View style={styles.coverWrap}>
@@ -442,29 +445,29 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 <Text style={styles.name}>{profile.businessName}</Text>
                 {profile.status === 'active' && (
                   <View style={styles.liveBadge}>
-                    <Ionicons name="radio" size={10} color={COLORS.success} />
+                    <Ionicons name="radio" size={10} color={colors.success} />
                     <Text style={styles.liveBadgeText}>Live</Text>
                   </View>
                 )}
                 {profile.isEmergencyProvider && (
                   <View style={styles.emergencyBadge}>
-                    <Ionicons name="flash" size={12} color={COLORS.warning} />
+                    <Ionicons name="flash" size={12} color={colors.warning} />
                     <Text style={styles.emergencyBadgeText}>Emergency</Text>
                   </View>
                 )}
               </View>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name={s <= Math.round(profile.rating) ? 'star' : 'star-outline'} size={14} color={COLORS.primary} />
+                  <Ionicons key={s} name={s <= Math.round(profile.rating) ? 'star' : 'star-outline'} size={14} color={colors.primary} />
                 ))}
                 <Text style={styles.ratingText}>{profile.rating}</Text>
                 <Text style={styles.reviewCount}>({profile.reviewCount} reviews)</Text>
               </View>
               <View style={styles.metaRow}>
-                <Ionicons name="time-outline" size={13} color={COLORS.textTertiary} />
+                <Ionicons name="time-outline" size={13} color={colors.textTertiary} />
                 <Text style={styles.metaText}>Responds {profile.responseTime}</Text>
                 <Text style={styles.metaDot}>·</Text>
-                <Ionicons name="location-outline" size={13} color={COLORS.textTertiary} />
+                <Ionicons name="location-outline" size={13} color={colors.textTertiary} />
                 <Text style={styles.metaText}>{profile.town}, {profile.county}</Text>
               </View>
               <View style={styles.chipRow}>
@@ -475,7 +478,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                   <Text style={styles.categoryChipTextOutline}>{profile.subcategory}</Text>
                 </View>
                 <View style={styles.categoryChipOutline}>
-                  <Ionicons name="diamond" size={11} color={COLORS.primary} />
+                  <Ionicons name="diamond" size={11} color={colors.primary} />
                   <Text style={styles.categoryChipTextOutline}>{profile.plan}</Text>
                 </View>
               </View>
@@ -493,10 +496,10 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
 
         {/* Trust badges */}
         <View style={styles.badgesRow}>
-          <View style={styles.trustBadge}><Ionicons name="shield-checkmark" size={13} color={COLORS.success} /><Text style={styles.trustText}>Verified</Text></View>
-          <View style={styles.trustBadge}><Ionicons name="ribbon-outline" size={13} color={COLORS.primary} /><Text style={styles.trustText}>Certified</Text></View>
-          <View style={styles.trustBadge}><Ionicons name="shield-half-outline" size={13} color={COLORS.success} /><Text style={styles.trustText}>Insured</Text></View>
-          <View style={styles.trustBadge}><Ionicons name="document-text-outline" size={13} color={COLORS.primary} /><Text style={styles.trustText}>Licensed</Text></View>
+          <View style={styles.trustBadge}><Ionicons name="shield-checkmark" size={13} color={colors.success} /><Text style={styles.trustText}>Verified</Text></View>
+          <View style={styles.trustBadge}><Ionicons name="ribbon-outline" size={13} color={colors.primary} /><Text style={styles.trustText}>Certified</Text></View>
+          <View style={styles.trustBadge}><Ionicons name="shield-half-outline" size={13} color={colors.success} /><Text style={styles.trustText}>Insured</Text></View>
+          <View style={styles.trustBadge}><Ionicons name="document-text-outline" size={13} color={colors.primary} /><Text style={styles.trustText}>Licensed</Text></View>
         </View>
 
         {/* About */}
@@ -508,16 +511,16 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           ) : null}
           <View style={styles.contactRow}>
             <TouchableOpacity onPress={handleCall} style={styles.contactChip}>
-              <Ionicons name="call-outline" size={14} color={COLORS.primary} />
+              <Ionicons name="call-outline" size={14} color={colors.primary} />
               <Text style={styles.contactChipText}>{profile.phone}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => Linking.openURL(`mailto:${profile.email}`)} style={styles.contactChip}>
-              <Ionicons name="mail-outline" size={14} color={COLORS.primary} />
+              <Ionicons name="mail-outline" size={14} color={colors.primary} />
               <Text style={styles.contactChipText}>{profile.email}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.warrantyRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.success} />
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.success} />
             <Text style={styles.warrantyText}>{profile.warranty}</Text>
           </View>
         </View>
@@ -548,12 +551,12 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             <View style={styles.areaChip}><Text style={styles.areaChipText}>{profile.serviceAreas.radiusKm} km radius</Text></View>
           </View>
           <View style={styles.mapPlaceholder}>
-            <Ionicons name="map-outline" size={22} color={COLORS.textTertiary} />
+            <Ionicons name="map-outline" size={22} color={colors.textTertiary} />
             <Text style={styles.mapText}>Interactive coverage map</Text>
             <View style={styles.mapGrid}>
               {Array.from({ length: 12 }).map((_, i) => (
                 <View key={i} style={styles.mapCell}>
-                  {i === 2 || i === 5 || i === 9 ? <Ionicons name="location" size={12} color={COLORS.primary} /> : null}
+                  {i === 2 || i === 5 || i === 9 ? <Ionicons name="location" size={12} color={colors.primary} /> : null}
                 </View>
               ))}
             </View>
@@ -569,8 +572,8 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             ) : (
               profile.businessHours.map((d) => (
                 <View key={d.day} style={styles.hoursRow}>
-                  <Text style={[styles.hoursDay, d.closed && { color: COLORS.textTertiary }]}>{d.day}</Text>
-                  <Text style={[styles.hoursOpen, d.closed && { color: COLORS.textTertiary }]}>{d.closed ? 'Closed' : `${d.open} – ${d.close}`}</Text>
+                  <Text style={[styles.hoursDay, d.closed && { color: colors.textTertiary }]}>{d.day}</Text>
+                  <Text style={[styles.hoursOpen, d.closed && { color: colors.textTertiary }]}>{d.closed ? 'Closed' : `${d.open} – ${d.close}`}</Text>
                 </View>
               ))
             )}
@@ -586,16 +589,16 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 <View style={styles.serviceNameRow}>
                   <Text style={styles.serviceName}>{s.name}</Text>
                   {s.emergencyAvailable && (
-                    <View style={styles.emergencyBadgeSmall}><Ionicons name="flash" size={10} color={COLORS.warning} /><Text style={styles.emergencyBadgeSmallText}>24/7</Text></View>
+                    <View style={styles.emergencyBadgeSmall}><Ionicons name="flash" size={10} color={colors.warning} /><Text style={styles.emergencyBadgeSmallText}>24/7</Text></View>
                   )}
                 </View>
                 <Text style={styles.serviceDesc}>{s.description}</Text>
                 <View style={styles.serviceMeta}>
                   <Text style={styles.servicePrice}>{formatPrice(s.price)} <Text style={styles.serviceUnit}>/{s.priceUnit.replace('per ', '')}</Text></Text>
                   <View style={styles.serviceMetaRight}>
-                    <Ionicons name="time-outline" size={12} color={COLORS.textTertiary} />
+                    <Ionicons name="time-outline" size={12} color={colors.textTertiary} />
                     <Text style={styles.serviceMetaText}>{s.duration || 'Flexible'}</Text>
-                    <Ionicons name="shield-checkmark-outline" size={12} color={COLORS.textTertiary} style={{ marginLeft: 8 }} />
+                    <Ionicons name="shield-checkmark-outline" size={12} color={colors.textTertiary} style={{ marginLeft: 8 }} />
                     <Text style={styles.serviceMetaText}>{s.warranty || 'Warranty included'}</Text>
                   </View>
                 </View>
@@ -615,7 +618,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 style={[styles.pkgCard, i === 2 && { borderWidth: 1, borderColor: 'rgba(255,107,0,0.5)' }]}
               >
                 <View style={styles.pkgHeader}>
-                  <Ionicons name={i === 0 ? 'medal-outline' : i === 1 ? 'medal' : 'diamond'} size={16} color={i === 2 ? COLORS.primary : COLORS.textSecondary} />
+                  <Ionicons name={i === 0 ? 'medal-outline' : i === 1 ? 'medal' : 'diamond'} size={16} color={i === 2 ? colors.primary : colors.textSecondary} />
                   <Text style={styles.pkgName}>{pkg.name}</Text>
                   {i === 2 && <View style={styles.popularTag}><Text style={styles.popularText}>Popular</Text></View>}
                 </View>
@@ -623,7 +626,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 <Text style={styles.pkgDesc}>{pkg.description}</Text>
                 {pkg.features.map((f) => (
                   <View key={f} style={styles.featureRow}>
-                    <Ionicons name="checkmark-circle" size={13} color={COLORS.success} />
+                    <Ionicons name="checkmark-circle" size={13} color={colors.success} />
                     <Text style={styles.featureText}>{f}</Text>
                   </View>
                 ))}
@@ -656,7 +659,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           {profile.certifications.map((c) => (
             <GlassCard key={c.id} style={styles.certCard}>
               <View style={styles.certIcon}>
-                <Ionicons name={c.verified ? 'shield-checkmark' : 'shield-outline'} size={18} color={c.verified ? COLORS.success : COLORS.textTertiary} />
+                <Ionicons name={c.verified ? 'shield-checkmark' : 'shield-outline'} size={18} color={c.verified ? colors.success : colors.textTertiary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.certName}>{c.name}</Text>
@@ -688,11 +691,11 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           <Text style={styles.sectionTitle}>Payment & financing</Text>
           <View style={styles.chipWrap}>
             {profile.paymentMethods.map((m) => (
-              <View key={m} style={styles.areaChip}><Ionicons name="card-outline" size={12} color={COLORS.textSecondary} /><Text style={styles.areaChipText}>{m}</Text></View>
+              <View key={m} style={styles.areaChip}><Ionicons name="card-outline" size={12} color={colors.textSecondary} /><Text style={styles.areaChipText}>{m}</Text></View>
             ))}
           </View>
           <GlassCard style={styles.financeCard}>
-            <Ionicons name="wallet-outline" size={18} color={COLORS.primary} />
+            <Ionicons name="wallet-outline" size={18} color={colors.primary} />
             <Text style={styles.financeText}>Pay in instalments with HAMA Financing — from as little as 3 monthly payments.</Text>
           </GlassCard>
         </View>
@@ -718,11 +721,11 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             <Text style={[styles.fieldLabel, { marginTop: SPACING.md }]}>Quantity / hours</Text>
             <View style={styles.qtyRow}>
               <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuoteQty(String(Math.max(1, (parseInt(quoteQty, 10) || 1) - 1)))}>
-                <Ionicons name="remove" size={16} color={COLORS.text} />
+                <Ionicons name="remove" size={16} color={colors.text} />
               </TouchableOpacity>
               <Text style={styles.qtyValue}>{quoteQty}</Text>
               <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuoteQty(String((parseInt(quoteQty, 10) || 1) + 1))}>
-                <Ionicons name="add" size={16} color={COLORS.text} />
+                <Ionicons name="add" size={16} color={colors.text} />
               </TouchableOpacity>
             </View>
             <View style={styles.estimateRow}>
@@ -747,7 +750,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
               <Text style={styles.bigRating}>{profile.rating}</Text>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name={s <= Math.round(profile.rating) ? 'star' : 'star-outline'} size={12} color={COLORS.primary} />
+                  <Ionicons key={s} name={s <= Math.round(profile.rating) ? 'star' : 'star-outline'} size={12} color={colors.primary} />
                 ))}
               </View>
               <Text style={styles.ratingCount}>{profile.reviewCount} reviews</Text>
@@ -756,7 +759,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
               {ratingBars.map((b) => (
                 <View key={b.star} style={styles.barRow}>
                   <Text style={styles.barLabel}>{b.star}</Text>
-                  <Ionicons name="star" size={10} color={COLORS.textTertiary} />
+                  <Ionicons name="star" size={10} color={colors.textTertiary} />
                   <View style={styles.barTrack}>
                     <View style={[styles.barFill, { width: `${b.pct}%` }]} />
                   </View>
@@ -770,7 +773,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
           {reviewFiltered.length > 2 && (
             <TouchableOpacity style={styles.viewAllBtn} onPress={() => setViewAllReviews((v) => !v)}>
               <Text style={styles.viewAllText}>{viewAllReviews ? 'Show fewer' : `View all ${reviewFiltered.length} reviews`}</Text>
-              <Ionicons name={viewAllReviews ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.primary} />
+              <Ionicons name={viewAllReviews ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} />
             </TouchableOpacity>
           )}
           <View style={{ marginTop: SPACING.sm }}>
@@ -801,7 +804,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             <GlassCard key={f.id} style={styles.faqCard}>
               <TouchableOpacity style={styles.faqHeader} onPress={() => setOpenFaq(openFaq === f.id ? null : f.id)}>
                 <Text style={styles.faqQuestion}>{f.question}</Text>
-                <Ionicons name={openFaq === f.id ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.textTertiary} />
+                <Ionicons name={openFaq === f.id ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textTertiary} />
               </TouchableOpacity>
               {openFaq === f.id && <Text style={styles.faqAnswer}>{f.answer}</Text>}
             </GlassCard>
@@ -818,7 +821,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 <Text style={styles.similarName}>{p.businessName}</Text>
                 <Text style={styles.similarSub}>{p.subcategory} · {p.town}</Text>
                 <View style={styles.starsRow}>
-                  <Ionicons name="star" size={11} color={COLORS.primary} />
+                  <Ionicons name="star" size={11} color={colors.primary} />
                   <Text style={styles.similarRating}>{p.rating} ({p.reviewCount})</Text>
                 </View>
               </TouchableOpacity>
@@ -831,15 +834,15 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
       <LinearGradient colors={['rgba(0,0,0,0.9)', '#000']} style={[styles.bottomBar, { paddingBottom: insets.bottom + SPACING.md }]}>
         <View style={styles.bottomIcons}>
           <TouchableOpacity style={styles.bottomIconBtn} onPress={handleCall}>
-            <Ionicons name="call" size={20} color={COLORS.primary} />
+            <Ionicons name="call" size={20} color={colors.primary} />
             <Text style={styles.bottomIconText}>Call</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomIconBtn} onPress={handleChat}>
-            <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.primary} />
+            <Ionicons name="chatbubble-ellipses" size={20} color={colors.primary} />
             <Text style={styles.bottomIconText}>Chat</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomIconBtn} onPress={handleWhatsApp}>
-            <Ionicons name="logo-whatsapp" size={20} color={COLORS.success} />
+            <Ionicons name="logo-whatsapp" size={20} color={colors.success} />
             <Text style={styles.bottomIconText}>WhatsApp</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomPrimary} onPress={() => setQuoteOpen(true)}>
@@ -847,7 +850,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
             <Text style={styles.bottomPrimaryText}>Request Quotation</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.bottomSecondary} onPress={() => setBookOpen(true)}>
-            <Ionicons name="calendar" size={18} color={COLORS.primary} />
+            <Ionicons name="calendar" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -877,11 +880,11 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                 <Text style={[styles.fieldLabel, { marginTop: SPACING.md }]}>Quantity</Text>
                 <View style={styles.qtyRow}>
                   <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuoteQty(String(Math.max(1, (parseInt(quoteQty, 10) || 1) - 1)))}>
-                    <Ionicons name="remove" size={16} color={COLORS.text} />
+                    <Ionicons name="remove" size={16} color={colors.text} />
                   </TouchableOpacity>
                   <Text style={styles.qtyValue}>{quoteQty}</Text>
                   <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuoteQty(String((parseInt(quoteQty, 10) || 1) + 1))}>
-                    <Ionicons name="add" size={16} color={COLORS.text} />
+                    <Ionicons name="add" size={16} color={colors.text} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.estimateRow}>
@@ -902,7 +905,7 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
                     value={quoteMessage}
                     onChangeText={setQuoteMessage}
                     placeholder="Describe the job — size, condition, timeline…"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     multiline
                   />
                 </View>
@@ -986,8 +989,9 @@ export const ServiceProviderProfileScreen: React.FC<Props> = ({ providerId, navi
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   bg: { ...StyleSheet.absoluteFillObject },
   coverWrap: { position: 'relative' },
   cover: { width: '100%', height: 240 },
@@ -997,170 +1001,170 @@ const styles = StyleSheet.create({
   identityWrap: { flexDirection: 'row', alignItems: 'flex-end', marginTop: -44, paddingHorizontal: SPACING.md },
   logoFrame: { width: 92, height: 92, borderRadius: RADIUS.xl, backgroundColor: '#111', borderWidth: 3, borderColor: '#000', overflow: 'hidden' },
   logo: { width: '100%', height: '100%' },
-  verifiedBadge: { position: 'absolute', right: -4, bottom: -4, width: 26, height: 26, borderRadius: RADIUS.full, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#000' },
+  verifiedBadge: { position: 'absolute', right: -4, bottom: -4, width: 26, height: 26, borderRadius: RADIUS.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#000' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, flexWrap: 'wrap', marginTop: 8 },
   name: { ...FONTS.h2, fontSize: 20, lineHeight: 26, flexShrink: 1 },
   emergencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,184,77,0.12)', borderWidth: 1, borderColor: 'rgba(255,184,77,0.4)' },
-  emergencyBadgeText: { ...FONTS.caption, fontSize: 10, color: COLORS.warning, fontWeight: '700' },
+  emergencyBadgeText: { ...FONTS.caption, fontSize: 10, color: colors.warning, fontWeight: '700' },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: 'rgba(0,212,170,0.12)', borderWidth: 1, borderColor: 'rgba(0,212,170,0.4)' },
-  liveBadgeText: { ...FONTS.caption, fontSize: 10, color: COLORS.success, fontWeight: '700' },
+  liveBadgeText: { ...FONTS.caption, fontSize: 10, color: colors.success, fontWeight: '700' },
   starsRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 6 },
-  ratingText: { ...FONTS.bodySmall, color: COLORS.text, fontWeight: '700', marginLeft: 4 },
-  reviewCount: { ...FONTS.caption, color: COLORS.textTertiary },
+  ratingText: { ...FONTS.bodySmall, color: colors.text, fontWeight: '700', marginLeft: 4 },
+  reviewCount: { ...FONTS.caption, color: colors.textTertiary },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
-  metaText: { ...FONTS.caption, color: COLORS.textTertiary },
-  metaDot: { color: COLORS.textTertiary },
+  metaText: { ...FONTS.caption, color: colors.textTertiary },
+  metaDot: { color: colors.textTertiary },
   chipRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 8, flexWrap: 'wrap' },
-  categoryChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
+  categoryChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, backgroundColor: colors.primary },
   categoryChipText: { ...FONTS.caption, fontSize: 11, color: '#000', fontWeight: '700' },
-  categoryChipOutline: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.borderLight },
-  categoryChipTextOutline: { ...FONTS.caption, fontSize: 11, color: COLORS.textSecondary },
-  statsRow: { flexDirection: 'row', marginHorizontal: SPACING.md, marginTop: SPACING.md, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: COLORS.border, paddingVertical: SPACING.md },
+  categoryChipOutline: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, borderWidth: 1, borderColor: colors.borderLight },
+  categoryChipTextOutline: { ...FONTS.caption, fontSize: 11, color: colors.textSecondary },
+  statsRow: { flexDirection: 'row', marginHorizontal: SPACING.md, marginTop: SPACING.md, backgroundColor: colors.bgCard, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: colors.border, paddingVertical: SPACING.md },
   statItem: { flex: 1, alignItems: 'center', gap: 2 },
   statValue: { ...FONTS.bodyLarge, fontSize: 15, fontVariant: ['tabular-nums'] },
-  statLabel: { ...FONTS.caption, color: COLORS.textTertiary },
+  statLabel: { ...FONTS.caption, color: colors.textTertiary },
   badgesRow: { flexDirection: 'row', gap: SPACING.sm, marginHorizontal: SPACING.md, marginTop: SPACING.md },
-  trustBadge: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  trustText: { ...FONTS.caption, fontSize: 11, color: COLORS.textSecondary, fontWeight: '600' },
+  trustBadge: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  trustText: { ...FONTS.caption, fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
   section: { paddingHorizontal: SPACING.md, marginTop: SPACING.xl },
   sectionTitle: { ...FONTS.h3, fontSize: 17, lineHeight: 22, marginBottom: SPACING.md },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionCount: { ...FONTS.caption, color: COLORS.textTertiary, marginBottom: SPACING.md },
-  bodyText: { ...FONTS.body, color: COLORS.textSecondary, lineHeight: 24 },
-  tagline: { ...FONTS.bodySmall, color: COLORS.primary, fontStyle: 'italic', marginTop: SPACING.sm },
+  sectionCount: { ...FONTS.caption, color: colors.textTertiary, marginBottom: SPACING.md },
+  bodyText: { ...FONTS.body, color: colors.textSecondary, lineHeight: 24 },
+  tagline: { ...FONTS.bodySmall, color: colors.primary, fontStyle: 'italic', marginTop: SPACING.sm },
   contactRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.md },
-  contactChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  contactChipText: { ...FONTS.caption, color: COLORS.textSecondary },
+  contactChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  contactChipText: { ...FONTS.caption, color: colors.textSecondary },
   warrantyRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,212,170,0.07)', borderWidth: 1, borderColor: 'rgba(0,212,170,0.2)' },
-  warrantyText: { ...FONTS.caption, color: COLORS.textSecondary, flex: 1 },
+  warrantyText: { ...FONTS.caption, color: colors.textSecondary, flex: 1 },
   promoCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.lg, marginBottom: SPACING.sm },
-  promoTag: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.sm, backgroundColor: COLORS.primary },
+  promoTag: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.sm, backgroundColor: colors.primary },
   promoTagText: { ...FONTS.caption, fontSize: 11, color: '#000', fontWeight: '800' },
   promoTitle: { ...FONTS.bodySmall, flex: 1 },
-  promoBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated },
-  promoBtnText: { ...FONTS.caption, color: COLORS.primary, fontWeight: '700' },
+  promoBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated },
+  promoBtnText: { ...FONTS.caption, color: colors.primary, fontWeight: '700' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  areaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  areaChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  areaChipText: { ...FONTS.caption, color: COLORS.textSecondary },
-  mapPlaceholder: { marginTop: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.bgCard, alignItems: 'center', padding: SPACING.lg, gap: 4, overflow: 'hidden' },
-  mapText: { ...FONTS.caption, color: COLORS.textTertiary },
+  areaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  areaChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  areaChipText: { ...FONTS.caption, color: colors.textSecondary },
+  mapPlaceholder: { marginTop: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgCard, alignItems: 'center', padding: SPACING.lg, gap: 4, overflow: 'hidden' },
+  mapText: { ...FONTS.caption, color: colors.textTertiary },
   mapGrid: { flexDirection: 'row', flexWrap: 'wrap', width: '100%', marginTop: SPACING.md, gap: 6 },
-  mapCell: { width: '22%', aspectRatio: 1, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, alignItems: 'center', justifyContent: 'center' },
+  mapCell: { width: '22%', aspectRatio: 1, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   hoursCard: { padding: SPACING.md },
   hoursRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   hoursDay: { ...FONTS.bodySmall, fontWeight: '600' },
-  hoursOpen: { ...FONTS.bodySmall, color: COLORS.success },
+  hoursOpen: { ...FONTS.bodySmall, color: colors.success },
   serviceCard: { flexDirection: 'row', padding: SPACING.md, marginBottom: SPACING.sm },
   serviceNameRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   serviceName: { ...FONTS.bodyLarge, fontSize: 15, lineHeight: 20 },
   emergencyBadgeSmall: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,184,77,0.12)' },
-  emergencyBadgeSmallText: { ...FONTS.caption, fontSize: 9, color: COLORS.warning, fontWeight: '700' },
-  serviceDesc: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 4, lineHeight: 18 },
+  emergencyBadgeSmallText: { ...FONTS.caption, fontSize: 9, color: colors.warning, fontWeight: '700' },
+  serviceDesc: { ...FONTS.caption, color: colors.textTertiary, marginTop: 4, lineHeight: 18 },
   serviceMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
-  servicePrice: { ...FONTS.price, fontSize: 16, lineHeight: 20, color: COLORS.primary },
-  serviceUnit: { ...FONTS.caption, color: COLORS.textTertiary },
+  servicePrice: { ...FONTS.price, fontSize: 16, lineHeight: 20, color: colors.primary },
+  serviceUnit: { ...FONTS.caption, color: colors.textTertiary },
   serviceMetaRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  serviceMetaText: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
+  serviceMetaText: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary },
   pkgCard: { width: 240, borderRadius: RADIUS.xl, padding: SPACING.md, gap: 6 },
   pkgHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pkgName: { ...FONTS.bodyLarge, fontSize: 15, flex: 1 },
-  popularTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
+  popularTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.full, backgroundColor: colors.primary },
   popularText: { ...FONTS.caption, fontSize: 9, color: '#000', fontWeight: '800' },
   pkgPrice: { ...FONTS.price, fontSize: 22, lineHeight: 28 },
-  pkgDesc: { ...FONTS.caption, color: COLORS.textTertiary, minHeight: 32 },
+  pkgDesc: { ...FONTS.caption, color: colors.textTertiary, minHeight: 32 },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  featureText: { ...FONTS.caption, color: COLORS.textSecondary },
-  pkgBtn: { marginTop: SPACING.sm, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: COLORS.primary, alignItems: 'center' },
+  featureText: { ...FONTS.caption, color: colors.textSecondary },
+  pkgBtn: { marginTop: SPACING.sm, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: colors.primary, alignItems: 'center' },
   pkgBtnText: { ...FONTS.bodySmall, color: '#000', fontWeight: '700' },
   portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   portfolioImage: { width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3, aspectRatio: 1, borderRadius: RADIUS.md },
   certCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, marginBottom: SPACING.sm },
-  certIcon: { width: 40, height: 40, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, alignItems: 'center', justifyContent: 'center' },
+  certIcon: { width: 40, height: 40, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   certName: { ...FONTS.bodySmall, fontWeight: '600' },
-  certIssuer: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
+  certIssuer: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
   certVerified: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, backgroundColor: 'rgba(0,212,170,0.12)' },
-  certVerifiedText: { ...FONTS.caption, fontSize: 10, color: COLORS.success, fontWeight: '700' },
-  teamCard: { width: 110, alignItems: 'center', gap: 4, padding: SPACING.sm, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
+  certVerifiedText: { ...FONTS.caption, fontSize: 10, color: colors.success, fontWeight: '700' },
+  teamCard: { width: 110, alignItems: 'center', gap: 4, padding: SPACING.sm, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
   teamAvatar: { width: 56, height: 56, borderRadius: RADIUS.full },
   teamName: { ...FONTS.caption, fontWeight: '600', textAlign: 'center', fontSize: 12 },
-  teamRole: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary, textAlign: 'center' },
+  teamRole: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary, textAlign: 'center' },
   financeCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, marginTop: SPACING.md },
-  financeText: { ...FONTS.caption, color: COLORS.textSecondary, flex: 1 },
+  financeText: { ...FONTS.caption, color: colors.textSecondary, flex: 1 },
   aiHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md },
-  aiIcon: { width: 34, height: 34, borderRadius: RADIUS.full, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  aiSub: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
+  aiIcon: { width: 34, height: 34, borderRadius: RADIUS.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  aiSub: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
   quoteCard: { padding: SPACING.md },
-  fieldLabel: { ...FONTS.caption, color: COLORS.textSecondary, marginBottom: 8, fontWeight: '600' },
+  fieldLabel: { ...FONTS.caption, color: colors.textSecondary, marginBottom: 8, fontWeight: '600' },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  qtyBtn: { width: 40, height: 40, borderRadius: RADIUS.md, backgroundColor: COLORS.bgElevated, alignItems: 'center', justifyContent: 'center' },
+  qtyBtn: { width: 40, height: 40, borderRadius: RADIUS.md, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   qtyValue: { ...FONTS.h3, minWidth: 40, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  estimateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: SPACING.md, paddingVertical: SPACING.md, borderTopWidth: 1, borderTopColor: COLORS.border },
-  estimateLabel: { ...FONTS.bodySmall, color: COLORS.textTertiary },
-  estimateValue: { ...FONTS.price, color: COLORS.primary },
-  estimateNote: { ...FONTS.caption, color: COLORS.textTertiary },
-  estimateBtn: { marginTop: SPACING.md, paddingVertical: 14, borderRadius: RADIUS.md, backgroundColor: COLORS.primary, alignItems: 'center' },
+  estimateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: SPACING.md, paddingVertical: SPACING.md, borderTopWidth: 1, borderTopColor: colors.border },
+  estimateLabel: { ...FONTS.bodySmall, color: colors.textTertiary },
+  estimateValue: { ...FONTS.price, color: colors.primary },
+  estimateNote: { ...FONTS.caption, color: colors.textTertiary },
+  estimateBtn: { marginTop: SPACING.md, paddingVertical: 14, borderRadius: RADIUS.md, backgroundColor: colors.primary, alignItems: 'center' },
   estimateBtnText: { ...FONTS.bodySmall, color: '#000', fontWeight: '700' },
   ratingSummary: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, marginBottom: SPACING.md },
-  bigRating: { ...FONTS.h1, fontSize: 40, lineHeight: 44, color: COLORS.primary },
-  ratingCount: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 4 },
+  bigRating: { ...FONTS.h1, fontSize: 40, lineHeight: 44, color: colors.primary },
+  ratingCount: { ...FONTS.caption, color: colors.textTertiary, marginTop: 4 },
   barRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 2 },
-  barLabel: { ...FONTS.caption, width: 10, color: COLORS.textSecondary },
-  barTrack: { flex: 1, height: 6, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated, overflow: 'hidden' },
-  barFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: RADIUS.full },
-  barCount: { ...FONTS.caption, width: 16, textAlign: 'right', color: COLORS.textTertiary },
+  barLabel: { ...FONTS.caption, width: 10, color: colors.textSecondary },
+  barTrack: { flex: 1, height: 6, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated, overflow: 'hidden' },
+  barFill: { height: '100%', backgroundColor: colors.primary, borderRadius: RADIUS.full },
+  barCount: { ...FONTS.caption, width: 16, textAlign: 'right', color: colors.textTertiary },
   reviewCard: { padding: SPACING.md, marginBottom: SPACING.md },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.sm },
   localAvatar: { width: 36, height: 36, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.18)', alignItems: 'center', justifyContent: 'center' },
-  localAvatarText: { ...FONTS.body, fontWeight: '800', color: COLORS.primary },
-  avatar: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated },
+  localAvatarText: { ...FONTS.body, fontWeight: '800', color: colors.primary },
+  avatar: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated },
   reviewName: { ...FONTS.bodySmall, fontWeight: '600' },
-  reviewDate: { ...FONTS.caption, color: COLORS.textTertiary, marginLeft: 6 },
-  reviewText: { ...FONTS.bodySmall, color: COLORS.textSecondary, lineHeight: 21 },
+  reviewDate: { ...FONTS.caption, color: colors.textTertiary, marginLeft: 6 },
+  reviewText: { ...FONTS.bodySmall, color: colors.textSecondary, lineHeight: 21 },
   reviewMedia: { width: '100%', height: 160, borderRadius: RADIUS.md, marginTop: SPACING.md },
-  replyBox: { marginTop: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.md, backgroundColor: COLORS.bgCard, borderLeftWidth: 3, borderLeftColor: COLORS.primary },
-  replyLabel: { ...FONTS.caption, fontSize: 10, color: COLORS.primary, fontWeight: '700', textTransform: 'uppercase' },
-  replyText: { ...FONTS.caption, color: COLORS.textSecondary, marginTop: 4 },
-  replyDate: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary, marginTop: 4 },
+  replyBox: { marginTop: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.md, backgroundColor: colors.bgCard, borderLeftWidth: 3, borderLeftColor: colors.primary },
+  replyLabel: { ...FONTS.caption, fontSize: 10, color: colors.primary, fontWeight: '700', textTransform: 'uppercase' },
+  replyText: { ...FONTS.caption, color: colors.textSecondary, marginTop: 4 },
+  replyDate: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary, marginTop: 4 },
   viewAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: SPACING.md },
-  viewAllText: { ...FONTS.bodySmall, color: COLORS.primary, fontWeight: '600' },
+  viewAllText: { ...FONTS.bodySmall, color: colors.primary, fontWeight: '600' },
   faqCard: { padding: SPACING.md, marginBottom: SPACING.sm },
   faqHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.md },
   faqQuestion: { ...FONTS.bodySmall, fontWeight: '600', flex: 1 },
-  faqAnswer: { ...FONTS.caption, color: COLORS.textSecondary, marginTop: SPACING.sm, lineHeight: 20 },
-  similarCard: { width: 150, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', gap: 4 },
+  faqAnswer: { ...FONTS.caption, color: colors.textSecondary, marginTop: SPACING.sm, lineHeight: 20 },
+  similarCard: { width: 150, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, alignItems: 'center', gap: 4 },
   similarLogo: { width: 48, height: 48, borderRadius: RADIUS.full },
   similarName: { ...FONTS.caption, fontWeight: '700', textAlign: 'center', fontSize: 12 },
-  similarSub: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary, textAlign: 'center' },
-  similarRating: { ...FONTS.caption, fontSize: 11, color: COLORS.textSecondary },
+  similarSub: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary, textAlign: 'center' },
+  similarRating: { ...FONTS.caption, fontSize: 11, color: colors.textSecondary },
   bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: SPACING.md, paddingTop: SPACING.md },
   bottomIcons: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   bottomIconBtn: { alignItems: 'center', gap: 2, paddingHorizontal: 4, minWidth: 52 },
-  bottomIconText: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary },
-  bottomPrimary: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 15, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, ...SHADOWS.md },
+  bottomIconText: { ...FONTS.caption, fontSize: 10, color: colors.textSecondary },
+  bottomPrimary: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 15, borderRadius: RADIUS.lg, backgroundColor: colors.primary, ...SHADOWS.md },
   bottomPrimaryText: { ...FONTS.button, fontSize: 14, color: '#000' },
-  bottomSecondary: { width: 52, height: 52, borderRadius: RADIUS.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
+  bottomSecondary: { width: 52, height: 52, borderRadius: RADIUS.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#0D0D0D', borderTopLeftRadius: RADIUS.xxl, borderTopRightRadius: RADIUS.xxl, padding: SPACING.lg, paddingTop: SPACING.md },
-  sheetHandle: { alignSelf: 'center', width: 44, height: 5, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated, marginBottom: SPACING.md },
+  sheetHandle: { alignSelf: 'center', width: 44, height: 5, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated, marginBottom: SPACING.md },
   sheetTitle: { ...FONTS.h3, marginBottom: SPACING.md },
-  inputWrap: { backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 14 },
-  inputMultiline: { color: COLORS.text, paddingVertical: 12, minHeight: 88, textAlignVertical: 'top', ...FONTS.bodySmall },
+  inputWrap: { backgroundColor: colors.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14 },
+  inputMultiline: { color: colors.text, paddingVertical: 12, minHeight: 88, textAlignVertical: 'top', ...FONTS.bodySmall },
   summaryCard: { padding: SPACING.md, marginTop: SPACING.md },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
-  summaryLabel: { ...FONTS.caption, color: COLORS.textTertiary },
-  summaryValue: { ...FONTS.caption, color: COLORS.text, fontWeight: '600' },
-  sheetPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, marginTop: SPACING.lg, ...SHADOWS.md },
+  summaryLabel: { ...FONTS.caption, color: colors.textTertiary },
+  summaryValue: { ...FONTS.caption, color: colors.text, fontWeight: '600' },
+  sheetPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: colors.primary, marginTop: SPACING.lg, ...SHADOWS.md },
   sheetPrimaryText: { ...FONTS.button, fontSize: 15, color: '#000' },
   sheetClose: { alignItems: 'center', paddingVertical: SPACING.md },
-  sheetCloseText: { ...FONTS.bodySmall, color: COLORS.textTertiary },
+  sheetCloseText: { ...FONTS.bodySmall, color: colors.textTertiary },
   successWrap: { alignItems: 'center', paddingVertical: SPACING.lg, gap: 6 },
-  successCircle: { width: 72, height: 72, borderRadius: RADIUS.full, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm },
+  successCircle: { width: 72, height: 72, borderRadius: RADIUS.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm },
   successTitle: { ...FONTS.h3 },
-  successText: { ...FONTS.bodySmall, color: COLORS.textTertiary, textAlign: 'center' },
-  dayOption: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border, minWidth: 64 },
-  dayOptionActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  dayOptionLabel: { ...FONTS.caption, fontSize: 11, color: COLORS.textSecondary },
-  dayOptionDate: { ...FONTS.bodySmall, fontSize: 13, color: COLORS.text, fontWeight: '600' },
-  slotChip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
+  successText: { ...FONTS.bodySmall, color: colors.textTertiary, textAlign: 'center' },
+  dayOption: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, minWidth: 64 },
+  dayOptionActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayOptionLabel: { ...FONTS.caption, fontSize: 11, color: colors.textSecondary },
+  dayOptionDate: { ...FONTS.bodySmall, fontSize: 13, color: colors.text, fontWeight: '600' },
+  slotChip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
 });

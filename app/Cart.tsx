@@ -19,7 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { COLORS, RADIUS, SPACING } from '../src/constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../src/constants/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 import { formatPrice } from '../src/utils/currency';
 import { AVAILABLE_COUPONS, useCart } from '../src/contexts/CartContext';
 import { MOCK_PRODUCTS as MOCK_PRODUCTS_FOR_RECS } from '../src/constants/data';
@@ -115,6 +116,8 @@ function Entrance({ children, delay = 0, style }: { children: React.ReactNode; d
 
 /** Animated count-up money display. */
 function CountUpMoney({ value }: { value: number }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(0);
   useEffect(() => {
@@ -133,6 +136,8 @@ function CountUpMoney({ value }: { value: number }) {
 // ============ CART ITEM ROW ============
 
 function CartItemRow({ product, quantity, selected, index }: { product: Product; quantity: number; selected: boolean; index: number }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { toggleSelected, updateQuantity, toggleSaved, removeItem } = useCart();
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -226,6 +231,8 @@ function CartItemRow({ product, quantity, selected, index }: { product: Product;
 // ============ SELLER GROUP ============
 
 function SellerGroup({ seller, items }: { seller: Seller; items: { product: Product; quantity: number; selected: boolean; addedAt: string }[] }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.sellerCard}>
       <View style={styles.sellerHeader}>
@@ -262,6 +269,8 @@ function SellerGroup({ seller, items }: { seller: Seller; items: { product: Prod
 // ============ MAIN SCREEN ============
 
 export default function CartScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const cart = useCart();
   const {
@@ -981,6 +990,8 @@ export default function CartScreen() {
 
 /** Pop-in checkmark for order success. */
 function AnimatedSuccess() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.spring(anim, { toValue: 1, friction: 4, tension: 60, useNativeDriver: true }).start();
@@ -1004,8 +1015,9 @@ function AnimatedSuccess() {
 
 // ============ STYLES ============
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#000' },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
 
   header: {
     flexDirection: 'row',

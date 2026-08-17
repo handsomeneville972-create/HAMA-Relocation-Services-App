@@ -15,7 +15,8 @@ import { GlassCard } from '../components/GlassCard';
 import { MOCK_BILLING_HISTORY } from '../constants/data';
 import { formatPrice } from '../utils/currency';
 import type { CurrencyCode } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { BillingEntry } from '../constants/types';
 
@@ -52,12 +53,12 @@ const METHOD_FILTERS: { key: MethodFilter; label: string; icon: string }[] = [
   { key: 'paystack', label: 'Paystack', icon: 'card-outline' },
 ];
 
-function getStatusColor(status: BillingEntry['status']): string {
+const getStatusColor = (colors: ThemeColors, status: BillingEntry['status']): string => {
   switch (status) {
-    case 'paid': return COLORS.success;
-    case 'pending': return COLORS.warning;
-    case 'failed': return COLORS.error;
-    case 'refunded': return COLORS.info;
+    case 'paid': return colors.success;
+    case 'pending': return colors.warning;
+    case 'failed': return colors.error;
+    case 'refunded': return colors.info;
   }
 }
 
@@ -138,11 +139,13 @@ const ReceiptModal: React.FC<{
   visible: boolean;
   onClose: () => void;
 }> = ({ entry, visible, onClose }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
   if (!entry) return null;
 
-  const statusColor = getStatusColor(entry.status);
+  const statusColor = getStatusColor(colors, entry.status);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -155,7 +158,7 @@ const ReceiptModal: React.FC<{
           {/* Modal Header */}
           <View style={styles.modalHeader}>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Receipt Details</Text>
             <View style={{ width: 40 }} />
@@ -201,7 +204,7 @@ const ReceiptModal: React.FC<{
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptLabel}>Payment Method</Text>
                 <View style={styles.receiptMethodChip}>
-                  <Ionicons name={getMethodIcon(entry.paymentMethod) as any} size={14} color={COLORS.primary} />
+                  <Ionicons name={getMethodIcon(entry.paymentMethod) as any} size={14} color={colors.primary} />
                   <Text style={styles.receiptMethodText}>
                     {getMethodLabel(entry.paymentMethod)}
                   </Text>
@@ -265,12 +268,12 @@ const ReceiptModal: React.FC<{
             {/* Action Buttons */}
             <View style={styles.receiptActions}>
               <TouchableOpacity style={styles.receiptActionBtn}>
-                <Ionicons name="share-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="share-outline" size={20} color={colors.primary} />
                 <Text style={styles.receiptActionText}>Share Receipt</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.receiptActionBtn, styles.receiptActionBtnSecondary]}>
-                <Ionicons name="download-outline" size={20} color={COLORS.textSecondary} />
-                <Text style={[styles.receiptActionText, { color: COLORS.textSecondary }]}>Download</Text>
+                <Ionicons name="download-outline" size={20} color={colors.textSecondary} />
+                <Text style={[styles.receiptActionText, { color: colors.textSecondary }]}>Download</Text>
               </TouchableOpacity>
             </View>
 
@@ -291,6 +294,8 @@ const ReceiptModal: React.FC<{
 // ============================================================
 
 export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -358,12 +363,12 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={['#000000', '#0A0A0A']}
+          colors={colors.gradientNight}
           style={[styles.header, { paddingTop: insets.top }]}
         >
           <View style={styles.headerContent}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Billing History</Text>
             <View style={styles.headerSpacer} />
@@ -381,12 +386,12 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#000000', '#0A0A0A']}
+        colors={colors.gradientNight}
         style={[styles.header, { paddingTop: insets.top }]}
       >
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>Billing History</Text>
@@ -401,32 +406,32 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       >
         {/* ===== SUMMARY CARDS ===== */}
         <View style={styles.summaryRow}>
           <GlassCard style={styles.summaryCard}>
-            <View style={[styles.summaryIcon, { backgroundColor: COLORS.accent + '20' }]}>
-              <Ionicons name="cash-outline" size={20} color={COLORS.accent} />
+            <View style={[styles.summaryIcon, { backgroundColor: colors.accent + '20' }]}>
+              <Ionicons name="cash-outline" size={20} color={colors.accent} />
             </View>
             <Text style={styles.summaryValue}>{formatCurrency(summary.totalSpent, 'KSh')}</Text>
             <Text style={styles.summaryLabel}>Total Spent</Text>
           </GlassCard>
 
           <GlassCard style={styles.summaryCard}>
-            <View style={[styles.summaryIcon, { backgroundColor: COLORS.primary + '20' }]}>
-              <Ionicons name="receipt-outline" size={20} color={COLORS.primary} />
+            <View style={[styles.summaryIcon, { backgroundColor: colors.primary + '20' }]}>
+              <Ionicons name="receipt-outline" size={20} color={colors.primary} />
             </View>
             <Text style={styles.summaryValue}>{summary.totalTransactions}</Text>
             <Text style={styles.summaryLabel}>Transactions</Text>
           </GlassCard>
 
           <GlassCard style={styles.summaryCard}>
-            <View style={[styles.summaryIcon, { backgroundColor: COLORS.info + '20' }]}>
-              <Ionicons name="trending-up-outline" size={20} color={COLORS.info} />
+            <View style={[styles.summaryIcon, { backgroundColor: colors.info + '20' }]}>
+              <Ionicons name="trending-up-outline" size={20} color={colors.info} />
             </View>
             <Text style={styles.summaryValue}>{summary.successRate}%</Text>
             <Text style={styles.summaryLabel}>Success Rate</Text>
@@ -440,7 +445,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsRow}>
             {STATUS_FILTERS.map(f => {
               const isActive = statusFilter === f.key;
-              const chipColor = f.key !== 'all' ? getStatusColor(f.key) : COLORS.primary;
+              const chipColor = f.key !== 'all' ? getStatusColor(colors, f.key) : colors.primary;
               return (
                 <TouchableOpacity
                   key={f.key}
@@ -470,16 +475,16 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
                   key={f.key}
                   style={[
                     styles.filterChip,
-                    isActive && { backgroundColor: COLORS.accent + '20', borderColor: COLORS.accent + '40' },
+                    isActive && { backgroundColor: colors.accent + '20', borderColor: colors.accent + '40' },
                   ]}
                   onPress={() => setMethodFilter(f.key)}
                 >
                   <Ionicons
                     name={f.icon as any}
                     size={14}
-                    color={isActive ? COLORS.accent : COLORS.textTertiary}
+                    color={isActive ? colors.accent : colors.textTertiary}
                   />
-                  <Text style={[styles.filterChipText, isActive && { color: COLORS.accent }]}>
+                  <Text style={[styles.filterChipText, isActive && { color: colors.accent }]}>
                     {f.label}
                   </Text>
                 </TouchableOpacity>
@@ -491,7 +496,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
         {/* ===== BILLING LIST ===== */}
         {filteredBilling.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={64} color={COLORS.textTertiary} />
+            <Ionicons name="receipt-outline" size={64} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No Results</Text>
             <Text style={styles.emptyDesc}>
               {statusFilter !== 'all' || methodFilter !== 'all'
@@ -503,7 +508,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
                 style={styles.clearFilterBtn}
                 onPress={() => { setStatusFilter('all'); setMethodFilter('all'); }}
               >
-                <Ionicons name="close-circle-outline" size={18} color={COLORS.primary} />
+                <Ionicons name="close-circle-outline" size={18} color={colors.primary} />
                 <Text style={styles.clearFilterText}>Clear Filters</Text>
               </TouchableOpacity>
             )}
@@ -521,7 +526,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
 
                 <GlassCard noPadding>
                   {groupedByMonth[monthKey].map((entry, index) => {
-                    const statusColor = getStatusColor(entry.status);
+                    const statusColor = getStatusColor(colors, entry.status);
                     const entries = groupedByMonth[monthKey];
                     return (
                       <TouchableOpacity
@@ -548,7 +553,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
                               <Ionicons
                                 name={getMethodIcon(entry.paymentMethod) as any}
                                 size={10}
-                                color={COLORS.textTertiary}
+                                color={colors.textTertiary}
                               />
                               <Text style={styles.billingMethodText}>
                                 {getMethodLabel(entry.paymentMethod)}
@@ -565,7 +570,7 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
                           <Text style={styles.billingAmount}>
                             {formatCurrency(entry.amount, entry.currency)}
                           </Text>
-                          <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+                          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
                         </View>
                       </TouchableOpacity>
                     );
@@ -593,10 +598,11 @@ export const BillingHistoryScreen: React.FC<{ navigation: any }> = ({ navigation
 // Styles
 // ============================================================
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   // Header
   header: {
@@ -613,7 +619,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -624,7 +630,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -652,12 +658,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryValue: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 10,
     fontWeight: '500',
   },
@@ -678,7 +684,7 @@ const styles = StyleSheet.create({
   },
   freemiumBannerText: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -688,7 +694,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   filterLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -707,12 +713,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   filterChipText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -735,7 +741,7 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.xs,
   },
   monthTitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -743,10 +749,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   monthBadgeText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -760,7 +766,7 @@ const styles = StyleSheet.create({
   },
   billingItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   billingIcon: {
     width: 38,
@@ -773,7 +779,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   billingDesc: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -787,18 +793,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: RADIUS.sm,
   },
   billingMethodText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 10,
     fontWeight: '500',
   },
   billingDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   billingRight: {
@@ -807,7 +813,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   billingAmount: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -820,10 +826,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   emptyDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     maxWidth: 260,
@@ -837,10 +843,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary + '15',
+    backgroundColor: colors.primary + '15',
   },
   clearFilterText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -848,11 +854,11 @@ const styles = StyleSheet.create({
   // ===== RECEIPT MODAL =====
   modalOverlay: {
     flex: 1,
-    backgroundColor: COLORS.bgOverlay,
+    backgroundColor: colors.bgOverlay,
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     borderTopLeftRadius: RADIUS.xxl,
     borderTopRightRadius: RADIUS.xxl,
     maxHeight: '90%',
@@ -866,7 +872,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: COLORS.textTertiary,
+    backgroundColor: colors.textTertiary,
     opacity: 0.3,
     alignSelf: 'center',
   },
@@ -877,19 +883,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   modalCloseBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   modalContent: {
     padding: SPACING.md,
@@ -909,7 +915,7 @@ const styles = StyleSheet.create({
   },
   receiptAmount: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   receiptStatusBadge: {
@@ -939,18 +945,18 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
   },
   receiptLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   receiptValue: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'right',
     maxWidth: '55%',
   },
   receiptValueMuted: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '400',
     fontSize: 12,
   },
@@ -960,19 +966,19 @@ const styles = StyleSheet.create({
   },
   receiptDivider: {
     height: 1,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   receiptMethodChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.primary + '15',
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
   },
   receiptMethodText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -990,16 +996,16 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary + '15',
+    backgroundColor: colors.primary + '15',
     borderWidth: 1,
-    borderColor: COLORS.primary + '25',
+    borderColor: colors.primary + '25',
   },
   receiptActionBtnSecondary: {
-    backgroundColor: COLORS.bgCard,
-    borderColor: COLORS.glassBorder,
+    backgroundColor: colors.bgCard,
+    borderColor: colors.glassBorder,
   },
   receiptActionText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1011,12 +1017,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   receiptFooterText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
   },
   receiptFooterTextSmall: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
 });

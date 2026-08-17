@@ -4,9 +4,10 @@
  * Animated three-dot indicator shown when the other user is typing.
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { COLORS, SPACING, FONTS } from '../../constants/theme';
+import { SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface TypingIndicatorProps {
   userName: string;
@@ -20,6 +21,8 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
   const dot3 = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (!visible) return;
@@ -77,7 +80,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
@@ -96,7 +99,7 @@ const styles = StyleSheet.create({
   },
   text: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     marginRight: 4,
   },
   dots: {
@@ -107,6 +110,6 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: COLORS.textTertiary,
+    backgroundColor: colors.textTertiary,
   },
 });

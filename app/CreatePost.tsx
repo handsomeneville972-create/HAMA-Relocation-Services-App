@@ -5,7 +5,7 @@
  * OLED black, white text, orange accents, liquid glass, smooth animations.
  */
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,7 +32,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../src/constants/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 import { publishLocalPost } from '../src/utils/localPosts';
 import { useAuth } from '../src/contexts/AuthContext';
 import { uploadFile, COMMUNITY_BUCKET } from '../src/services/uploadService';
@@ -132,6 +133,8 @@ const FadeInView: React.FC<{ children: React.ReactNode; delay?: number; style?: 
 // ============================================================
 
 export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId } = useAuth();
 
@@ -436,14 +439,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Upload</Text>
           <TouchableOpacity style={styles.helpBtn} onPress={() => setShowHelp(true)}>
-            <Ionicons name="help-circle-outline" size={24} color={COLORS.textSecondary} />
+            <Ionicons name="help-circle-outline" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -465,7 +468,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                 onPress={() => type.key !== 'live' && setFormData(prev => ({ ...prev, type: type.key }))}
                 activeOpacity={type.key === 'live' ? 1 : 0.7}
               >
-                <Ionicons name={type.icon as any} size={16} color={formData.type === type.key ? COLORS.primary : COLORS.textTertiary} />
+                <Ionicons name={type.icon as any} size={16} color={formData.type === type.key ? colors.primary : colors.textTertiary} />
                 <Text style={[styles.typeTabLabel, formData.type === type.key && styles.typeTabLabelActive]}>{type.label}</Text>
                 {type.key === 'live' && (
                   <View style={styles.comingSoonTiny}>
@@ -481,7 +484,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         <FadeInView delay={200}>
           {formData.type === 'live' ? (
             <View style={styles.uploadArea}>
-              <Ionicons name="radio-outline" size={48} color={COLORS.textTertiary} />
+              <Ionicons name="radio-outline" size={48} color={colors.textTertiary} />
               <Text style={styles.uploadTitle}>Live Streaming</Text>
               <Text style={styles.uploadSubtitle}>This feature is coming soon. Join the waiting list to be notified.</Text>
               <TouchableOpacity style={styles.waitlistBtn}>
@@ -502,7 +505,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                   </View>
                   <View style={styles.uploadActions}>
                     <TouchableOpacity style={styles.uploadActionBtn} onPress={() => { setUploading(false); setUploadProgress(0); }}>
-                      <Ionicons name="close" size={16} color={COLORS.error} />
+                      <Ionicons name="close" size={16} color={colors.error} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -526,33 +529,33 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                   <Text style={styles.uploadSubtitle}>{(selectedMedia.fileSize ? (selectedMedia.fileSize / (1024 * 1024)).toFixed(1) : 0) + ' MB · ready to upload'}</Text>
                   <View style={styles.uploadSourcesRow}>
                     <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromGallery}>
-                      <Ionicons name="images-outline" size={16} color={COLORS.textSecondary} />
+                      <Ionicons name="images-outline" size={16} color={colors.textSecondary} />
                       <Text style={styles.uploadSourceText}>Replace</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.uploadSourceBtn, { borderColor: COLORS.error, borderWidth: 1 }]} onPress={clearMedia}>
-                      <Ionicons name="trash-outline" size={16} color={COLORS.error} />
-                      <Text style={[styles.uploadSourceText, { color: COLORS.error }]}>Remove</Text>
+                    <TouchableOpacity style={[styles.uploadSourceBtn, { borderColor: colors.error, borderWidth: 1 }]} onPress={clearMedia}>
+                      <Ionicons name="trash-outline" size={16} color={colors.error} />
+                      <Text style={[styles.uploadSourceText, { color: colors.error }]}>Remove</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               ) : (
                 <>
                   <View style={styles.uploadIconCircle}>
-                    <Ionicons name="cloud-upload-outline" size={36} color={COLORS.primary} />
+                    <Ionicons name="cloud-upload-outline" size={36} color={colors.primary} />
                   </View>
                   <Text style={styles.uploadTitle}>Drag & drop a {activeType.label.toLowerCase()} to upload</Text>
                   <Text style={styles.uploadSubtitle}>Tap to browse or choose a source — your {activeType.label.toLowerCase()} stays private until you publish.</Text>
                   <View style={styles.uploadSourcesRow}>
                     <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromGallery}>
-                      <Ionicons name="images-outline" size={16} color={COLORS.textSecondary} />
+                      <Ionicons name="images-outline" size={16} color={colors.textSecondary} />
                       <Text style={styles.uploadSourceText}>Gallery</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromCamera}>
-                      <Ionicons name="camera-outline" size={16} color={COLORS.textSecondary} />
+                      <Ionicons name="camera-outline" size={16} color={colors.textSecondary} />
                       <Text style={styles.uploadSourceText}>Camera</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromFiles}>
-                      <Ionicons name="folder-open-outline" size={16} color={COLORS.textSecondary} />
+                      <Ionicons name="folder-open-outline" size={16} color={colors.textSecondary} />
                       <Text style={styles.uploadSourceText}>Files</Text>
                     </TouchableOpacity>
                   </View>
@@ -607,7 +610,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <TouchableOpacity style={styles.optionRow}>
             <View style={styles.optionLeft}>
               <View style={[styles.optionIconWrap, { backgroundColor: 'rgba(255,107,0,0.12)' }]}>
-                <Ionicons name="image-outline" size={18} color={COLORS.primary} />
+                <Ionicons name="image-outline" size={18} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.optionLabel}>Thumbnail</Text>
@@ -615,7 +618,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               </View>
             </View>
             <TouchableOpacity style={styles.optionAction}>
-              <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
+              <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
             </TouchableOpacity>
           </TouchableOpacity>
         </FadeInView>
@@ -625,14 +628,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <TouchableOpacity style={styles.optionRow} onPress={() => setShowVisibilityPicker(true)}>
             <View style={styles.optionLeft}>
               <View style={[styles.optionIconWrap, { backgroundColor: 'rgba(0,212,170,0.12)' }]}>
-                <Ionicons name="globe-outline" size={18} color={COLORS.accent} />
+                <Ionicons name="globe-outline" size={18} color={colors.accent} />
               </View>
               <View>
                 <Text style={styles.optionLabel}>Visibility</Text>
                 <Text style={styles.optionDesc}>{formData.visibility}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </FadeInView>
 
@@ -641,14 +644,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           <TouchableOpacity style={styles.optionRow}>
             <View style={styles.optionLeft}>
               <View style={[styles.optionIconWrap, { backgroundColor: 'rgba(255,184,77,0.12)' }]}>
-                <Ionicons name="location-outline" size={18} color={COLORS.warning} />
+                <Ionicons name="location-outline" size={18} color={colors.warning} />
               </View>
               <View>
                 <Text style={styles.optionLabel}>Location</Text>
                 <Text style={styles.optionDesc}>Add location to help others find your post</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </FadeInView>
 
@@ -664,7 +667,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                 <Text style={styles.optionDesc}>{formData.category || 'Select a category'}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         </FadeInView>
 
@@ -680,7 +683,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                 <View key={tag} style={styles.tagChip}>
                   <Text style={styles.tagChipText}>#{tag}</Text>
                   <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                    <Ionicons name="close-circle" size={16} color={COLORS.primary} />
+                    <Ionicons name="close-circle" size={16} color={colors.primary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -724,7 +727,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         <FadeInView delay={700}>
           <View style={styles.toggleRow}>
             <View style={styles.toggleLeft}>
-              <Ionicons name="repeat-outline" size={18} color={COLORS.textSecondary} />
+              <Ionicons name="repeat-outline" size={18} color={colors.textSecondary} />
               <View>
                 <Text style={styles.optionLabel}>Allow Remix</Text>
                 <Text style={styles.optionDesc}>Others can share, download, or reuse this content</Text>
@@ -733,8 +736,8 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
             <Switch
               value={formData.remix}
               onValueChange={(v) => setFormData(prev => ({ ...prev, remix: v }))}
-              trackColor={{ false: '#333', true: COLORS.primary + '60' }}
-              thumbColor={formData.remix ? COLORS.primary : '#666'}
+              trackColor={{ false: '#333', true: colors.primary + '60' }}
+              thumbColor={formData.remix ? colors.primary : '#666'}
             />
           </View>
         </FadeInView>
@@ -742,9 +745,9 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         {/* Advanced Settings */}
         <FadeInView delay={750}>
           <TouchableOpacity style={styles.advancedToggle} onPress={() => setShowAdvanced(!showAdvanced)}>
-            <Ionicons name="options-outline" size={18} color={COLORS.textSecondary} />
+            <Ionicons name="options-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.advancedToggleText}>Advanced Settings</Text>
-            <Ionicons name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={18} color={COLORS.textTertiary} />
+            <Ionicons name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textTertiary} />
           </TouchableOpacity>
 
           {showAdvanced && (
@@ -763,14 +766,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               ].map(item => (
                 <View key={item.key} style={styles.toggleRow}>
                   <View style={styles.toggleLeft}>
-                    <Ionicons name={item.icon as any} size={16} color={COLORS.textTertiary} />
+                    <Ionicons name={item.icon as any} size={16} color={colors.textTertiary} />
                     <Text style={styles.toggleLabel}>{item.label}</Text>
                   </View>
                   <Switch
                     value={(formData as any)[item.key]}
                     onValueChange={(v) => setFormData(prev => ({ ...prev, [item.key]: v }))}
-                    trackColor={{ false: '#333', true: COLORS.primary + '60' }}
-                    thumbColor={(formData as any)[item.key] ? COLORS.primary : '#666'}
+                    trackColor={{ false: '#333', true: colors.primary + '60' }}
+                    thumbColor={(formData as any)[item.key] ? colors.primary : '#666'}
                   />
                 </View>
               ))}
@@ -781,7 +784,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         {/* Bottom Actions */}
         <FadeInView delay={800} style={styles.bottomActions}>
           <TouchableOpacity style={styles.draftBtn} disabled={publishing}>
-            <Ionicons name="document-text-outline" size={18} color={COLORS.textSecondary} />
+            <Ionicons name="document-text-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.draftBtnText}>Save Draft</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -808,18 +811,18 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         <View style={styles.toastOverlay} pointerEvents="box-none">
           <FadeInView delay={100} style={styles.toastCard}>
             <View style={styles.toastIconWrap}>
-              <LinearGradient colors={[COLORS.primary, '#FF8A33']} style={styles.toastIconGrad}>
+              <LinearGradient colors={[colors.primary, '#FF8A33']} style={styles.toastIconGrad}>
                 <Ionicons name="checkmark" size={28} color="#fff" />
               </LinearGradient>
             </View>
             <Text style={styles.toastTitle}>Your post has been published!</Text>
             <View style={styles.toastActions}>
               <TouchableOpacity style={styles.toastBtn} onPress={handleViewPost}>
-                <Ionicons name="eye-outline" size={16} color={COLORS.primary} />
+                <Ionicons name="eye-outline" size={16} color={colors.primary} />
                 <Text style={styles.toastBtnText}>View Post</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.toastBtnOutline} onPress={() => setShowShareSheet(true)}>
-                <Ionicons name="share-outline" size={16} color={COLORS.textSecondary} />
+                <Ionicons name="share-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.toastBtnOutlineText}>Share</Text>
               </TouchableOpacity>
             </View>
@@ -878,7 +881,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.shareCopyBtn} onPress={copyLink}>
-              <Ionicons name={linkCopied ? 'checkmark-circle' : 'link-outline'} size={20} color={linkCopied ? '#00D4AA' : COLORS.primary} />
+              <Ionicons name={linkCopied ? 'checkmark-circle' : 'link-outline'} size={20} color={linkCopied ? '#00D4AA' : colors.primary} />
               <Text style={[styles.shareCopyText, linkCopied && { color: '#00D4AA' }]}>
                 {linkCopied ? 'Link copied!' : 'Copy Link'}
               </Text>
@@ -903,7 +906,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               { icon: 'shield-checkmark-outline', title: 'Safety Policies', desc: 'No harmful, illegal, or explicit content. AI moderation enabled.' },
             ].map((item, i) => (
               <View key={i} style={styles.helpItem}>
-                <Ionicons name={item.icon as any} size={20} color={COLORS.primary} />
+                <Ionicons name={item.icon as any} size={20} color={colors.primary} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.helpItemTitle}>{item.title}</Text>
                   <Text style={styles.helpItemDesc}>{item.desc}</Text>
@@ -932,7 +935,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                   onPress={() => { setFormData(prev => ({ ...prev, category: item })); setShowCategoryPicker(false); }}
                 >
                   <Text style={[styles.sheetOptionText, formData.category === item && styles.sheetOptionTextActive]}>{item}</Text>
-                  {formData.category === item && <Ionicons name="checkmark" size={18} color={COLORS.primary} />}
+                  {formData.category === item && <Ionicons name="checkmark" size={18} color={colors.primary} />}
                 </TouchableOpacity>
               )}
               style={{ maxHeight: 400 }}
@@ -953,12 +956,12 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                 style={[styles.sheetOption, formData.visibility === opt.key && styles.sheetOptionActive]}
                 onPress={() => { setFormData(prev => ({ ...prev, visibility: opt.key })); setShowVisibilityPicker(false); }}
               >
-                <Ionicons name={opt.icon as any} size={20} color={formData.visibility === opt.key ? COLORS.primary : COLORS.textSecondary} />
+                <Ionicons name={opt.icon as any} size={20} color={formData.visibility === opt.key ? colors.primary : colors.textSecondary} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.sheetOptionText, formData.visibility === opt.key && styles.sheetOptionTextActive]}>{opt.key}</Text>
                   <Text style={styles.sheetOptionDesc}>{opt.desc}</Text>
                 </View>
-                {formData.visibility === opt.key && <Ionicons name="checkmark" size={18} color={COLORS.primary} />}
+                {formData.visibility === opt.key && <Ionicons name="checkmark" size={18} color={colors.primary} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -972,8 +975,9 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 // STYLES
 // ============================================================
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingBottom: 0 },
   headerContent: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -1001,14 +1005,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#1C1C1E',
     borderWidth: 1, borderColor: '#2C2C2E',
   },
-  typeTabActive: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: COLORS.primary },
+  typeTabActive: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: colors.primary },
   typeTabLabel: { color: '#666', fontSize: 12, fontWeight: '600' },
-  typeTabLabelActive: { color: COLORS.primary },
+  typeTabLabelActive: { color: colors.primary },
   comingSoonTiny: {
-    backgroundColor: COLORS.primary + '30', borderRadius: 4,
+    backgroundColor: colors.primary + '30', borderRadius: 4,
     paddingHorizontal: 4, paddingVertical: 1, marginLeft: 2,
   },
-  comingSoonTinyText: { color: COLORS.primary, fontSize: 7, fontWeight: '700' },
+  comingSoonTinyText: { color: colors.primary, fontSize: 7, fontWeight: '700' },
 
   // Upload area
   uploadArea: {
@@ -1028,15 +1032,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#2C2C2E', borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 6,
   },
-  uploadSourceText: { color: COLORS.textSecondary, fontSize: 11 },
+  uploadSourceText: { color: colors.textSecondary, fontSize: 11 },
   uploadProgressWrap: { alignItems: 'center', width: '100%' },
   uploadProgressCircle: {
-    width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: COLORS.primary,
+    width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: colors.primary,
     justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.md,
   },
   uploadProgressText: { color: '#fff', fontSize: 18, fontWeight: '700' },
   progressBarBg: { width: '100%', height: 4, backgroundColor: '#2C2C2E', borderRadius: 2, marginBottom: SPACING.md },
-  progressBarFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 2 },
+  progressBarFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 2 },
   uploadActions: { flexDirection: 'row', gap: 12 },
   uploadActionBtn: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: '#2C2C2E',
@@ -1044,7 +1048,7 @@ const styles = StyleSheet.create({
   },
   waitlistBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingHorizontal: 20, paddingVertical: 12,
+    backgroundColor: colors.primary, borderRadius: RADIUS.md, paddingHorizontal: 20, paddingVertical: 12,
     marginTop: SPACING.sm,
   },
   waitlistBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
@@ -1065,9 +1069,9 @@ const styles = StyleSheet.create({
   inputGroup: { marginBottom: SPACING.lg },
   inputLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   inputLabel: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  required: { color: COLORS.primary },
+  required: { color: colors.primary },
   charCount: { color: 'rgba(255,255,255,0.3)', fontSize: 11 },
-  charCountWarn: { color: COLORS.warning },
+  charCountWarn: { color: colors.warning },
   textInput: {
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#2C2C2E',
     paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 14,
@@ -1081,10 +1085,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: RADIUS.sm,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  tagChipText: { color: COLORS.primary, fontSize: 12, fontWeight: '600' },
+  tagChipText: { color: colors.primary, fontSize: 12, fontWeight: '600' },
   tagInputRow: { flexDirection: 'row', gap: 8 },
   tagAddBtn: {
-    width: 40, height: 40, borderRadius: RADIUS.md, backgroundColor: COLORS.primary,
+    width: 40, height: 40, borderRadius: RADIUS.md, backgroundColor: colors.primary,
     justifyContent: 'center', alignItems: 'center',
   },
 
@@ -1108,9 +1112,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm,
     backgroundColor: '#1C1C1E', borderWidth: 1, borderColor: '#2C2C2E',
   },
-  commentOptionActive: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: COLORS.primary },
+  commentOptionActive: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: colors.primary },
   commentOptionText: { color: '#666', fontSize: 12, fontWeight: '600' },
-  commentOptionTextActive: { color: COLORS.primary },
+  commentOptionTextActive: { color: colors.primary },
 
   // Toggles
   toggleRow: {
@@ -1136,10 +1140,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#2C2C2E',
     paddingVertical: 14,
   },
-  draftBtnText: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
+  draftBtnText: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
   publishBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 14,
+    backgroundColor: colors.primary, borderRadius: RADIUS.md, paddingVertical: 14,
   },
   publishBtnDisabled: { opacity: 0.6 },
   publishBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
@@ -1153,7 +1157,7 @@ const styles = StyleSheet.create({
   successActions: { gap: 12, width: '100%' },
   successBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 14,
+    backgroundColor: colors.primary, borderRadius: RADIUS.md, paddingVertical: 14,
   },
   successBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   successBtnOutline: {
@@ -1161,7 +1165,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#2C2C2E',
     paddingVertical: 14,
   },
-  successBtnOutlineText: { color: COLORS.textSecondary, fontSize: 15, fontWeight: '600' },
+  successBtnOutlineText: { color: colors.textSecondary, fontSize: 15, fontWeight: '600' },
 
   // Toast overlay
   toastOverlay: {
@@ -1182,7 +1186,7 @@ const styles = StyleSheet.create({
   toastActions: { flexDirection: 'row', gap: 10, width: '100%' },
   toastBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 12,
+    backgroundColor: colors.primary, borderRadius: RADIUS.md, paddingVertical: 12,
   },
   toastBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   toastBtnOutline: {
@@ -1190,7 +1194,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#252528', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#333',
     paddingVertical: 12,
   },
-  toastBtnOutlineText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
+  toastBtnOutlineText: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
 
   // Share sheet
   shareSheetBackdrop: { flex: 1, justifyContent: 'flex-end' },
@@ -1220,7 +1224,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#2C2C2E',
     paddingVertical: 14,
   },
-  shareCopyText: { color: COLORS.primary, fontSize: 14, fontWeight: '700' },
+  shareCopyText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
 
   // Modal
   modalOverlay: {
@@ -1240,10 +1244,10 @@ const styles = StyleSheet.create({
   },
   sheetOptionActive: { backgroundColor: 'rgba(255,107,0,0.08)', borderRadius: RADIUS.sm, paddingHorizontal: 8 },
   sheetOptionText: { flex: 1, color: '#fff', fontSize: 15 },
-  sheetOptionTextActive: { color: COLORS.primary, fontWeight: '600' },
+  sheetOptionTextActive: { color: colors.primary, fontWeight: '600' },
   sheetOptionDesc: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 },
   sheetCloseBtn: {
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 14,
+    backgroundColor: colors.primary, borderRadius: RADIUS.md, paddingVertical: 14,
     alignItems: 'center', marginTop: SPACING.md,
   },
   sheetCloseBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },

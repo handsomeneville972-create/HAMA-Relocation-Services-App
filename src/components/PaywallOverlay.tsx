@@ -7,7 +7,7 @@
  * Pay triggers M-Pesa STK push flow.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +18,8 @@ import { PaymentModal } from './PaymentModal';
 import { recordSubscription } from '../utils/subscriptionStore';
 import { purchaseSubscription } from '../services/subscriptionService';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, RADIUS, SPACING } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SPACING, type ThemeColors } from '../constants/theme';
 
 interface PaywallOverlayProps {
   visible: boolean;
@@ -32,6 +33,8 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
   onDismiss,
   message = "YOU CURRENTLY HAVE NO ACCESS TO THIS FEATURE AND MANY OTHERS. PAY KSH 199 TO UNLOCK ALL FEATURES!",
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const mpesa = useMpesaPayment();
@@ -103,7 +106,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
           >
             {/* Icon */}
             <View style={styles.iconWrap}>
-              <Ionicons name="lock-closed" size={32} color={COLORS.primary} />
+              <Ionicons name="lock-closed" size={32} color={colors.primary} />
             </View>
 
             {/* Message */}
@@ -118,7 +121,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={[COLORS.success, '#34D399']}
+                    colors={[colors.success, '#34D399']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.payGradient}
@@ -143,7 +146,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
                     <TextInput
                       style={styles.textInput}
                       placeholder="712345678"
-                      placeholderTextColor={COLORS.textTertiary}
+                      placeholderTextColor={colors.textTertiary}
                       keyboardType="phone-pad"
                       maxLength={9}
                       value={phoneNumber}
@@ -159,7 +162,7 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={[COLORS.success, '#34D399']}
+                    colors={[colors.success, '#34D399']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.payGradient}
@@ -206,7 +209,8 @@ export const PaywallOverlay: React.FC<PaywallOverlayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
     alignItems: 'center',
     width: '100%',
@@ -234,7 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   message: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
@@ -266,7 +270,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   dismissText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -275,28 +279,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   inputLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     textAlign: 'center',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     paddingHorizontal: 14,
   },
   inputPrefix: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,
   },
   textInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
   },
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   backText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
 });

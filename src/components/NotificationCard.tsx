@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Notification } from '../constants/types';
-import { COLORS, RADIUS, SPACING, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface NotificationCardProps {
   notification: Notification;
@@ -24,6 +25,8 @@ const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
 export const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onPress }) => {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     Animated.parallel([
@@ -54,7 +57,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ notification
       <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
         <View style={[styles.card, !notification.read && styles.unreadCard]}>
           <LinearGradient
-            colors={!notification.read ? ['rgba(255, 107, 0, 0.1)', 'rgba(255, 107, 0, 0.02)'] : COLORS.gradientCard}
+            colors={!notification.read ? ['rgba(255, 107, 0, 0.1)', 'rgba(255, 107, 0, 0.02)'] : colors.gradientCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradient}
@@ -63,7 +66,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ notification
               <Ionicons
                 name={ICON_MAP[notification.icon] || 'notifications-outline'}
                 size={20}
-                color={!notification.read ? COLORS.primary : COLORS.textSecondary}
+                color={!notification.read ? colors.primary : colors.textSecondary}
               />
             </View>
             <View style={styles.content}>
@@ -81,7 +84,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ notification
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrapper: {
     marginBottom: SPACING.sm,
   },
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   unreadCard: {
     borderColor: 'rgba(255, 107, 0, 0.3)',
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -115,28 +118,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 2,
   },
   unreadTitle: {
-    color: COLORS.text,
+    color: colors.text,
   },
   message: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 4,
   },
   time: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
 });

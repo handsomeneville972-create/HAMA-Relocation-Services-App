@@ -1,20 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ResponsiveTabBar } from '../../src/components/ResponsiveTabBar';
 import { useResponsive } from '../../src/utils/responsive';
-import { COLORS } from '../../src/constants/theme';
+import { type ThemeColors } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
 
 export default function TabLayout() {
+  const { colors } = useTheme();
   const { isDesktop } = useResponsive();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarPosition: isDesktop ? 'top' : 'bottom',
-        tabBarActiveTintColor: COLORS.primary,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: 'rgba(255,255,255,0.65)',
         tabBarShowLabel: true,
       }}
@@ -27,6 +30,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.tabIconContainer, focused && styles.tabIconActive]}>
               <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: 'Discover',
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={[styles.tabIconContainer, focused && styles.tabIconActive]}>
+              <Ionicons name={focused ? 'compass' : 'compass-outline'} size={22} color={color} />
             </View>
           ),
         }}
@@ -65,17 +79,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="featured"
-        options={{
-          title: 'Featured',
-          tabBarIcon: ({ color, size, focused }) => (
-            <View style={[styles.tabIconContainer, focused && styles.tabIconActive]}>
-              <Ionicons name={focused ? 'grid' : 'grid-outline'} size={22} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="notifications"
         options={{
           href: null,
@@ -96,7 +99,8 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   tabIconContainer: {
     width: 36,
     height: 36,

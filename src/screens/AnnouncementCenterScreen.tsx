@@ -11,13 +11,14 @@
  * In production, these would be loaded from a CMS or backend API.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type AnnouncementCategory = 'all' | 'updates' | 'features' | 'releases' | 'founder' | 'community';
 
@@ -30,7 +31,7 @@ const CATEGORIES: { key: AnnouncementCategory; label: string; icon: string }[] =
   { key: 'community', label: 'Community', icon: 'people' },
 ];
 
-const MOCK_ANNOUNCEMENTS = [
+const getMockAnnouncements = (colors: ThemeColors) => [
   {
     id: 'a1',
     type: 'updates' as const,
@@ -38,7 +39,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'We\'ve optimized dashboard loading times by 40% and fixed several reported issues.',
     date: '2 days ago',
     icon: 'refresh',
-    color: COLORS.accent,
+    color: colors.accent,
   },
   {
     id: 'a2',
@@ -47,7 +48,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'Homie can now help you with property comparisons, market analysis, and personalized recommendations.',
     date: '5 days ago',
     icon: 'sparkles',
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
   },
   {
     id: 'a3',
@@ -56,7 +57,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'We\'re building automated inventory tracking for sellers. Join the beta waitlist to get early access.',
     date: '1 week ago',
     icon: 'rocket',
-    color: COLORS.secondary,
+    color: colors.secondary,
   },
   {
     id: 'a4',
@@ -65,7 +66,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'Thank you for being part of our Founding Member community. Your feedback is shaping our roadmap.',
     date: '2 weeks ago',
     icon: 'megaphone',
-    color: COLORS.warning,
+    color: colors.warning,
   },
   {
     id: 'a5',
@@ -74,7 +75,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'Vote on the next big feature. Options include supplier marketplace, AI contract analysis, and more.',
     date: '2 weeks ago',
     icon: 'people',
-    color: COLORS.info,
+    color: colors.info,
   },
   {
     id: 'a6',
@@ -83,7 +84,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'Our search now supports advanced filters, saved searches, and AI-powered recommendations.',
     date: '3 weeks ago',
     icon: 'search',
-    color: COLORS.accent,
+    color: colors.accent,
   },
   {
     id: 'a7',
@@ -92,7 +93,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'Track your sales, inventory, and customer engagement with real-time analytics and reports.',
     date: '1 month ago',
     icon: 'analytics',
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
   },
   {
     id: 'a8',
@@ -101,7 +102,7 @@ const MOCK_ANNOUNCEMENTS = [
     excerpt: 'We\'ve reached 1,000 Founding Members. Thank you for being part of this incredible journey.',
     date: '1 month ago',
     icon: 'trophy',
-    color: COLORS.warning,
+    color: colors.warning,
   },
 ];
 
@@ -110,19 +111,23 @@ interface AnnouncementCenterScreenProps {
 }
 
 export const AnnouncementCenterScreen: React.FC<AnnouncementCenterScreenProps> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [activeCategory, setActiveCategory] = useState<AnnouncementCategory>('all');
 
+  const mockAnnouncements = useMemo(() => getMockAnnouncements(colors), [colors]);
+
   const filteredAnnouncements = activeCategory === 'all'
-    ? MOCK_ANNOUNCEMENTS
-    : MOCK_ANNOUNCEMENTS.filter(a => a.type === activeCategory);
+    ? mockAnnouncements
+    : mockAnnouncements.filter(a => a.type === activeCategory);
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Announcements</Text>
         <Text style={styles.headerSubtitle}>Platform updates, new features, and community news</Text>
@@ -139,7 +144,7 @@ export const AnnouncementCenterScreen: React.FC<AnnouncementCenterScreenProps> =
             <Ionicons
               name={cat.icon as any}
               size={16}
-              color={activeCategory === cat.key ? '#fff' : COLORS.textTertiary}
+              color={activeCategory === cat.key ? '#fff' : colors.textTertiary}
             />
             <Text style={[styles.categoryLabel, activeCategory === cat.key && styles.categoryLabelActive]}>
               {cat.label}
@@ -152,7 +157,7 @@ export const AnnouncementCenterScreen: React.FC<AnnouncementCenterScreenProps> =
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {filteredAnnouncements.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="newspaper-outline" size={48} color={COLORS.textTertiary} />
+            <Ionicons name="newspaper-outline" size={48} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No announcements yet</Text>
             <Text style={styles.emptyText}>Check back later for updates</Text>
           </View>
@@ -185,10 +190,11 @@ export const AnnouncementCenterScreen: React.FC<AnnouncementCenterScreenProps> =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -198,17 +204,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -227,16 +233,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   categoryTabActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   categoryLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -259,10 +265,10 @@ scrollContent: {
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   emptyText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   announcementRow: {
@@ -297,16 +303,16 @@ scrollContent: {
     fontWeight: '700',
   },
   announcementDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   announcementTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   announcementExcerpt: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },

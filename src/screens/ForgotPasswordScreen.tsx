@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeInput } from '../utils/sanitize';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ResetState = 'idle' | 'sending' | 'sent' | 'error';
 
 export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { resetPassword } = useAuth();
 
@@ -58,10 +61,10 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+        <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Reset Password</Text>
             <View style={styles.headerSpacer} />
@@ -71,7 +74,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
         <View style={styles.content}>
           {/* Icon */}
           <View style={styles.iconContainer}>
-            <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.iconCircle}>
+            <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.iconCircle}>
               <Ionicons name="lock-open-outline" size={36} color="#fff" />
             </LinearGradient>
           </View>
@@ -81,7 +84,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
             <GlassCard>
               <View style={styles.successContent}>
                 <View style={styles.successIcon}>
-                  <Ionicons name="checkmark-circle" size={56} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={56} color={colors.success} />
                 </View>
                 <Text style={styles.successTitle}>Email Sent!</Text>
                 <Text style={styles.successText}>
@@ -96,7 +99,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
                   style={styles.doneButton}
                   onPress={() => navigation.goBack()}
                 >
-                  <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientButton}>
+                  <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientButton}>
                     <Text style={styles.doneButtonText}>Done</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -111,11 +114,11 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
 
               <GlassCard noPadding>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={20} color={COLORS.textTertiary} style={styles.inputIcon} />
+                  <Ionicons name="mail-outline" size={20} color={colors.textTertiary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Email address"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -129,7 +132,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
                   />
                   {email.length > 0 && (
                     <TouchableOpacity onPress={() => setEmail('')}>
-                      <Ionicons name="close-circle" size={20} color={COLORS.textTertiary} />
+                      <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -137,7 +140,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
 
               {state === 'error' && (
                 <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle" size={18} color={COLORS.error} />
+                  <Ionicons name="alert-circle" size={18} color={colors.error} />
                   <Text style={styles.errorText}>{errorMsg}</Text>
                 </View>
               )}
@@ -149,7 +152,7 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={isValidEmail && state !== 'sending' ? COLORS.gradientPremium : [COLORS.textTertiary, COLORS.textTertiary]}
+                  colors={isValidEmail && state !== 'sending' ? colors.gradientPremium : [colors.textTertiary, colors.textTertiary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.gradientButton}
@@ -169,10 +172,11 @@ export const ForgotPasswordScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   flex: {
     flex: 1,
@@ -191,13 +195,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -224,7 +228,7 @@ content: {
     ...SHADOWS.glow,
   },
   instruction: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
@@ -241,7 +245,7 @@ content: {
   },
   input: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
   },
@@ -256,7 +260,7 @@ content: {
     borderColor: 'rgba(255, 77, 106, 0.25)',
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     flex: 1,
   },
@@ -288,20 +292,20 @@ content: {
   },
   successTitle: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   successText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
   },
   successEmail: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   successHint: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,

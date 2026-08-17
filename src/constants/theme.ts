@@ -2,7 +2,48 @@ import { Dimensions, Easing } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export const COLORS = {
+export interface ThemeColors {
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  primaryGlow: string;
+  secondary: string;
+  secondaryLight: string;
+  secondaryGlow: string;
+  accent: string;
+  accentLight: string;
+  accentGlow: string;
+  bg: string;
+  bgCard: string;
+  bgCardHover: string;
+  bgElevated: string;
+  bgOverlay: string;
+  bgBlur: string;
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  textInverse: string;
+  border: string;
+  borderLight: string;
+  borderActive: string;
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+  glassBorder: string;
+  glassHighlight: string;
+  glassShadow: string;
+  gradientPrimary: readonly [string, string];
+  gradientSecondary: readonly [string, string];
+  gradientAccent: readonly [string, string];
+  gradientSunset: readonly [string, string];
+  gradientNight: readonly [string, string];
+  gradientCard: readonly [string, string];
+  gradientPremium: readonly [string, string];
+}
+
+/** Default dark theme — OLED black base, the app's default look. */
+export const darkColors: ThemeColors = {
   // Primary - Orange
   primary: '#FF6B00',
   primaryLight: '#FF8A33',
@@ -58,6 +99,72 @@ export const COLORS = {
   gradientCard: ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)'] as const,
   gradientPremium: ['#FF6B00', '#FFFFFF'] as const,
 };
+
+/** Universal light theme — near-white base with dark text and the same brand accents. */
+export const lightColors: ThemeColors = {
+  // Primary - Orange
+  primary: '#FF6B00',
+  primaryLight: '#FF8A33',
+  primaryDark: '#CC5500',
+  primaryGlow: 'rgba(255, 107, 0, 0.2)',
+
+  // Secondary - White
+  secondary: '#FFFFFF',
+  secondaryLight: 'rgba(255, 255, 255, 0.95)',
+  secondaryGlow: 'rgba(255, 255, 255, 0.3)',
+
+  // Accent
+  accent: '#FF6B00',
+  accentLight: '#FF8A33',
+  accentGlow: 'rgba(255, 107, 0, 0.18)',
+
+  // Background - Near-white
+  bg: '#F5F5F7',
+  bgCard: 'rgba(0, 0, 0, 0.04)',
+  bgCardHover: 'rgba(0, 0, 0, 0.06)',
+  bgElevated: 'rgba(0, 0, 0, 0.08)',
+  bgOverlay: 'rgba(0, 0, 0, 0.5)',
+  bgBlur: 'rgba(245, 245, 247, 0.92)',
+
+  // Text
+  text: '#111111',
+  textSecondary: 'rgba(17, 17, 17, 0.78)',
+  textTertiary: 'rgba(17, 17, 17, 0.5)',
+  textInverse: '#FFFFFF',
+
+  // Borders
+  border: 'rgba(0, 0, 0, 0.08)',
+  borderLight: 'rgba(0, 0, 0, 0.12)',
+  borderActive: 'rgba(255, 107, 0, 0.5)',
+
+  // Status
+  success: '#00B894',
+  warning: '#D99A2B',
+  error: '#E5484D',
+  info: '#FF6B00',
+
+  // Glass
+  glassBorder: 'rgba(0, 0, 0, 0.1)',
+  glassHighlight: 'rgba(0, 0, 0, 0.05)',
+  glassShadow: 'rgba(0, 0, 0, 0.18)',
+
+  // Gradient presets
+  gradientPrimary: ['#FF6B00', '#FF8A33'] as const,
+  gradientSecondary: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.02)'] as const,
+  gradientAccent: ['#FF6B00', '#FFB366'] as const,
+  gradientSunset: ['#FF6B00', '#FFB84D'] as const,
+  gradientNight: ['#FFFFFF', '#E9E9EE'] as const,
+  gradientCard: ['rgba(0,0,0,0.04)', 'rgba(0,0,0,0.01)'] as const,
+  gradientPremium: ['#FF6B00', '#FF8A33'] as const,
+};
+
+/**
+ * Migration shim — the active palette for legacy static imports.
+ * Theme-aware components should read colors from `useTheme()` instead.
+ * This object is mutated at runtime by ThemeProvider to track the active theme,
+ * so inline (render-time) `COLORS.x` usages remain reactive during migration.
+ */
+export const COLORS: ThemeColors = { ...darkColors };
 
 export const SPACING = {
   xs: 4,

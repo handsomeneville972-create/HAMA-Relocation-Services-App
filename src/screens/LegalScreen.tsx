@@ -7,12 +7,13 @@
  * In production, these would be loaded from a CMS or markdown files.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type LegalPage = 'terms' | 'privacy' | 'cookies' | 'acceptable-use';
 
@@ -184,6 +185,8 @@ const LEGAL_CONTENT: Record<LegalPage, { title: string; hostedUrl?: string; sect
 };
 
 export const LegalScreen: React.FC<LegalScreenProps> = ({ navigation, initialPage = 'terms' }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<LegalPage>(initialPage);
   const content = LEGAL_CONTENT[activeTab];
@@ -191,9 +194,9 @@ export const LegalScreen: React.FC<LegalScreenProps> = ({ navigation, initialPag
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Legal</Text>
         <Text style={styles.headerSubtitle}>Policies and terms governing your use of HAMA™</Text>
@@ -219,7 +222,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = ({ navigation, initialPag
         <Text style={styles.pageTitle}>{content.title}</Text>
         {'hostedUrl' in content && content.hostedUrl && (
           <TouchableOpacity style={styles.onlineLink} onPress={() => Linking.openURL(content.hostedUrl!)}>
-            <Ionicons name="open-outline" size={16} color={COLORS.primary} />
+            <Ionicons name="open-outline" size={16} color={colors.primary} />
             <Text style={styles.onlineLinkText}>View Full Policy Online</Text>
           </TouchableOpacity>
         )}
@@ -235,10 +238,11 @@ export const LegalScreen: React.FC<LegalScreenProps> = ({ navigation, initialPag
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -248,17 +252,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -274,16 +278,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   tabActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tabLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -300,7 +304,7 @@ scrollContent: {
     },
   pageTitle: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   onlineLink: {
     flexDirection: 'row',
@@ -313,7 +317,7 @@ scrollContent: {
     borderColor: 'rgba(255, 107, 0, 0.2)',
   },
   onlineLinkText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -321,12 +325,12 @@ scrollContent: {
     gap: 8,
   },
   sectionHeading: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   sectionBody: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
   },

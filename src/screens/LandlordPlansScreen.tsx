@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,10 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { LandlordSubscriptionModal } from '../components/LandlordSubscriptionModal';
 import { getPlansForRole } from '../constants/plans';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatPrice } from '../utils/currency';
 
 export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -25,7 +28,7 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Plans & Pricing</Text>
         <View style={{ width: 40 }} />
@@ -36,7 +39,7 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
           {/* Hero */}
           <View style={styles.hero}>
             <View style={styles.heroIcon}>
-              <LinearGradient colors={[ACCENT, '#FF9500']} style={styles.heroGradient}>
+              <LinearGradient colors={[getAccent(colors), '#FF9500']} style={styles.heroGradient}>
                 <Ionicons name="diamond" size={32} color="#fff" />
               </LinearGradient>
             </View>
@@ -58,9 +61,9 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
                   </View>
                 )}
 
-                <Text style={[styles.planTier, highlighted && { color: ACCENT }]}>{plan.tier}</Text>
+                <Text style={[styles.planTier, highlighted && { color: getAccent(colors) }]}>{plan.tier}</Text>
                 <View style={styles.priceRow}>
-                  <Text style={[styles.planPrice, highlighted && { color: ACCENT }]}>
+                  <Text style={[styles.planPrice, highlighted && { color: getAccent(colors) }]}>
                     {formatPrice(plan.price, plan.currency)}
                   </Text>
                   <Text style={styles.planPeriod}>/month</Text>
@@ -71,7 +74,7 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
                 <View style={styles.featuresList}>
                   {plan.features.map((feature, i) => (
                     <View key={i} style={styles.featureRow}>
-                      <Ionicons name="checkmark-circle" size={16} color={highlighted ? ACCENT : COLORS.success} />
+                      <Ionicons name="checkmark-circle" size={16} color={highlighted ? getAccent(colors) : colors.success} />
                       <Text style={styles.featureText}>{feature}</Text>
                     </View>
                   ))}
@@ -83,7 +86,7 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
                   activeOpacity={0.85}
                 >
                   {highlighted ? (
-                    <LinearGradient colors={[ACCENT, '#FF9500']} style={styles.selectBtnGradient}>
+                    <LinearGradient colors={[getAccent(colors), '#FF9500']} style={styles.selectBtnGradient}>
                       <Text style={styles.selectBtnText}>Get Started</Text>
                     </LinearGradient>
                   ) : (
@@ -101,7 +104,7 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
               Contact our support team for a personalized recommendation based on your property portfolio.
             </Text>
             <TouchableOpacity style={styles.contactBtn}>
-              <Ionicons name="chatbubble-outline" size={16} color={ACCENT} />
+              <Ionicons name="chatbubble-outline" size={16} color={getAccent(colors)} />
               <Text style={styles.contactBtnText}>Contact Support</Text>
             </TouchableOpacity>
           </View>
@@ -118,10 +121,11 @@ export const LandlordPlansScreen: React.FC<{ navigation: any }> = ({ navigation 
   );
 };
 
-const ACCENT = COLORS.primary;
+const getAccent = (colors: ThemeColors) => colors.primary;
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -139,7 +143,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
-  headerTitle: { ...FONTS.h3, color: COLORS.text },
+  headerTitle: { ...FONTS.h3, color: colors.text },
   scrollContent: { padding: SPACING.lg, maxWidth: 1200, width: '100%', alignSelf: 'center' },
 
   hero: { alignItems: 'center', marginBottom: SPACING.xl },
@@ -151,8 +155,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  heroTitle: { color: COLORS.text, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
-  heroDesc: { color: COLORS.textSecondary, fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  heroTitle: { color: colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
+  heroDesc: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', lineHeight: 20 },
 
   planCard: {
     backgroundColor: '#121212',
@@ -163,7 +167,7 @@ const styles = StyleSheet.create({
     borderColor: '#1A1A1A',
   },
   planCardHighlighted: {
-    borderColor: `${ACCENT}60`,
+    borderColor: `${getAccent(colors)}60`,
     backgroundColor: '#121212',
   },
   popularBadge: {
@@ -174,19 +178,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.full,
-    backgroundColor: `${ACCENT}20`,
+    backgroundColor: `${getAccent(colors)}20`,
     marginBottom: SPACING.md,
   },
-  popularBadgeText: { color: ACCENT, fontSize: 11, fontWeight: '700' },
-  planTier: { color: COLORS.text, fontSize: 20, fontWeight: '800', marginBottom: 4 },
+  popularBadgeText: { color: getAccent(colors), fontSize: 11, fontWeight: '700' },
+  planTier: { color: colors.text, fontSize: 20, fontWeight: '800', marginBottom: 4 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginBottom: SPACING.md },
-  planPrice: { color: COLORS.text, fontSize: 32, fontWeight: '900' },
-  planPeriod: { color: COLORS.textTertiary, fontSize: 14 },
+  planPrice: { color: colors.text, fontSize: 32, fontWeight: '900' },
+  planPeriod: { color: colors.textTertiary, fontSize: 14 },
   divider: { height: 1, backgroundColor: '#1A1A1A', marginBottom: SPACING.md },
 
   featuresList: { gap: 10, marginBottom: SPACING.lg },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  featureText: { color: COLORS.textSecondary, fontSize: 13, flex: 1 },
+  featureText: { color: colors.textSecondary, fontSize: 13, flex: 1 },
 
   selectBtn: {
     borderRadius: RADIUS.md,
@@ -194,9 +198,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
-  selectBtnHighlighted: { borderColor: ACCENT },
+  selectBtnHighlighted: { borderColor: getAccent(colors) },
   selectBtnGradient: { paddingVertical: 14, alignItems: 'center' },
-  selectBtnText: { color: COLORS.text, fontSize: 15, fontWeight: '700', textAlign: 'center', paddingVertical: 14 },
+  selectBtnText: { color: colors.text, fontSize: 15, fontWeight: '700', textAlign: 'center', paddingVertical: 14 },
 
   comparisonSection: {
     backgroundColor: '#121212',
@@ -206,8 +210,8 @@ const styles = StyleSheet.create({
     borderColor: '#1A1A1A',
     alignItems: 'center',
   },
-  comparisonTitle: { color: COLORS.text, fontSize: 17, fontWeight: '700', marginBottom: 6 },
-  comparisonDesc: { color: COLORS.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: SPACING.md },
+  comparisonTitle: { color: colors.text, fontSize: 17, fontWeight: '700', marginBottom: 6 },
+  comparisonDesc: { color: colors.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: SPACING.md },
   contactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: ACCENT,
+    borderColor: getAccent(colors),
   },
-  contactBtnText: { color: ACCENT, fontSize: 13, fontWeight: '600' },
+  contactBtnText: { color: getAccent(colors), fontSize: 13, fontWeight: '600' },
 });

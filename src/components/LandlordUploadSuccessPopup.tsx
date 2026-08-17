@@ -5,11 +5,12 @@
  * Informs them that free uploads are over and prompts subscription.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LandlordUploadSuccessPopupProps {
   visible: boolean;
@@ -23,6 +24,8 @@ export const LandlordUploadSuccessPopup: React.FC<LandlordUploadSuccessPopupProp
   onMaybeLater,
 }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -52,7 +55,7 @@ export const LandlordUploadSuccessPopup: React.FC<LandlordUploadSuccessPopupProp
         >
           {/* Success Icon */}
           <View style={styles.iconWrap}>
-            <Ionicons name="checkmark-circle" size={56} color={COLORS.success} />
+            <Ionicons name="checkmark-circle" size={56} color={colors.success} />
           </View>
 
           {/* Title */}
@@ -83,7 +86,7 @@ export const LandlordUploadSuccessPopup: React.FC<LandlordUploadSuccessPopupProp
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
     alignItems: 'center',
     width: '100%',
@@ -107,26 +110,26 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
     fontSize: 18,
     lineHeight: 24,
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   motivationalText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontStyle: 'italic',
     textAlign: 'center',
     fontFamily: 'serif',
   },
   payButton: {
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     paddingHorizontal: 40,
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
   },
   maybeLaterText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '600',
   },

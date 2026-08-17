@@ -1,17 +1,18 @@
 /**
- * HAMA™ FAQ Screen
+ * HAMA FAQ Screen
  *
  * Frequently asked questions organized by category, with expandable
  * accordion cards and a contact/support CTA.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface FaqItem {
   question: string;
@@ -26,12 +27,12 @@ interface FaqCategory {
   items: FaqItem[];
 }
 
-const FAQ_CATEGORIES: FaqCategory[] = [
+const getFaqCategories = (colors: ThemeColors): FaqCategory[] => [
   {
     id: 'accounts',
     title: 'Accounts & Profiles',
     icon: 'person-circle-outline',
-    color: COLORS.primary,
+    color: colors.primary,
     items: [
       {
         question: 'How do I create a HAMA account?',
@@ -55,7 +56,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'housing',
     title: 'Finding Housing',
     icon: 'home-outline',
-    color: COLORS.accent,
+    color: colors.accent,
     items: [
       {
         question: 'How do I search for properties?',
@@ -79,7 +80,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'marketplace',
     title: 'Marketplace & Selling',
     icon: 'cart-outline',
-    color: COLORS.warning,
+    color: colors.warning,
     items: [
       {
         question: 'How do I sell products on HAMA?',
@@ -99,7 +100,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'services',
     title: 'Service Providers',
     icon: 'construct-outline',
-    color: COLORS.info,
+    color: colors.info,
     items: [
       {
         question: 'How do I list my services?',
@@ -119,7 +120,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'billing',
     title: 'Billing & Subscriptions',
     icon: 'card-outline',
-    color: COLORS.secondary,
+    color: colors.secondary,
     items: [
       {
         question: 'How do I subscribe to a plan?',
@@ -143,7 +144,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'safety',
     title: 'Safety & Trust',
     icon: 'shield-checkmark-outline',
-    color: COLORS.success,
+    color: colors.success,
     items: [
       {
         question: 'How does HAMA keep my data safe?',
@@ -163,7 +164,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     id: 'support',
     title: 'Support & Troubleshooting',
     icon: 'headset-outline',
-    color: COLORS.error,
+    color: colors.error,
     items: [
       {
         question: 'I did not receive the M-Pesa prompt. What now?',
@@ -187,6 +188,8 @@ interface FaqScreenProps {
 
 export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [openItem, setOpenItem] = useState<string | null>(null);
 
@@ -195,12 +198,14 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
     setOpenItem(null);
   };
 
+  const faqCategories = useMemo(() => getFaqCategories(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>FAQ</Text>
@@ -209,7 +214,7 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {FAQ_CATEGORIES.map((category) => {
+        {faqCategories.map((category) => {
           const isOpen = openCategory === category.id;
           return (
             <GlassCard key={category.id} style={styles.categoryCard}>
@@ -230,7 +235,7 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
                 <Ionicons
                   name={isOpen ? 'chevron-up' : 'chevron-down'}
                   size={20}
-                  color={COLORS.textTertiary}
+                  color={colors.textTertiary}
                 />
               </TouchableOpacity>
 
@@ -250,7 +255,7 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
                         <Ionicons
                           name={isItemOpen ? 'remove-circle-outline' : 'add-circle-outline'}
                           size={18}
-                          color={isItemOpen ? COLORS.primary : COLORS.textTertiary}
+                          color={isItemOpen ? colors.primary : colors.textTertiary}
                         />
                       </View>
                       {isItemOpen && <Text style={styles.faqAnswer}>{item.answer}</Text>}
@@ -269,7 +274,7 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
             style={styles.contactGradient}
           >
-            <Ionicons name="chatbubbles-outline" size={28} color={COLORS.primary} />
+            <Ionicons name="chatbubbles-outline" size={28} color={colors.primary} />
             <Text style={styles.contactTitle}>Still have questions?</Text>
             <Text style={styles.contactText}>
               Our support team is happy to help. Reach us at support@hama.app or via Help & Support in Settings.
@@ -287,8 +292,8 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
                   style={[styles.contactButton, styles.contactButtonSecondary]}
                   onPress={() => navigation.navigate('Settings')}
                 >
-                  <Ionicons name="settings-outline" size={16} color={COLORS.primary} />
-                  <Text style={[styles.contactButtonText, { color: COLORS.primary }]}>Help & Support</Text>
+                  <Ionicons name="settings-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.contactButtonText, { color: colors.primary }]}>Help & Support</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -301,10 +306,10 @@ export const FaqScreen: React.FC<FaqScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -328,20 +333,20 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 6,
   },
-scrollContent: {
-      padding: SPACING.md,
-      gap: SPACING.md,
-      maxWidth: 1200,
-      width: '100%',
-      alignSelf: 'center',
-    },
+  scrollContent: {
+    padding: SPACING.md,
+    gap: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
+  },
   categoryCard: {
     padding: SPACING.md,
   },
@@ -362,10 +367,10 @@ scrollContent: {
   },
   categoryTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   categoryCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -387,13 +392,13 @@ scrollContent: {
   },
   faqQuestion: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
   },
   faqAnswer: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     marginTop: SPACING.sm,
@@ -407,11 +412,11 @@ scrollContent: {
   },
   contactTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginTop: SPACING.sm,
   },
   contactText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -429,7 +434,7 @@ scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   contactButtonSecondary: {
     backgroundColor: 'rgba(255,107,0,0.12)',

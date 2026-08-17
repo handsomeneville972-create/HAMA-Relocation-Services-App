@@ -21,7 +21,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useProvider } from '../contexts/ProviderContext';
 import {
   CATEGORIES,
@@ -95,20 +96,22 @@ function Field({
   helper?: string;
   onBlur?: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>
         {label} {optional ? <Text style={styles.optionalText}>(optional)</Text> : null}
       </Text>
       <View style={styles.inputWrap}>
-        {icon ? <Ionicons name={icon} size={16} color={COLORS.textTertiary} style={styles.inputIcon} /> : null}
+        {icon ? <Ionicons name={icon} size={16} color={colors.textTertiary} style={styles.inputIcon} /> : null}
         <TextInput
           style={[styles.input, multiline && styles.inputMultiline, icon && { paddingLeft: 36 }]}
           value={value}
           onChangeText={onChange}
           onBlur={onBlur}
           placeholder={placeholder}
-          placeholderTextColor={COLORS.textTertiary}
+          placeholderTextColor={colors.textTertiary}
           keyboardType={keyboardType}
           multiline={multiline}
           maxLength={maxLength}
@@ -130,23 +133,27 @@ function Chip({
   onPress: () => void;
   icon?: keyof typeof Ionicons.glyphMap;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
       style={[styles.chip, selected && styles.chipSelected]}
     >
-      {icon ? <Ionicons name={icon} size={14} color={selected ? '#000' : COLORS.textSecondary} /> : null}
+      {icon ? <Ionicons name={icon} size={14} color={selected ? '#000' : colors.textSecondary} /> : null}
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
 function SectionTitle({ icon, title, subtitle }: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.sectionTitleRow}>
       <View style={styles.sectionIcon}>
-        <Ionicons name={icon} size={20} color={COLORS.primary} />
+        <Ionicons name={icon} size={20} color={colors.primary} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -157,6 +164,8 @@ function SectionTitle({ icon, title, subtitle }: { icon: keyof typeof Ionicons.g
 }
 
 export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { draft, updateDraft, markStepComplete, activateProvider, isProvider } = useProvider();
 
@@ -341,7 +350,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           <Image source={{ uri: profile.logo }} style={styles.photoPreview} />
         ) : (
           <View style={styles.photoPlaceholder}>
-            <Ionicons name="camera-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="camera-outline" size={24} color={colors.primary} />
             <Text style={styles.mediaLabel}>Add a clear photo</Text>
           </View>
         )}
@@ -408,10 +417,10 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
               </Text>
             </View>
             <TouchableOpacity onPress={() => setExpandedService(expandedService === svc.id ? null : svc.id)} style={styles.iconBtn}>
-              <Ionicons name={expandedService === svc.id ? 'chevron-up' : 'create-outline'} size={18} color={COLORS.primary} />
+              <Ionicons name={expandedService === svc.id ? 'chevron-up' : 'create-outline'} size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setServices(profile.services.filter((s) => s.id !== svc.id))} style={styles.iconBtn}>
-              <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+              <Ionicons name="trash-outline" size={18} color={colors.error} />
             </TouchableOpacity>
           </View>
           {expandedService === svc.id && (
@@ -422,7 +431,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>Price (KSh)</Text>
                   <View style={styles.inputWrap}>
-                    <TextInput style={styles.input} value={svc.price ? String(svc.price) : ''} onChangeText={(v) => setServices(profile.services.map((s) => (s.id === svc.id ? { ...s, price: parseFloat(v) || 0 } : s)))} keyboardType="numeric" placeholder="1500" placeholderTextColor={COLORS.textTertiary} />
+                    <TextInput style={styles.input} value={svc.price ? String(svc.price) : ''} onChangeText={(v) => setServices(profile.services.map((s) => (s.id === svc.id ? { ...s, price: parseFloat(v) || 0 } : s)))} keyboardType="numeric" placeholder="1500" placeholderTextColor={colors.textTertiary} />
                   </View>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -441,8 +450,8 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                 <Switch
                   value={svc.emergencyAvailable}
                   onValueChange={(v) => setServices(profile.services.map((s) => (s.id === svc.id ? { ...s, emergencyAvailable: v } : s)))}
-                  trackColor={{ false: COLORS.bgElevated, true: COLORS.primaryDark }}
-                  thumbColor={svc.emergencyAvailable ? COLORS.primary : '#888'}
+                  trackColor={{ false: colors.bgElevated, true: colors.primaryDark }}
+                  thumbColor={svc.emergencyAvailable ? colors.primary : '#888'}
                 />
               </View>
             </View>
@@ -457,7 +466,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           setExpandedService(id);
         }}
       >
-        <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+        <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
         <Text style={styles.addButtonText}>Add a service</Text>
       </TouchableOpacity>
 
@@ -474,8 +483,8 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         <Switch
           value={profile.availability !== false}
           onValueChange={(v) => updateDraft({ availability: v })}
-          trackColor={{ false: COLORS.bgElevated, true: COLORS.primaryDark }}
-          thumbColor={profile.availability !== false ? COLORS.primary : '#888'}
+          trackColor={{ false: colors.bgElevated, true: colors.primaryDark }}
+          thumbColor={profile.availability !== false ? colors.primary : '#888'}
         />
       </View>
     </>
@@ -489,11 +498,11 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           <Text style={styles.fieldLabel}>Years of experience</Text>
           <View style={styles.stepper}>
             <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ yearsInBusiness: Math.max(0, profile.yearsInBusiness - 1) })}>
-              <Ionicons name="remove" size={16} color={COLORS.text} />
+              <Ionicons name="remove" size={16} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.stepperValue}>{profile.yearsInBusiness}</Text>
             <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ yearsInBusiness: profile.yearsInBusiness + 1 })}>
-              <Ionicons name="add" size={16} color={COLORS.text} />
+              <Ionicons name="add" size={16} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -501,11 +510,11 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           <Text style={styles.fieldLabel}>Team size</Text>
           <View style={styles.stepper}>
             <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ teamSize: Math.max(1, profile.teamSize - 1) })}>
-              <Ionicons name="remove" size={16} color={COLORS.text} />
+              <Ionicons name="remove" size={16} color={colors.text} />
             </TouchableOpacity>
             <Text style={styles.stepperValue}>{profile.teamSize}</Text>
             <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ teamSize: profile.teamSize + 1 })}>
-              <Ionicons name="add" size={16} color={COLORS.text} />
+              <Ionicons name="add" size={16} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -524,7 +533,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           </View>
         ))}
         <TouchableOpacity style={styles.portfolioAdd} onPress={pickPortfolioPhotos}>
-          <Ionicons name="add" size={28} color={COLORS.primary} />
+          <Ionicons name="add" size={28} color={colors.primary} />
           <Text style={styles.portfolioAddText}>Add photos</Text>
         </TouchableOpacity>
       </View>
@@ -537,17 +546,17 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         <GlassCard key={cert.id} style={styles.listCard}>
           <View style={styles.listRow}>
             <View style={styles.certBadge}>
-              <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.success} />
+              <Ionicons name="shield-checkmark-outline" size={18} color={colors.success} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.listTitle}>{cert.name || 'Untitled certification'}</Text>
               <Text style={styles.listSub}>{cert.issuer} · {cert.year}</Text>
             </View>
             <TouchableOpacity onPress={() => setExpandedCert(expandedCert === cert.id ? null : cert.id)} style={styles.iconBtn}>
-              <Ionicons name={expandedCert === cert.id ? 'chevron-up' : 'create-outline'} size={18} color={COLORS.primary} />
+              <Ionicons name={expandedCert === cert.id ? 'chevron-up' : 'create-outline'} size={18} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => updateDraft({ certifications: profile.certifications.filter((c) => c.id !== cert.id) })} style={styles.iconBtn}>
-              <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+              <Ionicons name="trash-outline" size={18} color={colors.error} />
             </TouchableOpacity>
           </View>
           {expandedCert === cert.id && (
@@ -568,7 +577,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
             setExpandedCert(id);
           }}
         >
-          <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
           <Text style={styles.addButtonText}>Add certification</Text>
         </TouchableOpacity>
       )}
@@ -576,7 +585,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
       <View style={[styles.docsHeader, { marginTop: SPACING.lg }]}>
         <Text style={styles.fieldLabel}>Supporting documents</Text>
         <TouchableOpacity style={styles.smallBtn} onPress={pickDocument}>
-          <Ionicons name="cloud-upload-outline" size={14} color={COLORS.primary} />
+          <Ionicons name="cloud-upload-outline" size={14} color={colors.primary} />
           <Text style={styles.smallBtnText}>Upload</Text>
         </TouchableOpacity>
       </View>
@@ -584,9 +593,9 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
       {profile.documents.map((doc) => (
         <GlassCard key={doc.id} style={styles.listCard}>
           <View style={styles.listRow}>
-            <Ionicons name="document-text-outline" size={18} color={COLORS.primary} />
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
             <Text style={[styles.listSub, { flex: 1, marginLeft: SPACING.sm }]} numberOfLines={1}>{doc.name}</Text>
-            <Text style={[styles.docStatus, doc.status === 'verified' && { color: COLORS.success }]}>{doc.status}</Text>
+            <Text style={[styles.docStatus, doc.status === 'verified' && { color: colors.success }]}>{doc.status}</Text>
           </View>
         </GlassCard>
       ))}
@@ -604,13 +613,13 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
     <GlassCard style={styles.sectionCard}>
       <TouchableOpacity style={styles.sectionCardHeader} onPress={() => setOpenSection(openSection === key ? null : key)}>
         <View style={[styles.sectionIcon, done && styles.sectionIconDone]}>
-          <Ionicons name={done ? 'checkmark' : icon} size={18} color={done ? COLORS.success : COLORS.primary} />
+          <Ionicons name={done ? 'checkmark' : icon} size={18} color={done ? colors.success : colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.sectionCardTitle}>{title}</Text>
           <Text style={styles.sectionCardSubtitle}>{subtitle}</Text>
         </View>
-        <Ionicons name={openSection === key ? 'chevron-up' : 'chevron-down'} size={18} color={COLORS.textTertiary} />
+        <Ionicons name={openSection === key ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textTertiary} />
       </TouchableOpacity>
       {openSection === key && <View style={styles.sectionCardBody}>{content}</View>}
     </GlassCard>
@@ -627,7 +636,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
       <>
         <SectionTitle icon="rocket-outline" title="Ranking boost" subtitle="Optional extras that lift your profile strength and search ranking." />
         <GlassCard style={styles.hintCard}>
-          <Ionicons name="sparkles-outline" size={16} color={COLORS.primary} />
+          <Ionicons name="sparkles-outline" size={16} color={colors.primary} />
           <Text style={styles.hintText}>Every section you complete improves your ranking. Certificates and work photos get the biggest boost.</Text>
         </GlassCard>
         {renderBoostSection('areas', 'location-outline', 'Service areas', 'Where do you travel to work?', hasAreas, (
@@ -648,7 +657,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
               <Text style={styles.fieldLabel}>Travel radius</Text>
               <View style={styles.radiusRow}>
                 <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ serviceAreas: { ...profile.serviceAreas, radiusKm: Math.max(5, profile.serviceAreas.radiusKm - 5) } })}>
-                  <Ionicons name="remove" size={16} color={COLORS.text} />
+                  <Ionicons name="remove" size={16} color={colors.text} />
                 </TouchableOpacity>
                 <View style={{ alignItems: 'center', flex: 1 }}>
                   <Text style={styles.radiusValue}>{profile.serviceAreas.radiusKm} km</Text>
@@ -657,7 +666,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                   </View>
                 </View>
                 <TouchableOpacity style={styles.stepperBtn} onPress={() => updateDraft({ serviceAreas: { ...profile.serviceAreas, radiusKm: Math.min(100, profile.serviceAreas.radiusKm + 5) } })}>
-                  <Ionicons name="add" size={16} color={COLORS.text} />
+                  <Ionicons name="add" size={16} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -670,14 +679,14 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
               <Switch
                 value={profile.open247}
                 onValueChange={(v) => updateDraft({ open247: v })}
-                trackColor={{ false: COLORS.bgElevated, true: COLORS.primaryDark }}
-                thumbColor={profile.open247 ? COLORS.primary : '#888'}
+                trackColor={{ false: colors.bgElevated, true: colors.primaryDark }}
+                thumbColor={profile.open247 ? colors.primary : '#888'}
               />
             </View>
             {!profile.open247 &&
               profile.businessHours.map((day) => (
                 <GlassCard key={day.day} style={styles.dayCard}>
-                  <Text style={[styles.dayName, day.closed && { color: COLORS.textTertiary }]}>{day.day}</Text>
+                  <Text style={[styles.dayName, day.closed && { color: colors.textTertiary }]}>{day.day}</Text>
                   {day.closed ? (
                     <Text style={styles.closedText}>Closed</Text>
                   ) : (
@@ -687,7 +696,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                         value={day.open}
                         onChangeText={(v) => updateDraft({ businessHours: profile.businessHours.map((d) => (d.day === day.day ? { ...d, open: v } : d)) })}
                         placeholder="08:00"
-                        placeholderTextColor={COLORS.textTertiary}
+                        placeholderTextColor={colors.textTertiary}
                       />
                       <Text style={styles.timeDash}>to</Text>
                       <TextInput
@@ -695,7 +704,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                         value={day.close}
                         onChangeText={(v) => updateDraft({ businessHours: profile.businessHours.map((d) => (d.day === day.day ? { ...d, close: v } : d)) })}
                         placeholder="18:00"
-                        placeholderTextColor={COLORS.textTertiary}
+                        placeholderTextColor={colors.textTertiary}
                       />
                       <TouchableOpacity style={styles.closedToggle} onPress={() => updateDraft({ businessHours: profile.businessHours.map((d) => (d.day === day.day ? { ...d, closed: !d.closed } : d)) })}>
                         <Text style={styles.closedToggleText}>{day.closed ? 'Reopen' : 'Close'}</Text>
@@ -724,10 +733,10 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                     <Text style={styles.listSub}>{formatPrice(pkg.price)} · {pkg.features.length} features</Text>
                   </View>
                   <TouchableOpacity onPress={() => setExpandedPackage(expandedPackage === pkg.id ? null : pkg.id)} style={styles.iconBtn}>
-                    <Ionicons name={expandedPackage === pkg.id ? 'chevron-up' : 'create-outline'} size={18} color={COLORS.primary} />
+                    <Ionicons name={expandedPackage === pkg.id ? 'chevron-up' : 'create-outline'} size={18} color={colors.primary} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => updateDraft({ packages: profile.packages.filter((p) => p.id !== pkg.id) })} style={styles.iconBtn}>
-                    <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+                    <Ionicons name="trash-outline" size={18} color={colors.error} />
                   </TouchableOpacity>
                 </View>
                 {expandedPackage === pkg.id && (
@@ -754,7 +763,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
                 setExpandedPackage(id);
               }}
             >
-              <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
               <Text style={styles.addButtonText}>Add package</Text>
             </TouchableOpacity>
           </>
@@ -773,20 +782,20 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
             {profile.bankAccount ? (
               <GlassCard style={styles.listCard}>
                 <View style={styles.listRow}>
-                  <Ionicons name="business-outline" size={18} color={COLORS.primary} />
+                  <Ionicons name="business-outline" size={18} color={colors.primary} />
                   <View style={{ flex: 1, marginLeft: SPACING.sm }}>
                     <Text style={styles.listTitle}>{profile.bankAccount.bankName}</Text>
                     <Text style={styles.listSub}>{profile.bankAccount.accountName} · {profile.bankAccount.accountNumber}</Text>
                   </View>
                   <TouchableOpacity onPress={() => updateDraft({ bankAccount: null })} style={styles.iconBtn}>
-                    <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+                    <Ionicons name="trash-outline" size={18} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               </GlassCard>
             ) : (
               <View style={{ marginTop: SPACING.md }}>
                 <TouchableOpacity style={styles.addButton} onPress={() => updateDraft({ bankAccount: { bankName: '', accountName: '', accountNumber: '' } })}>
-                  <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+                  <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
                   <Text style={styles.addButtonText}>Add bank account (optional)</Text>
                 </TouchableOpacity>
               </View>
@@ -824,16 +833,16 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
             <View style={[styles.docsHeader, { marginTop: SPACING.lg }]}>
               <Text style={styles.fieldLabel}>Promo video (optional)</Text>
               <TouchableOpacity style={styles.smallBtn} onPress={pickPromoVideo}>
-                <Ionicons name="videocam-outline" size={14} color={COLORS.primary} />
+                <Ionicons name="videocam-outline" size={14} color={colors.primary} />
                 <Text style={styles.smallBtnText}>{profile.branding.promoVideo ? 'Replace' : 'Upload'}</Text>
               </TouchableOpacity>
             </View>
             {profile.branding.promoVideo && (
               <GlassCard style={styles.listCard}>
-                <Ionicons name="play-circle" size={18} color={COLORS.primary} />
+                <Ionicons name="play-circle" size={18} color={colors.primary} />
                 <Text style={[styles.listSub, { flex: 1, marginLeft: SPACING.sm }]}>Promo video ready</Text>
                 <TouchableOpacity onPress={() => updateDraft({ branding: { ...profile.branding, promoVideo: null } })} style={styles.iconBtn}>
-                  <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+                  <Ionicons name="trash-outline" size={18} color={colors.error} />
                 </TouchableOpacity>
               </GlassCard>
             )}
@@ -842,8 +851,8 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
               <Switch
                 value={profile.isEmergencyProvider}
                 onValueChange={(v) => updateDraft({ isEmergencyProvider: v })}
-                trackColor={{ false: COLORS.bgElevated, true: COLORS.primaryDark }}
-                thumbColor={profile.isEmergencyProvider ? COLORS.primary : '#888'}
+                trackColor={{ false: colors.bgElevated, true: colors.primaryDark }}
+                thumbColor={profile.isEmergencyProvider ? colors.primary : '#888'}
               />
             </View>
           </>
@@ -855,7 +864,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
   const renderReview = () => (
     <>
       <SectionTitle icon="checkmark-done-outline" title="Review & publish" subtitle="Everything looks great. Here's what clients will see." />
-      <LinearGradient colors={COLORS.gradientCard} style={styles.scoreCard}>
+      <LinearGradient colors={colors.gradientCard} style={styles.scoreCard}>
         <View style={styles.scoreRing}>
           <Text style={styles.scoreValue}>{strength.score}%</Text>
           <Text style={styles.scoreLabel}>strength</Text>
@@ -874,18 +883,18 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
       ].map((card) => (
         <TouchableOpacity key={card.index} style={styles.summaryCard} onPress={() => { setCurrentIndex(card.index); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}>
           <View style={[styles.sectionIcon, card.done && styles.sectionIconDone]}>
-            <Ionicons name={card.done ? 'checkmark' : (card.icon as keyof typeof Ionicons.glyphMap)} size={18} color={card.done ? COLORS.success : COLORS.primary} />
+            <Ionicons name={card.done ? 'checkmark' : (card.icon as keyof typeof Ionicons.glyphMap)} size={18} color={card.done ? colors.success : colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.summaryTitle}>{card.title}</Text>
             <Text style={styles.summarySub}>{card.sub}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
         </TouchableOpacity>
       ))}
 
       <GlassCard style={styles.planCard}>
-        <Ionicons name="sparkles" size={18} color={COLORS.primary} />
+        <Ionicons name="sparkles" size={18} color={colors.primary} />
         <View style={{ flex: 1, marginLeft: SPACING.sm }}>
           <Text style={styles.listTitle}>Free to join — your profile goes live immediately</Text>
           <Text style={styles.listSub}>
@@ -901,7 +910,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         ))}
       </View>
       <GlassCard style={{ ...styles.hintCard, marginTop: SPACING.md }}>
-        <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.success} />
+        <Ionicons name="shield-checkmark-outline" size={16} color={colors.success} />
         <Text style={styles.hintText}>Profiles go live immediately after onboarding so clients can discover you right away.</Text>
       </GlassCard>
     </>
@@ -912,7 +921,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
   if (published) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+        <LinearGradient colors={colors.gradientNight} style={styles.bg} />
         <View style={styles.successWrap}>
           <View style={styles.successCircle}>
             <Ionicons name="checkmark" size={44} color="#000" />
@@ -923,15 +932,15 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           </Text>
           <GlassCard style={styles.successCard}>
             <View style={styles.successRow}>
-              <Ionicons name="search-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="search-outline" size={18} color={colors.primary} />
               <Text style={styles.successRowText}>You're findable in search by category, area and keywords.</Text>
             </View>
             <View style={styles.successRow}>
-              <Ionicons name="create-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="create-outline" size={18} color={colors.primary} />
               <Text style={styles.successRowText}>Update your profile, photos and pricing anytime from the dashboard.</Text>
             </View>
             <View style={styles.successRow}>
-              <Ionicons name="diamond-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="diamond-outline" size={18} color={colors.primary} />
               <Text style={styles.successRowText}>Upgrade to a plan anytime to unlock leads, booking tools and premium placement.</Text>
             </View>
           </GlassCard>
@@ -960,11 +969,11 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+        <LinearGradient colors={colors.gradientNight} style={styles.bg} />
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={goBack} style={styles.headerBtn}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginHorizontal: SPACING.md }}>
             <View style={styles.titleRow}>
@@ -986,7 +995,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         {/* Resume banner */}
         {resumed && currentIndex > 0 && (
           <View style={styles.resumeBanner}>
-            <Ionicons name="cloud-done-outline" size={16} color={COLORS.success} />
+            <Ionicons name="cloud-done-outline" size={16} color={colors.success} />
             <Text style={styles.resumeText}>Draft restored — changes autosave as you go.</Text>
           </View>
         )}
@@ -1005,7 +1014,7 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
         {/* Error toast */}
         {error && (
           <View style={styles.errorToast}>
-            <Ionicons name="alert-circle" size={16} color={COLORS.error} />
+            <Ionicons name="alert-circle" size={16} color={colors.error} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
@@ -1015,8 +1024,8 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
           <View style={styles.footerRow}>
             {!isReview && (
               <TouchableOpacity style={styles.footerSecondary} onPress={goBack} disabled={currentIndex === 0}>
-                <Ionicons name="arrow-back" size={18} color={currentIndex === 0 ? COLORS.textTertiary : COLORS.textSecondary} />
-                <Text style={[styles.footerSecondaryText, currentIndex === 0 && { color: COLORS.textTertiary }]}>Back</Text>
+                <Ionicons name="arrow-back" size={18} color={currentIndex === 0 ? colors.textTertiary : colors.textSecondary} />
+                <Text style={[styles.footerSecondaryText, currentIndex === 0 && { color: colors.textTertiary }]}>Back</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -1045,126 +1054,127 @@ export const ServiceProviderOnboardingScreen: React.FC<Props> = ({ plan, navigat
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   bg: { ...StyleSheet.absoluteFillObject },
-  emptyText: { color: COLORS.textSecondary, textAlign: 'center', marginTop: SPACING.xl },
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: SPACING.xl },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: SPACING.md },
-  headerBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
+  headerBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, alignItems: 'center', justifyContent: 'center' },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerTitle: { ...FONTS.h3, fontSize: 16, lineHeight: 20 },
-  headerStep: { ...FONTS.caption, color: COLORS.textTertiary, fontVariant: ['tabular-nums'] },
-  headerSub: { ...FONTS.caption, color: COLORS.primary, marginTop: 2 },
-  progressTrack: { height: 4, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated, marginTop: SPACING.sm, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
+  headerStep: { ...FONTS.caption, color: colors.textTertiary, fontVariant: ['tabular-nums'] },
+  headerSub: { ...FONTS.caption, color: colors.primary, marginTop: 2 },
+  progressTrack: { height: 4, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated, marginTop: SPACING.sm, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: RADIUS.full, backgroundColor: colors.primary },
   dotsRow: { flexDirection: 'row', gap: 6, marginTop: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.13)' },
-  dotActive: { backgroundColor: COLORS.primary, width: 18 },
-  dotDone: { backgroundColor: COLORS.success },
+  dotActive: { backgroundColor: colors.primary, width: 18 },
+  dotDone: { backgroundColor: colors.success },
   resumeBanner: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginHorizontal: SPACING.md, marginBottom: SPACING.sm, padding: SPACING.sm + 2, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,212,170,0.08)', borderWidth: 1, borderColor: 'rgba(0,212,170,0.25)' },
-  resumeText: { ...FONTS.caption, color: COLORS.success, flex: 1 },
+  resumeText: { ...FONTS.caption, color: colors.success, flex: 1 },
   field: { marginBottom: SPACING.md },
-  fieldLabel: { ...FONTS.caption, color: COLORS.textSecondary, marginBottom: 6, fontWeight: '600' },
-  optionalText: { color: COLORS.textTertiary, fontWeight: '400' },
-  helperText: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 4, marginBottom: SPACING.sm, lineHeight: 16 },
-  inlineError: { ...FONTS.caption, color: COLORS.error, marginTop: -SPACING.sm, marginBottom: SPACING.sm },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border },
+  fieldLabel: { ...FONTS.caption, color: colors.textSecondary, marginBottom: 6, fontWeight: '600' },
+  optionalText: { color: colors.textTertiary, fontWeight: '400' },
+  helperText: { ...FONTS.caption, color: colors.textTertiary, marginTop: 4, marginBottom: SPACING.sm, lineHeight: 16 },
+  inlineError: { ...FONTS.caption, color: colors.error, marginTop: -SPACING.sm, marginBottom: SPACING.sm },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: colors.border },
   inputIcon: { position: 'absolute', left: 12 },
-  input: { flex: 1, color: COLORS.text, paddingHorizontal: 14, paddingVertical: 12, ...FONTS.body },
+  input: { flex: 1, color: colors.text, paddingHorizontal: 14, paddingVertical: 12, ...FONTS.body },
   inputMultiline: { minHeight: 96, textAlignVertical: 'top' },
   row2: { flexDirection: 'row', gap: SPACING.md },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  chipSelected: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  chipText: { ...FONTS.caption, color: COLORS.textSecondary },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { ...FONTS.caption, color: colors.textSecondary },
   chipTextSelected: { color: '#000', fontWeight: '700' },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.lg },
   sectionIcon: { width: 44, height: 44, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   sectionIconDone: { backgroundColor: 'rgba(0,212,170,0.12)' },
   sectionTitle: { ...FONTS.h3 },
-  sectionSubtitle: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
-  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: SPACING.lg },
-  photoPicker: { width: 108, height: 108, borderRadius: RADIUS.xl, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden', marginBottom: SPACING.sm },
+  sectionSubtitle: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: SPACING.lg },
+  photoPicker: { width: 108, height: 108, borderRadius: RADIUS.xl, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', marginBottom: SPACING.sm },
   photoPreview: { width: '100%', height: '100%' },
   photoPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  photoChangeBadge: { position: 'absolute', bottom: 8, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.primary, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
+  photoChangeBadge: { position: 'absolute', bottom: 8, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primary, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
   photoChangeText: { ...FONTS.caption, color: '#000', fontWeight: '700' },
-  mediaLabel: { ...FONTS.caption, color: COLORS.textTertiary },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 4 },
-  stepperBtn: { width: 34, height: 34, borderRadius: RADIUS.sm + 2, backgroundColor: COLORS.bgElevated, alignItems: 'center', justifyContent: 'center' },
+  mediaLabel: { ...FONTS.caption, color: colors.textTertiary },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: colors.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: colors.border, padding: 4 },
+  stepperBtn: { width: 34, height: 34, borderRadius: RADIUS.sm + 2, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   stepperValue: { ...FONTS.bodyLarge, minWidth: 32, textAlign: 'center', fontVariant: ['tabular-nums'] },
   hintCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.lg, padding: SPACING.md },
-  hintText: { ...FONTS.caption, color: COLORS.textSecondary, flex: 1 },
+  hintText: { ...FONTS.caption, color: colors.textSecondary, flex: 1 },
   listCard: { marginBottom: SPACING.sm, padding: SPACING.md },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   listTitle: { ...FONTS.bodyLarge, fontSize: 15, lineHeight: 20 },
-  listSub: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
+  listSub: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
   iconBtn: { width: 32, height: 32, borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' },
-  inlineEditor: { marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: SPACING.md },
-  addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, paddingVertical: 14, borderRadius: RADIUS.md, borderWidth: 1, borderStyle: 'dashed', borderColor: COLORS.borderActive, marginTop: SPACING.sm },
-  addButtonText: { ...FONTS.bodySmall, color: COLORS.primary, fontWeight: '600' },
+  inlineEditor: { marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACING.md },
+  addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, paddingVertical: 14, borderRadius: RADIUS.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderActive, marginTop: SPACING.sm },
+  addButtonText: { ...FONTS.bodySmall, color: colors.primary, fontWeight: '600' },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.md },
-  switchLabel: { ...FONTS.bodySmall, color: COLORS.textSecondary, flex: 1, marginRight: SPACING.md },
-  radiusCard: { backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border, padding: SPACING.md, marginTop: SPACING.lg },
+  switchLabel: { ...FONTS.bodySmall, color: colors.textSecondary, flex: 1, marginRight: SPACING.md },
+  radiusCard: { backgroundColor: colors.bgCard, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: colors.border, padding: SPACING.md, marginTop: SPACING.lg },
   radiusRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   radiusValue: { ...FONTS.bodyLarge, fontVariant: ['tabular-nums'] },
-  radiusTrack: { height: 6, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated, marginTop: 6, width: '100%', overflow: 'hidden' },
-  radiusFill: { height: '100%', borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
+  radiusTrack: { height: 6, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated, marginTop: 6, width: '100%', overflow: 'hidden' },
+  radiusFill: { height: '100%', borderRadius: RADIUS.full, backgroundColor: colors.primary },
   dayCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm, padding: SPACING.md },
   dayName: { ...FONTS.bodyLarge, fontSize: 15, width: 48 },
-  closedText: { ...FONTS.bodySmall, color: COLORS.textTertiary },
+  closedText: { ...FONTS.bodySmall, color: colors.textTertiary },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  timeInput: { width: 56, color: COLORS.text, backgroundColor: COLORS.bgElevated, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 8, textAlign: 'center', ...FONTS.caption },
-  timeDash: { color: COLORS.textTertiary, ...FONTS.caption },
+  timeInput: { width: 56, color: colors.text, backgroundColor: colors.bgElevated, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 8, textAlign: 'center', ...FONTS.caption },
+  timeDash: { color: colors.textTertiary, ...FONTS.caption },
   closedToggle: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm, backgroundColor: 'rgba(255,77,106,0.1)' },
-  closedToggleText: { ...FONTS.caption, color: COLORS.error, fontWeight: '600' },
+  closedToggleText: { ...FONTS.caption, color: colors.error, fontWeight: '600' },
   sectionCard: { marginBottom: SPACING.md, padding: SPACING.md },
   sectionCardHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   sectionCardTitle: { ...FONTS.bodyLarge, fontSize: 15 },
-  sectionCardSubtitle: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
-  sectionCardBody: { marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: SPACING.md },
+  sectionCardSubtitle: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
+  sectionCardBody: { marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACING.md },
   portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  portfolioItem: { width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3, aspectRatio: 1, borderRadius: RADIUS.md, overflow: 'hidden', backgroundColor: COLORS.bgCard },
+  portfolioItem: { width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3, aspectRatio: 1, borderRadius: RADIUS.md, overflow: 'hidden', backgroundColor: colors.bgCard },
   portfolioImage: { width: '100%', height: '100%' },
   portfolioRemove: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: RADIUS.full, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center' },
-  portfolioAdd: { width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3, aspectRatio: 1, borderRadius: RADIUS.md, borderWidth: 1, borderStyle: 'dashed', borderColor: COLORS.borderActive, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  portfolioAddText: { ...FONTS.caption, color: COLORS.primary },
-  certBadge: { width: 36, height: 36, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, alignItems: 'center', justifyContent: 'center' },
+  portfolioAdd: { width: (SCREEN_WIDTH - SPACING.md * 2 - SPACING.sm * 2) / 3, aspectRatio: 1, borderRadius: RADIUS.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderActive, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  portfolioAddText: { ...FONTS.caption, color: colors.primary },
+  certBadge: { width: 36, height: 36, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' },
   docsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm },
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)' },
-  smallBtnText: { ...FONTS.caption, color: COLORS.primary, fontWeight: '600' },
-  docStatus: { ...FONTS.caption, color: COLORS.warning, textTransform: 'capitalize' },
+  smallBtnText: { ...FONTS.caption, color: colors.primary, fontWeight: '600' },
+  docStatus: { ...FONTS.caption, color: colors.warning, textTransform: 'capitalize' },
   colorRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.md },
   colorSwatch: { width: 40, height: 40, borderRadius: RADIUS.full, alignItems: 'center', justifyContent: 'center' },
   colorSwatchActive: { borderWidth: 2, borderColor: '#fff' },
-  scoreCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, borderRadius: RADIUS.xl, padding: SPACING.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: COLORS.border },
-  scoreRing: { width: 76, height: 76, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: COLORS.primary },
-  scoreValue: { ...FONTS.price, color: COLORS.primary, fontVariant: ['tabular-nums'] },
-  scoreLabel: { ...FONTS.caption, color: COLORS.textSecondary },
+  scoreCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, borderRadius: RADIUS.xl, padding: SPACING.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: colors.border },
+  scoreRing: { width: 76, height: 76, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.primary },
+  scoreValue: { ...FONTS.price, color: colors.primary, fontVariant: ['tabular-nums'] },
+  scoreLabel: { ...FONTS.caption, color: colors.textSecondary },
   scoreTitle: { ...FONTS.bodyLarge },
-  scoreSub: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
-  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.sm, borderWidth: 1, borderColor: COLORS.border },
+  scoreSub: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
+  summaryCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: colors.bgCard, borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.sm, borderWidth: 1, borderColor: colors.border },
   summaryTitle: { ...FONTS.bodyLarge, fontSize: 15 },
-  summarySub: { ...FONTS.caption, color: COLORS.textTertiary, marginTop: 2 },
+  summarySub: { ...FONTS.caption, color: colors.textTertiary, marginTop: 2 },
   planCard: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, marginTop: SPACING.md },
   errorToast: { position: 'absolute', bottom: 140, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, backgroundColor: 'rgba(255,77,106,0.12)', borderWidth: 1, borderColor: 'rgba(255,77,106,0.35)', borderRadius: RADIUS.full, paddingHorizontal: SPACING.md, paddingVertical: 10 },
-  errorText: { ...FONTS.caption, color: COLORS.error },
+  errorText: { ...FONTS.caption, color: colors.error },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: SPACING.md, paddingTop: SPACING.lg },
   footerRow: { flexDirection: 'row', gap: SPACING.md },
-  footerSecondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flex: 1, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  footerSecondaryText: { ...FONTS.button, color: COLORS.textSecondary, fontSize: 15 },
-  footerPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, flex: 2.2, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, ...SHADOWS.md },
+  footerSecondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flex: 1, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  footerSecondaryText: { ...FONTS.button, color: colors.textSecondary, fontSize: 15 },
+  footerPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, flex: 2.2, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: colors.primary, ...SHADOWS.md },
   footerPrimaryMuted: { opacity: 0.6 },
   footerPrimaryText: { ...FONTS.button, color: '#000', fontSize: 15 },
   successWrap: { flex: 1, padding: SPACING.lg, justifyContent: 'center' },
-  successCircle: { width: 96, height: 96, borderRadius: RADIUS.full, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: SPACING.lg },
+  successCircle: { width: 96, height: 96, borderRadius: RADIUS.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: SPACING.lg },
   successTitle: { ...FONTS.h1, textAlign: 'center' },
-  successSub: { ...FONTS.body, color: COLORS.textSecondary, textAlign: 'center', marginTop: SPACING.sm, lineHeight: 22 },
+  successSub: { ...FONTS.body, color: colors.textSecondary, textAlign: 'center', marginTop: SPACING.sm, lineHeight: 22 },
   successCard: { marginTop: SPACING.lg, padding: SPACING.md, gap: SPACING.md },
   successRow: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm },
-  successRowText: { ...FONTS.bodySmall, color: COLORS.textSecondary, flex: 1, lineHeight: 19 },
-  successCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, marginTop: SPACING.xl, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, ...SHADOWS.md },
+  successRowText: { ...FONTS.bodySmall, color: colors.textSecondary, flex: 1, lineHeight: 19 },
+  successCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, marginTop: SPACING.xl, paddingVertical: 16, borderRadius: RADIUS.lg, backgroundColor: colors.primary, ...SHADOWS.md },
   successCtaText: { ...FONTS.button, color: '#000', fontSize: 15 },
   successSecondary: { alignItems: 'center', paddingVertical: 14, marginTop: SPACING.sm },
-  successSecondaryText: { ...FONTS.button, color: COLORS.textSecondary, fontSize: 15 },
+  successSecondaryText: { ...FONTS.button, color: colors.textSecondary, fontSize: 15 },
 });

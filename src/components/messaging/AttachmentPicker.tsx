@@ -5,10 +5,11 @@
  * Uses expo-image-picker for camera/gallery selection.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
 
 interface AttachmentPickerProps {
@@ -22,6 +23,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onClose,
   onPickImage,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const pickFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -61,7 +65,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
 
           <TouchableOpacity style={styles.option} onPress={takePhoto}>
             <View style={styles.iconCircle}>
-              <Ionicons name="camera-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="camera-outline" size={24} color={colors.primary} />
             </View>
             <View>
               <Text style={styles.optionText}>Take Photo</Text>
@@ -71,7 +75,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
 
           <TouchableOpacity style={styles.option} onPress={pickFromGallery}>
             <View style={styles.iconCircle}>
-              <Ionicons name="images-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="images-outline" size={24} color={colors.primary} />
             </View>
             <View>
               <Text style={styles.optionText}>Choose from Gallery</Text>
@@ -88,14 +92,15 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl,
     padding: SPACING.lg,
@@ -105,13 +110,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     alignSelf: 'center',
     marginBottom: SPACING.md,
   },
   title: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.lg,
   },
   option: {
@@ -130,11 +135,11 @@ const styles = StyleSheet.create({
   },
   optionText: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
   },
   optionSubtext: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   cancelButton: {
     marginTop: SPACING.md,
@@ -143,6 +148,6 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     ...FONTS.body,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
 });

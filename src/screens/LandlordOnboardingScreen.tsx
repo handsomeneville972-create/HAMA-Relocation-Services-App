@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Animated, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,7 +8,8 @@ import { GlassCard } from '../components/GlassCard';
 import { LandlordUploadSuccessPopup } from '../components/LandlordUploadSuccessPopup';
 import { LandlordSubscriptionModal } from '../components/LandlordSubscriptionModal';
 import { loadLandlordUploads, incrementPropertyCount, getLandlordUploadState } from '../utils/landlordUploads';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useResponsive } from '../utils/responsive';
 
 type OnboardingStep =
@@ -80,6 +81,8 @@ const INITIAL_PROPERTY: PropertyDraft = {
 };
 
 export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { width } = useResponsive();
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -181,7 +184,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
         return (
           <TouchableOpacity key={step.key} style={styles.stepItem} onPress={() => goToStep(step.key)}>
             <View style={[styles.stepCircle, isActive && styles.stepCircleActive, isCompleted && styles.stepCircleCompleted]}>
-              <Ionicons name={isCompleted ? 'checkmark' : step.icon} size={16} color={isCompleted || isActive ? '#fff' : COLORS.textTertiary} />
+              <Ionicons name={isCompleted ? 'checkmark' : step.icon} size={16} color={isCompleted || isActive ? '#fff' : colors.textTertiary} />
             </View>
             <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>{step.label}</Text>
           </TouchableOpacity>
@@ -197,22 +200,22 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Full Name</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="person-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor={COLORS.textTertiary} value={profile.fullName} onChangeText={v => updateProfile('fullName', v)} />
+          <Ionicons name="person-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor={colors.textTertiary} value={profile.fullName} onChangeText={v => updateProfile('fullName', v)} />
         </View>
       </View>
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Email Address</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="john@example.com" placeholderTextColor={COLORS.textTertiary} keyboardType="email-address" autoCapitalize="none" value={profile.email} onChangeText={v => updateProfile('email', v)} />
+          <Ionicons name="mail-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="john@example.com" placeholderTextColor={colors.textTertiary} keyboardType="email-address" autoCapitalize="none" value={profile.email} onChangeText={v => updateProfile('email', v)} />
         </View>
       </View>
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Phone Number</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="call-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="+254 712 345 678" placeholderTextColor={COLORS.textTertiary} keyboardType="phone-pad" value={profile.phone} onChangeText={v => updateProfile('phone', v)} />
+          <Ionicons name="call-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="+254 712 345 678" placeholderTextColor={colors.textTertiary} keyboardType="phone-pad" value={profile.phone} onChangeText={v => updateProfile('phone', v)} />
         </View>
       </View>
     </View>
@@ -227,7 +230,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
         <View style={styles.optionRow}>
           {(['national_id', 'passport'] as const).map(type => (
             <TouchableOpacity key={type} style={[styles.optionCard, profile.idType === type && styles.optionCardActive]} onPress={() => updateProfile('idType', type)}>
-              <Ionicons name={type === 'national_id' ? 'id-card-outline' : 'airplane-outline'} size={24} color={profile.idType === type ? COLORS.primary : COLORS.textTertiary} />
+              <Ionicons name={type === 'national_id' ? 'id-card-outline' : 'airplane-outline'} size={24} color={profile.idType === type ? colors.primary : colors.textTertiary} />
               <Text style={[styles.optionLabel, profile.idType === type && styles.optionLabelActive]}>{type === 'national_id' ? 'National ID' : 'Passport'}</Text>
             </TouchableOpacity>
           ))}
@@ -236,12 +239,12 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>ID Number</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="document-text-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Enter ID number" placeholderTextColor={COLORS.textTertiary} value={profile.idNumber} onChangeText={v => updateProfile('idNumber', v)} />
+          <Ionicons name="document-text-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Enter ID number" placeholderTextColor={colors.textTertiary} value={profile.idNumber} onChangeText={v => updateProfile('idNumber', v)} />
         </View>
       </View>
       <LiquidGlass variant="subtle" style={styles.uploadCard}>
-        <Ionicons name="camera-outline" size={32} color={COLORS.primary} />
+        <Ionicons name="camera-outline" size={32} color={colors.primary} />
         <Text style={styles.uploadTitle}>Upload ID Photo</Text>
         <Text style={styles.uploadHint}>Front and back of your ID or passport</Text>
         <TouchableOpacity style={styles.uploadButton}>
@@ -249,7 +252,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
         </TouchableOpacity>
       </LiquidGlass>
       <LiquidGlass variant="subtle" style={styles.uploadCard}>
-        <Ionicons name="camera-reverse-outline" size={32} color={COLORS.primary} />
+        <Ionicons name="camera-reverse-outline" size={32} color={colors.primary} />
         <Text style={styles.uploadTitle}>Selfie Verification</Text>
         <Text style={styles.uploadHint}>Take a selfie to confirm your identity</Text>
         <TouchableOpacity style={styles.uploadButton}>
@@ -266,22 +269,22 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Business Name</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="business-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Your business name" placeholderTextColor={COLORS.textTertiary} value={profile.businessName} onChangeText={v => updateProfile('businessName', v)} />
+          <Ionicons name="business-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Your business name" placeholderTextColor={colors.textTertiary} value={profile.businessName} onChangeText={v => updateProfile('businessName', v)} />
         </View>
       </View>
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Business Registration Number</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="document-text-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Optional" placeholderTextColor={COLORS.textTertiary} value={profile.businessRegNumber} onChangeText={v => updateProfile('businessRegNumber', v)} />
+          <Ionicons name="document-text-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Optional" placeholderTextColor={colors.textTertiary} value={profile.businessRegNumber} onChangeText={v => updateProfile('businessRegNumber', v)} />
         </View>
       </View>
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Tax ID (KRA PIN)</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="receipt-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Optional" placeholderTextColor={COLORS.textTertiary} value={profile.taxId} onChangeText={v => updateProfile('taxId', v)} />
+          <Ionicons name="receipt-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Optional" placeholderTextColor={colors.textTertiary} value={profile.taxId} onChangeText={v => updateProfile('taxId', v)} />
         </View>
       </View>
     </View>
@@ -296,7 +299,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
         <View style={styles.optionRow}>
           {(['mpesa', 'bank', 'paypal'] as const).map(method => (
             <TouchableOpacity key={method} style={[styles.optionCard, profile.payoutMethod === method && styles.optionCardActive]} onPress={() => updateProfile('payoutMethod', method)}>
-              <Ionicons name={method === 'mpesa' ? 'phone-portrait-outline' : method === 'bank' ? 'business-outline' : 'globe-outline'} size={24} color={profile.payoutMethod === method ? COLORS.primary : COLORS.textTertiary} />
+              <Ionicons name={method === 'mpesa' ? 'phone-portrait-outline' : method === 'bank' ? 'business-outline' : 'globe-outline'} size={24} color={profile.payoutMethod === method ? colors.primary : colors.textTertiary} />
               <Text style={[styles.optionLabel, profile.payoutMethod === method && styles.optionLabelActive]}>{method.charAt(0).toUpperCase() + method.slice(1)}</Text>
             </TouchableOpacity>
           ))}
@@ -305,15 +308,15 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>{profile.payoutMethod === 'mpesa' ? 'M-Pesa Number' : profile.payoutMethod === 'bank' ? 'Account Number' : 'PayPal Email'}</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="card-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Enter payout details" placeholderTextColor={COLORS.textTertiary} value={profile.payoutDetails} onChangeText={v => updateProfile('payoutDetails', v)} />
+          <Ionicons name="card-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Enter payout details" placeholderTextColor={colors.textTertiary} value={profile.payoutDetails} onChangeText={v => updateProfile('payoutDetails', v)} />
         </View>
       </View>
       <View style={styles.formGroup}>
         <Text style={styles.inputLabel}>Account Name</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="person-outline" size={18} color={COLORS.textTertiary} />
-          <TextInput style={styles.input} placeholder="Full account name" placeholderTextColor={COLORS.textTertiary} value={profile.accountName} onChangeText={v => updateProfile('accountName', v)} />
+          <Ionicons name="person-outline" size={18} color={colors.textTertiary} />
+          <TextInput style={styles.input} placeholder="Full account name" placeholderTextColor={colors.textTertiary} value={profile.accountName} onChangeText={v => updateProfile('accountName', v)} />
         </View>
       </View>
     </View>
@@ -329,41 +332,41 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
             <Text style={styles.propertyCardTitle}>Property {index + 1}</Text>
             {properties.length > 1 && (
               <TouchableOpacity onPress={() => removeProperty(index)}>
-                <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
               </TouchableOpacity>
             )}
           </View>
           <View style={styles.formGroup}>
             <Text style={styles.inputLabel}>Title</Text>
-            <TextInput style={styles.smallInput} placeholder="e.g. 2BR in Kilimani" placeholderTextColor={COLORS.textTertiary} value={property.title} onChangeText={v => updateProperty(index, 'title', v)} />
+            <TextInput style={styles.smallInput} placeholder="e.g. 2BR in Kilimani" placeholderTextColor={colors.textTertiary} value={property.title} onChangeText={v => updateProperty(index, 'title', v)} />
           </View>
           <View style={styles.formRow}>
             <View style={[styles.formGroup, { flex: 1 }]}>
               <Text style={styles.inputLabel}>Bedrooms</Text>
-              <TextInput style={styles.smallInput} placeholder="2" placeholderTextColor={COLORS.textTertiary} keyboardType="number-pad" value={property.bedrooms} onChangeText={v => updateProperty(index, 'bedrooms', v)} />
+              <TextInput style={styles.smallInput} placeholder="2" placeholderTextColor={colors.textTertiary} keyboardType="number-pad" value={property.bedrooms} onChangeText={v => updateProperty(index, 'bedrooms', v)} />
             </View>
             <View style={[styles.formGroup, { flex: 1 }]}>
               <Text style={styles.inputLabel}>Bathrooms</Text>
-              <TextInput style={styles.smallInput} placeholder="2" placeholderTextColor={COLORS.textTertiary} keyboardType="number-pad" value={property.bathrooms} onChangeText={v => updateProperty(index, 'bathrooms', v)} />
+              <TextInput style={styles.smallInput} placeholder="2" placeholderTextColor={colors.textTertiary} keyboardType="number-pad" value={property.bathrooms} onChangeText={v => updateProperty(index, 'bathrooms', v)} />
             </View>
             <View style={[styles.formGroup, { flex: 1 }]}>
               <Text style={styles.inputLabel}>Size (sqm)</Text>
-              <TextInput style={styles.smallInput} placeholder="85" placeholderTextColor={COLORS.textTertiary} keyboardType="number-pad" value={property.size} onChangeText={v => updateProperty(index, 'size', v)} />
+              <TextInput style={styles.smallInput} placeholder="85" placeholderTextColor={colors.textTertiary} keyboardType="number-pad" value={property.size} onChangeText={v => updateProperty(index, 'size', v)} />
             </View>
           </View>
           <View style={styles.formGroup}>
             <Text style={styles.inputLabel}>Monthly Rent (KSh)</Text>
-            <TextInput style={styles.smallInput} placeholder="e.g. 50000" placeholderTextColor={COLORS.textTertiary} keyboardType="number-pad" value={property.price} onChangeText={v => updateProperty(index, 'price', v)} />
+            <TextInput style={styles.smallInput} placeholder="e.g. 50000" placeholderTextColor={colors.textTertiary} keyboardType="number-pad" value={property.price} onChangeText={v => updateProperty(index, 'price', v)} />
           </View>
           <View style={styles.formGroup}>
             <Text style={styles.inputLabel}>Location</Text>
-            <TextInput style={styles.smallInput} placeholder="e.g. Kilimani, Nairobi" placeholderTextColor={COLORS.textTertiary} value={property.location} onChangeText={v => updateProperty(index, 'location', v)} />
+            <TextInput style={styles.smallInput} placeholder="e.g. Kilimani, Nairobi" placeholderTextColor={colors.textTertiary} value={property.location} onChangeText={v => updateProperty(index, 'location', v)} />
           </View>
           <View style={styles.formGroup}>
             <Text style={styles.inputLabel}>GPS Coordinates</Text>
             <View style={styles.formRow}>
-              <TextInput style={[styles.smallInput, { flex: 1 }]} placeholder="Latitude" placeholderTextColor={COLORS.textTertiary} value={property.latitude} onChangeText={v => updateProperty(index, 'latitude', v)} />
-              <TextInput style={[styles.smallInput, { flex: 1 }]} placeholder="Longitude" placeholderTextColor={COLORS.textTertiary} value={property.longitude} onChangeText={v => updateProperty(index, 'longitude', v)} />
+              <TextInput style={[styles.smallInput, { flex: 1 }]} placeholder="Latitude" placeholderTextColor={colors.textTertiary} value={property.latitude} onChangeText={v => updateProperty(index, 'latitude', v)} />
+              <TextInput style={[styles.smallInput, { flex: 1 }]} placeholder="Longitude" placeholderTextColor={colors.textTertiary} value={property.longitude} onChangeText={v => updateProperty(index, 'longitude', v)} />
             </View>
           </View>
           <View style={styles.formGroup}>
@@ -379,7 +382,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
             </View>
           </View>
           <LiquidGlass variant="subtle" style={styles.uploadCard}>
-            <Ionicons name="images-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="images-outline" size={24} color={colors.primary} />
             <Text style={styles.uploadTitle}>Property Photos & Videos</Text>
             <Text style={styles.uploadHint}>Upload up to 10 photos and 1 video walkthrough</Text>
             <TouchableOpacity style={styles.uploadButton}>
@@ -387,7 +390,7 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
             </TouchableOpacity>
           </LiquidGlass>
           <LiquidGlass variant="subtle" style={styles.uploadCard}>
-            <Ionicons name="map-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="map-outline" size={24} color={colors.primary} />
             <Text style={styles.uploadTitle}>Floor Plan</Text>
             <Text style={styles.uploadHint}>Upload floor plan image (optional)</Text>
             <TouchableOpacity style={styles.uploadButton}>
@@ -406,18 +409,18 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
           </View>
           <View style={styles.toggleRow}>
             <TouchableOpacity style={[styles.toggleButton, property.furnished && styles.toggleButtonActive]} onPress={() => updateProperty(index, 'furnished', !property.furnished)}>
-              <Ionicons name={property.furnished ? 'bed' : 'bed-outline'} size={18} color={property.furnished ? COLORS.primary : COLORS.textTertiary} />
+              <Ionicons name={property.furnished ? 'bed' : 'bed-outline'} size={18} color={property.furnished ? colors.primary : colors.textTertiary} />
               <Text style={[styles.toggleText, property.furnished && styles.toggleTextActive]}>Furnished</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.toggleButton, property.available && styles.toggleButtonActive]} onPress={() => updateProperty(index, 'available', !property.available)}>
-              <Ionicons name={property.available ? 'checkmark-circle' : 'close-circle-outline'} size={18} color={property.available ? COLORS.success : COLORS.textTertiary} />
+              <Ionicons name={property.available ? 'checkmark-circle' : 'close-circle-outline'} size={18} color={property.available ? colors.success : colors.textTertiary} />
               <Text style={[styles.toggleText, property.available && styles.toggleTextActive]}>{property.available ? 'Available' : 'Rented'}</Text>
             </TouchableOpacity>
           </View>
         </LiquidGlass>
       ))}
       <TouchableOpacity style={styles.addPropertyButton} onPress={addProperty}>
-        <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
         <Text style={styles.addPropertyText}>Add Another Property</Text>
       </TouchableOpacity>
     </View>
@@ -465,10 +468,10 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#000000', '#0A0A0F']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backButton} onPress={goBack}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Landlord Setup</Text>
           <View style={styles.headerSpacer} />
@@ -509,70 +512,71 @@ export const LandlordOnboardingScreen: React.FC<{ navigation: any }> = ({ naviga
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingBottom: SPACING.md },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm },
   backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { ...FONTS.h3, color: COLORS.text },
+  headerTitle: { ...FONTS.h3, color: colors.text },
   headerSpacer: { width: 40 },
   progressContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.lg, gap: SPACING.md, marginBottom: SPACING.sm },
   progressTrack: { flex: 1, height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2 },
-  progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 2 },
-  progressText: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '600' },
+  progressFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 2 },
+  progressText: { color: colors.textTertiary, fontSize: 12, fontWeight: '600' },
   stepsRow: { paddingLeft: SPACING.lg },
   stepsContent: { gap: SPACING.md, paddingRight: SPACING.lg },
   stepItem: { alignItems: 'center', gap: 4 },
-  stepCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.glassBorder },
-  stepCircleActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  stepCircleCompleted: { backgroundColor: COLORS.success, borderColor: COLORS.success },
-  stepLabel: { fontSize: 10, color: COLORS.textTertiary, fontWeight: '500' },
-  stepLabelActive: { color: COLORS.primary },
+  stepCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.glassBorder },
+  stepCircleActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  stepCircleCompleted: { backgroundColor: colors.success, borderColor: colors.success },
+  stepLabel: { fontSize: 10, color: colors.textTertiary, fontWeight: '500' },
+  stepLabelActive: { color: colors.primary },
   body: { flex: 1 },
   bodyContent: { padding: SPACING.lg, paddingBottom: 100, maxWidth: 720, width: '100%', alignSelf: 'center' },
   stepContent: { gap: SPACING.lg },
-  stepTitle: { ...FONTS.h2, color: COLORS.text },
-  stepSubtitle: { ...FONTS.caption, color: COLORS.textSecondary, marginTop: -SPACING.sm },
+  stepTitle: { ...FONTS.h2, color: colors.text },
+  stepSubtitle: { ...FONTS.caption, color: colors.textSecondary, marginTop: -SPACING.sm },
   formGroup: { gap: 6 },
-  inputLabel: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12, gap: 10, borderWidth: 1, borderColor: COLORS.glassBorder },
-  input: { flex: 1, color: COLORS.text, fontSize: 15 },
-  smallInput: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 10, color: COLORS.text, fontSize: 14, borderWidth: 1, borderColor: COLORS.glassBorder },
+  inputLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 12, gap: 10, borderWidth: 1, borderColor: colors.glassBorder },
+  input: { flex: 1, color: colors.text, fontSize: 15 },
+  smallInput: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 10, color: colors.text, fontSize: 14, borderWidth: 1, borderColor: colors.glassBorder },
   formRow: { flexDirection: 'row', gap: SPACING.md },
   optionRow: { flexDirection: 'row', gap: SPACING.md },
-  optionCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: COLORS.glassBorder },
-  optionCardActive: { borderColor: COLORS.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
-  optionLabel: { color: COLORS.textTertiary, fontSize: 13, fontWeight: '600' },
-  optionLabelActive: { color: COLORS.primary },
-  smallOption: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: RADIUS.md, paddingVertical: 8, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.glassBorder },
-  smallOptionActive: { borderColor: COLORS.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
-  smallOptionText: { color: COLORS.textTertiary, fontSize: 11, fontWeight: '500' },
-  smallOptionTextActive: { color: COLORS.primary },
+  optionCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: colors.glassBorder },
+  optionCardActive: { borderColor: colors.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
+  optionLabel: { color: colors.textTertiary, fontSize: 13, fontWeight: '600' },
+  optionLabelActive: { color: colors.primary },
+  smallOption: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: RADIUS.md, paddingVertical: 8, paddingHorizontal: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.glassBorder },
+  smallOptionActive: { borderColor: colors.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
+  smallOptionText: { color: colors.textTertiary, fontSize: 11, fontWeight: '500' },
+  smallOptionTextActive: { color: colors.primary },
   uploadCard: { borderRadius: RADIUS.md, padding: SPACING.lg, alignItems: 'center', gap: 8, marginTop: SPACING.sm },
-  uploadTitle: { color: COLORS.text, fontSize: 15, fontWeight: '600' },
-  uploadHint: { color: COLORS.textTertiary, fontSize: 12, textAlign: 'center' },
-  uploadButton: { backgroundColor: COLORS.primary, paddingVertical: 8, paddingHorizontal: 20, borderRadius: RADIUS.full, marginTop: 4 },
+  uploadTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  uploadHint: { color: colors.textTertiary, fontSize: 12, textAlign: 'center' },
+  uploadButton: { backgroundColor: colors.primary, paddingVertical: 8, paddingHorizontal: 20, borderRadius: RADIUS.full, marginTop: 4 },
   uploadButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   propertyCard: { borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.md },
   propertyCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
-  propertyCardTitle: { ...FONTS.bodyLarge, color: COLORS.text, fontWeight: '700' },
+  propertyCardTitle: { ...FONTS.bodyLarge, color: colors.text, fontWeight: '700' },
   amenitiesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  amenityChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: COLORS.glassBorder },
-  amenityChipActive: { backgroundColor: 'rgba(255,107,0,0.15)', borderColor: COLORS.primary },
-  amenityChipText: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '500' },
-  amenityChipTextActive: { color: COLORS.primary },
+  amenityChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: colors.glassBorder },
+  amenityChipActive: { backgroundColor: 'rgba(255,107,0,0.15)', borderColor: colors.primary },
+  amenityChipText: { color: colors.textTertiary, fontSize: 12, fontWeight: '500' },
+  amenityChipTextActive: { color: colors.primary },
   toggleRow: { flexDirection: 'row', gap: SPACING.md },
-  toggleButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: COLORS.glassBorder },
-  toggleButtonActive: { borderColor: COLORS.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
-  toggleText: { color: COLORS.textTertiary, fontSize: 13, fontWeight: '500' },
-  toggleTextActive: { color: COLORS.primary },
-  addPropertyButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: SPACING.md, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.primary, borderStyle: 'dashed' },
-  addPropertyText: { color: COLORS.primary, fontSize: 14, fontWeight: '600' },
+  toggleButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: colors.glassBorder },
+  toggleButtonActive: { borderColor: colors.primary, backgroundColor: 'rgba(255,107,0,0.08)' },
+  toggleText: { color: colors.textTertiary, fontSize: 13, fontWeight: '500' },
+  toggleTextActive: { color: colors.primary },
+  addPropertyButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: SPACING.md, borderRadius: RADIUS.md, borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed' },
+  addPropertyText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
   reviewCard: { borderRadius: RADIUS.md, padding: SPACING.lg },
-  reviewSectionTitle: { ...FONTS.bodyLarge, color: COLORS.primary, fontWeight: '700', marginBottom: 8 },
-  reviewText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 20 },
-  footer: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, backgroundColor: COLORS.bg, borderTopWidth: 1, borderTopColor: COLORS.glassBorder },
-  nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.primary, paddingVertical: 14, borderRadius: RADIUS.full },
-  submitButton: { backgroundColor: COLORS.success },
+  reviewSectionTitle: { ...FONTS.bodyLarge, color: colors.primary, fontWeight: '700', marginBottom: 8 },
+  reviewText: { color: colors.textSecondary, fontSize: 13, lineHeight: 20 },
+  footer: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.glassBorder },
+  nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, paddingVertical: 14, borderRadius: RADIUS.full },
+  submitButton: { backgroundColor: colors.success },
   nextButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

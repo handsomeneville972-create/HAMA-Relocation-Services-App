@@ -4,9 +4,10 @@
  * Green dot for online status, with optional "Last seen X ago" text.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../constants/theme';
+import { FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface OnlineIndicatorProps {
   isOnline: boolean;
@@ -19,6 +20,9 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
   lastSeen,
   showText = true,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const formatLastSeen = (ts: string): string => {
     const diff = Date.now() - new Date(ts).getTime();
     const minutes = Math.floor(diff / 60_000);
@@ -46,7 +50,8 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -56,13 +61,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.textTertiary,
+    backgroundColor: colors.textTertiary,
   },
   dotOnline: {
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
   },
   text: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
 });

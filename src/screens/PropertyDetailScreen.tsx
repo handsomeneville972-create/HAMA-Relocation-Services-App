@@ -1,16 +1,18 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from '../components/GlassCard';
 import { StaggerItem } from '../components/StaggerItem';
 import { ReviewSection } from '../components/ReviewSection';
+import { UserAvatar } from '../components/UserAvatar';
 import { getPropertyById, getPropertyReviews } from '../services/propertyService';
 import { findOrCreateConversation } from '../services/conversationService';
 import { useAuth } from '../contexts/AuthContext';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Property, PropertyReview } from '../constants/types';
@@ -36,6 +38,8 @@ const ActionButton: React.FC<{
   variant?: 'primary' | 'secondary' | 'outline';
   onPress?: () => void;
 }> = ({ icon, label, variant = 'outline', onPress }) => {
+  const { colors } = useTheme();
+  const actionBtnStyles = useMemo(() => createActionBtnStyles(colors), [colors]);
   const isPrimary = variant === 'primary';
   return (
     <TouchableOpacity
@@ -48,13 +52,13 @@ const ActionButton: React.FC<{
       ]}
     >
       <LinearGradient
-        colors={isPrimary ? [COLORS.primary, COLORS.primaryLight] : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+        colors={isPrimary ? [colors.primary, colors.primaryLight] : ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={actionBtnStyles.gradient}
       >
         <View style={[actionBtnStyles.iconBox, isPrimary && actionBtnStyles.primaryIconBox]}>
-          <Ionicons name={icon as any} size={18} color={isPrimary ? '#fff' : COLORS.primaryLight} />
+          <Ionicons name={icon as any} size={18} color={isPrimary ? '#fff' : colors.primaryLight} />
         </View>
         <Text style={[actionBtnStyles.label, isPrimary && actionBtnStyles.primaryLabel]}>{label}</Text>
       </LinearGradient>
@@ -62,20 +66,21 @@ const ActionButton: React.FC<{
   );
 };
 
-const actionBtnStyles = StyleSheet.create({
+const createActionBtnStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   button: {
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   primaryButton: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderWidth: 0,
   },
   outlineButton: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   gradient: {
     flexDirection: 'row',
@@ -97,7 +102,7 @@ const actionBtnStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   label: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
     flexShrink: 1,
@@ -152,6 +157,8 @@ const AnimatedCollapsible: React.FC<{
 };
 
 export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { propertyId } = route.params;
   const { isDesktop } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -224,7 +231,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
   const heroGallery = (
     <Animated.View style={[styles.imageContainer, isDesktop && styles.imageContainerDesktop, { transform: [{ translateY: imageTranslateY }, { scale: imageScale }] }]}>
       <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
-      <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
+      <LinearGradient colors={['transparent', colors.bg]} style={styles.imageGradient} />
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
@@ -258,23 +265,23 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
 
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Ionicons name="bed-outline" size={16} color={COLORS.textSecondary} />
+            <Ionicons name="bed-outline" size={16} color={colors.textSecondary} />
             <Text style={styles.metaText}>{property.bedrooms} Bed</Text>
           </View>
           <View style={styles.metaDivider} />
           <View style={styles.metaItem}>
-            <Ionicons name="water-outline" size={16} color={COLORS.textSecondary} />
+            <Ionicons name="water-outline" size={16} color={colors.textSecondary} />
             <Text style={styles.metaText}>{property.bathrooms} Bath</Text>
           </View>
           <View style={styles.metaDivider} />
           <View style={styles.metaItem}>
-            <Ionicons name="expand-outline" size={16} color={COLORS.textSecondary} />
+            <Ionicons name="expand-outline" size={16} color={colors.textSecondary} />
             <Text style={styles.metaText}>{property.size} m²</Text>
           </View>
         </View>
 
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={16} color={COLORS.primary} />
+          <Ionicons name="location-outline" size={16} color={colors.primary} />
           <Text style={styles.locationText}>{property.location}</Text>
         </View>
 
@@ -285,7 +292,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
         <View style={styles.amenitiesGrid}>
           {property.amenities.map((amenity, i) => (
             <StaggerItem key={i} index={i} style={styles.amenityTag}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
+              <Ionicons name="checkmark-circle" size={14} color={colors.accent} />
               <Text style={styles.amenityText}>{amenity}</Text>
             </StaggerItem>
           ))}
@@ -294,7 +301,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
               index={property.amenities.length}
               style={styles.amenityTag}
             >
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.accent} />
+              <Ionicons name="checkmark-circle" size={14} color={colors.accent} />
               <Text style={styles.amenityText}>Furnished</Text>
             </StaggerItem>
           )}
@@ -305,13 +312,13 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
       <GlassCard>
         <Text style={styles.sectionTitle}>Landlord</Text>
         <View style={styles.landlordHeader}>
-          <Image source={{ uri: property.landlord.avatar }} style={styles.landlordAvatar} />
+          <UserAvatar uri={property.landlord.avatar} size={56} style={styles.landlordAvatar} />
           <View style={styles.landlordInfo}>
             <View style={styles.landlordNameRow}>
               <Text style={styles.landlordName}>{property.landlord.name}</Text>
               {property.landlord.verified && (
                 <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                   <Text style={styles.verifiedText}>Verified</Text>
                 </View>
               )}
@@ -390,7 +397,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
               <Ionicons
                 name={showQuestions ? 'chevron-up' : 'chevron-down'}
                 size={20}
-                color={COLORS.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
             <AnimatedCollapsible expanded={showQuestions}>
@@ -401,9 +408,9 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                     style={styles.questionItem}
                     onPress={() => handleAction(`Ask: ${q}`)}
                   >
-                    <Ionicons name="chatbubble-outline" size={16} color={COLORS.primary} />
+                    <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
                     <Text style={styles.questionText}>{q}</Text>
-                    <Ionicons name="send" size={14} color={COLORS.textTertiary} />
+                    <Ionicons name="send" size={14} color={colors.textTertiary} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -415,11 +422,11 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
             <Text style={styles.sectionTitle}>Trust & Safety</Text>
             <View style={styles.trustRow}>
               <View style={styles.trustItem}>
-                <Ionicons name="shield-checkmark" size={20} color={COLORS.accent} />
+                <Ionicons name="shield-checkmark" size={20} color={colors.accent} />
                 <Text style={styles.trustText}>Verified Listing</Text>
               </View>
               <View style={styles.trustItem}>
-                <Ionicons name="time" size={20} color={COLORS.warning} />
+                <Ionicons name="time" size={20} color={colors.warning} />
                 <Text style={styles.trustText}>Listed 3 days ago</Text>
               </View>
             </View>
@@ -427,9 +434,9 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
               style={styles.reportButton}
               onPress={() => setShowReport(!showReport)}
             >
-              <Ionicons name="flag-outline" size={18} color={COLORS.error} />
+              <Ionicons name="flag-outline" size={18} color={colors.error} />
               <Text style={styles.reportText}>Report Listing</Text>
-              <Ionicons name={showReport ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.error} />
+              <Ionicons name={showReport ? 'chevron-up' : 'chevron-down'} size={16} color={colors.error} />
             </TouchableOpacity>
             <AnimatedCollapsible expanded={showReport}>
               <View style={styles.reportList}>
@@ -445,7 +452,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
               </View>
             </AnimatedCollapsible>
             <TouchableOpacity style={styles.blockButton}>
-              <Ionicons name="ban-outline" size={18} color={COLORS.textTertiary} />
+              <Ionicons name="ban-outline" size={18} color={colors.textTertiary} />
               <Text style={styles.blockText}>Block Contact</Text>
             </TouchableOpacity>
           </GlassCard>
@@ -521,9 +528,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                     {review.avatar ? (
                       <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} />
                     ) : (
-                      <View style={styles.reviewAvatarFallback}>
-                        <Text style={styles.reviewAvatarFallbackText}>{review.name.charAt(0).toUpperCase()}</Text>
-                      </View>
+                      <UserAvatar uri={null} size={32} style={styles.reviewAvatarFallback} />
                     )}
                     <View style={styles.reviewUser}>
                       <Text style={styles.reviewName}>{review.name}</Text>
@@ -533,7 +538,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
                             key={i}
                             name={i < Math.floor(review.rating) ? 'star' : 'star-outline'}
                             size={12}
-                            color={COLORS.warning}
+                            color={colors.warning}
                           />
                         ))}
                       </View>
@@ -553,10 +558,11 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   // Hero
   imageContainer: {
@@ -642,7 +648,7 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     width: 24,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   availBadge: {
     position: 'absolute',
@@ -659,7 +665,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,77,106,0.2)',
   },
   availText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -677,7 +683,7 @@ const styles = StyleSheet.create({
   },
   propertyTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
   },
   priceRow: {
@@ -688,10 +694,10 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 28,
     fontWeight: '800',
-    color: COLORS.accent,
+    color: colors.accent,
   },
   perMonth: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   metaRow: {
@@ -706,13 +712,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   metaDivider: {
     width: 1,
     height: 16,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   locationRow: {
     flexDirection: 'row',
@@ -721,19 +727,19 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   locationText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '500',
   },
   description: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: SPACING.md,
   },
   sectionLabel: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
     marginTop: SPACING.sm,
   },
@@ -752,7 +758,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   amenityText: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -777,7 +783,7 @@ const styles = StyleSheet.create({
   },
   landlordName: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   verifiedBadge: {
     flexDirection: 'row',
@@ -789,19 +795,19 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   verifiedText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '600',
   },
   landlordMeta: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
   // Contact Actions
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
   },
   primaryActions: {
@@ -827,16 +833,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     padding: 12,
     borderRadius: RADIUS.md,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   questionText: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
   },
   // Trust & Safety
@@ -851,7 +857,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   trustText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   reportButton: {
@@ -860,11 +866,11 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
     marginBottom: 0,
   },
   reportText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
@@ -876,12 +882,12 @@ const styles = StyleSheet.create({
   reportItem: {
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.sm,
     marginBottom: 2,
   },
   reportItemText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   blockButton: {
@@ -890,10 +896,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
   },
   blockText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   // Reviews
@@ -903,7 +909,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   reviewCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   ratingOverview: {
@@ -912,7 +918,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   ratingBig: {
     flexDirection: 'row',
@@ -921,10 +927,10 @@ const styles = StyleSheet.create({
   ratingBigText: {
     fontSize: 42,
     fontWeight: '800',
-    color: COLORS.text,
+    color: colors.text,
   },
   ratingMax: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 16,
   },
   ratingBars: {
@@ -937,27 +943,27 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   ratingBarLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     width: 12,
   },
   ratingBarBg: {
     flex: 1,
     height: 5,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: 3,
     overflow: 'hidden',
   },
   ratingBarFill: {
     height: '100%',
-    backgroundColor: COLORS.warning,
+    backgroundColor: colors.warning,
     borderRadius: 3,
   },
   reviewCard: {
     marginBottom: SPACING.md,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   reviewTop: {
     flexDirection: 'row',
@@ -978,16 +984,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  reviewAvatarFallbackText: {
-    color: COLORS.primary,
-    fontSize: 13,
+  reviewsCount: {
     fontWeight: '700',
   },
   reviewUser: {
     flex: 1,
   },
   reviewName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -997,11 +1001,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reviewDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   reviewContent: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -1011,13 +1015,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   allReviewsText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

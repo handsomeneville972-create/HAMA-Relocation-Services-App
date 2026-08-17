@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PaystackWebViewProps {
   visible: boolean;
@@ -43,6 +44,8 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleNavigationStateChange = (navState: { url: string }) => {
     const { url } = navState;
@@ -82,7 +85,7 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Pay with Paystack</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
           <Text style={styles.headerSubtitle}>
@@ -93,7 +96,7 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
         {/* WebView */}
         {error ? (
           <View style={styles.errorContainer}>
-            <Ionicons name="cloud-offline-outline" size={48} color={COLORS.error} />
+            <Ionicons name="cloud-offline-outline" size={48} color={colors.error} />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={onClose}>
               <Text style={styles.retryButtonText}>Close</Text>
@@ -113,7 +116,7 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
               startInLoadingState
               renderLoading={() => (
                 <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="large" color={COLORS.primary} />
+                  <ActivityIndicator size="large" color={colors.primary} />
                   <Text style={styles.loadingText}>
                     Loading secure payment page...
                   </Text>
@@ -128,7 +131,7 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
                   colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.98)']}
                   style={styles.initialLoadingContent}
                 >
-                  <ActivityIndicator size="large" color={COLORS.primary} />
+                  <ActivityIndicator size="large" color={colors.primary} />
                   <Text style={styles.initialLoadingTitle}>
                     Connecting to Paystack...
                   </Text>
@@ -145,17 +148,17 @@ export const PaystackWebView: React.FC<PaystackWebViewProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     paddingTop: 50, // Status bar offset
   },
   header: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   headerContent: {
     flexDirection: 'row',
@@ -164,24 +167,24 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 4,
   },
   webview: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   loadingOverlay: {
     position: 'absolute',
@@ -191,11 +194,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     gap: 12,
   },
   loadingText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   initialLoading: {
@@ -213,10 +216,10 @@ const styles = StyleSheet.create({
   },
   initialLoadingTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   initialLoadingSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   errorContainer: {
@@ -227,13 +230,13 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   errorText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: RADIUS.md,

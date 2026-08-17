@@ -7,12 +7,13 @@ import { useRouter } from 'expo-router';
 import { CommunityPostCard } from '../components/CommunityPost';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { ResponsiveGrid } from '../components/ResponsiveGrid';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { getCommunityPosts } from '../services/communityService';
 import { getLocalPosts } from '../utils/localPosts';
 import { useResponsive } from '../utils/responsive';
 import type { CommunityPost } from '../constants/types';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type TabType = 'for-you' | 'trending' | 'following';
 
@@ -29,6 +30,8 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const { width, isPhone, isTablet } = useResponsive();
   const router = useRouter();
   const { currentUserId } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [activeTab, setActiveTab] = useState<TabType>('for-you');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,10 +97,10 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
           <Text style={styles.headerTitle}>Community</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="search-outline" size={22} color={COLORS.text} />
+              <Ionicons name="search-outline" size={22} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/CreatePost')}>
-              <Ionicons name="add-circle" size={26} color={COLORS.primary} />
+              <Ionicons name="add-circle" size={26} color={colors.primary} />
               <View style={styles.comingSoonBadge}>
                 <Text style={styles.comingSoonText}>Soon</Text>
               </View>
@@ -116,7 +119,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
               <Ionicons
                 name={tab.icon as any}
                 size={16}
-                color={activeTab === tab.key ? COLORS.primary : COLORS.textTertiary}
+                color={activeTab === tab.key ? colors.primary : colors.textTertiary}
               />
               <Text style={[styles.tabLabel, activeTab === tab.key && styles.activeTabLabel]}>
                 {tab.label}
@@ -145,7 +148,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         {/* Ad Banner — Coming Soon */}
         <View style={styles.adBanner}>
           <View style={styles.adBannerContent}>
-            <Ionicons name="megaphone-outline" size={18} color={COLORS.primary} />
+            <Ionicons name="megaphone-outline" size={18} color={colors.primary} />
             <Text style={styles.adBannerLabel}>Advertisement</Text>
           </View>
           <Text style={styles.adBannerTitle}>Coming Soon</Text>
@@ -164,7 +167,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </ResponsiveGrid>
           ) : activeTab === 'following' ? (
             <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={40} color={COLORS.textTertiary} />
+              <Ionicons name="people-outline" size={40} color={colors.textTertiary} />
               <Text style={styles.emptyTitle}>You're not following anyone yet</Text>
               <Text style={styles.emptyText}>
                 Follow community members to see their posts here. For now, check out the For You and Trending tabs!
@@ -172,7 +175,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </View>
           ) : visiblePosts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="newspaper-outline" size={40} color={COLORS.textTertiary} />
+              <Ionicons name="newspaper-outline" size={40} color={colors.textTertiary} />
               <Text style={styles.emptyTitle}>No posts yet</Text>
               <Text style={styles.emptyText}>Be the first to share something with the community!</Text>
             </View>
@@ -195,7 +198,7 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
               activeOpacity={0.8}
             >
               {loadingMore ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
                 <Text style={styles.loadMoreText}>Load more</Text>
               )}
@@ -209,10 +212,10 @@ export const CommunityScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: 0,
@@ -226,7 +229,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerActions: {
     flexDirection: 'row',
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -244,7 +247,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -8,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 6,
     paddingHorizontal: 4,
     paddingVertical: 1,
@@ -268,31 +271,31 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   tabLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   indicatorContainer: {
     height: 2,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     marginTop: 0,
   },
   indicator: {
     width: '33.33%',
     height: '100%',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   adBanner: {
     marginHorizontal: SPACING.md,
     marginTop: SPACING.md,
     marginBottom: SPACING.sm,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
   },
@@ -303,20 +306,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   adBannerLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   adBannerTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 2,
   },
   adBannerDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     lineHeight: 16,
   },
@@ -332,13 +335,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: SPACING.md,
     marginBottom: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   loadMoreText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -349,12 +352,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   emptyText: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textAlign: 'center',
     maxWidth: 260,
     lineHeight: 18,

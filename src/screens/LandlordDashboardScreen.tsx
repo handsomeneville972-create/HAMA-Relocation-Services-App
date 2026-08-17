@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,7 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LiquidGlass } from '../components/LiquidGlass';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { ResponsiveGrid } from '../components/ResponsiveGrid';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useResponsive } from '../utils/responsive';
@@ -63,10 +64,10 @@ interface OwnedProperty {
   image: string;
 }
 
-const KPI_DATA: KpiItem[] = [
-  { label: 'Total Properties', value: '12', change: '+3', icon: 'business-outline', color: COLORS.primary },
-  { label: 'Occupied', value: '8', change: '67%', icon: 'people-outline', color: COLORS.success },
-  { label: 'Revenue (MTD)', value: 'KSh 420K', change: '+12%', icon: 'cash-outline', color: COLORS.warning },
+const getKpiData = (colors: ThemeColors): KpiItem[] => [
+  { label: 'Total Properties', value: '12', change: '+3', icon: 'business-outline', color: colors.primary },
+  { label: 'Occupied', value: '8', change: '67%', icon: 'people-outline', color: colors.success },
+  { label: 'Revenue (MTD)', value: 'KSh 420K', change: '+12%', icon: 'cash-outline', color: colors.warning },
   { label: 'Avg. Rating', value: '4.8', change: '+0.2', icon: 'star-outline', color: '#FFD700' },
 ];
 
@@ -97,12 +98,12 @@ const OWNED_PROPERTIES: OwnedProperty[] = [
   { id: 'pr4', title: 'Student Studio near UoN', location: 'Ngara, Nairobi', price: 12000, status: 'Occupied', furnished: true, image: 'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=600' },
 ];
 
-const BOOKING_STATUS: Record<BookingStatus, { color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  pending: { color: COLORS.warning, icon: 'time-outline' },
-  confirmed: { color: COLORS.success, icon: 'checkmark-circle-outline' },
-  completed: { color: COLORS.primary, icon: 'checkmark-done-outline' },
-  cancelled: { color: COLORS.error, icon: 'close-circle-outline' },
-};
+const getBookingStatus = (colors: ThemeColors): Record<BookingStatus, { color: string; icon: keyof typeof Ionicons.glyphMap }> => ({
+  pending: { color: colors.warning, icon: 'time-outline' },
+  confirmed: { color: colors.success, icon: 'checkmark-circle-outline' },
+  completed: { color: colors.primary, icon: 'checkmark-done-outline' },
+  cancelled: { color: colors.error, icon: 'close-circle-outline' },
+});
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -119,6 +120,8 @@ const getGreeting = () => {
 };
 
 export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boolean }> = ({ navigation, firstRun = false }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const { currentUser } = useAuth();
@@ -133,7 +136,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const welcomeAnim = useRef(new Animated.Value(0)).current;
-  const kpiScale = useRef(KPI_DATA.map(() => new Animated.Value(0))).current;
+  const kpiScale = useRef(getKpiData(colors).map(() => new Animated.Value(0))).current;
 
   const firstName = currentUser?.name?.split(' ')[0] || 'Landlord';  const doneCount = checklist.filter((i) => i.done).length;
   const allChecklistDone = doneCount === checklist.length;
@@ -201,8 +204,8 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
       </View>
       <Text style={styles.kpiValue}>{item.value}</Text>
       <Text style={styles.kpiLabel}>{item.label}</Text>
-      <View style={[styles.kpiChange, { backgroundColor: `${COLORS.success}18` }]}>
-        <Ionicons name="arrow-up" size={10} color={COLORS.success} />
+      <View style={[styles.kpiChange, { backgroundColor: `${colors.success}18` }]}>
+        <Ionicons name="arrow-up" size={10} color={colors.success} />
         <Text style={styles.kpiChangeText}>{item.change}</Text>
       </View>
     </Animated.View>
@@ -213,10 +216,10 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
       <Animated.View style={{ opacity: welcomeAnim, transform: [{ translateY: welcomeAnim.interpolate({ inputRange: [0, 1], outputRange: [-12, 0] }) }] }}>
         <LiquidGlass variant="elevated" style={styles.welcomeBanner}>
           <TouchableOpacity style={styles.welcomeClose} onPress={() => setShowWelcome(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="close" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
           <View style={styles.welcomeIcon}>
-            <Ionicons name="sparkles" size={22} color={COLORS.primary} />
+            <Ionicons name="sparkles" size={22} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.welcomeTitle}>Welcome to your Landlord Dashboard</Text>
@@ -252,14 +255,14 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
               {item.done ? (
                 <Ionicons name="checkmark" size={14} color="#fff" />
               ) : (
-                <Ionicons name={item.icon} size={14} color={COLORS.primary} />
+                <Ionicons name={item.icon} size={14} color={colors.primary} />
               )}
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.checklistItemLabel, item.done && styles.checklistItemLabelDone]}>{item.label}</Text>
               <Text style={styles.checklistItemDesc}>{item.desc}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+            <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
           </TouchableOpacity>
         ))}
       </LiquidGlass>
@@ -269,14 +272,14 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
     showVerificationBanner ? (
       <LiquidGlass variant="subtle" style={styles.verificationBanner}>
         <View style={styles.verificationIcon}>
-          <Ionicons name="shield-checkmark-outline" size={24} color={COLORS.warning} />
+          <Ionicons name="shield-checkmark-outline" size={24} color={colors.warning} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.verificationTitle}>Identity Verification In Progress</Text>
           <Text style={styles.verificationDesc}>Your documents are being reviewed. Some features are limited.</Text>
         </View>
         <TouchableOpacity onPress={() => setShowVerificationBanner(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="close" size={20} color={COLORS.textTertiary} />
+          <Ionicons name="close" size={20} color={colors.textTertiary} />
         </TouchableOpacity>
       </LiquidGlass>
     ) : null;
@@ -284,20 +287,20 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const renderQuickActions = () => (
     <View style={styles.quickActionsRow}>
       <TouchableOpacity style={styles.quickActionBtn} onPress={() => navigation.navigate('LandlordOnboarding')} activeOpacity={0.8}>
-        <View style={[styles.quickActionIcon, { backgroundColor: `${COLORS.primary}18` }]}>
-          <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
+        <View style={[styles.quickActionIcon, { backgroundColor: `${colors.primary}18` }]}>
+          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
         </View>
         <Text style={styles.quickActionLabel}>Add Property</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.quickActionBtn} onPress={() => navigation.navigate('Inbox')} activeOpacity={0.8}>
-        <View style={[styles.quickActionIcon, { backgroundColor: `${COLORS.success}18` }]}>
-          <Ionicons name="chatbubbles-outline" size={20} color={COLORS.success} />
+        <View style={[styles.quickActionIcon, { backgroundColor: `${colors.success}18` }]}>
+          <Ionicons name="chatbubbles-outline" size={20} color={colors.success} />
         </View>
         <Text style={styles.quickActionLabel}>Messages</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.quickActionBtn} onPress={() => switchTab('analytics')} activeOpacity={0.8}>
-        <View style={[styles.quickActionIcon, { backgroundColor: `${COLORS.warning}18` }]}>
-          <Ionicons name="bar-chart-outline" size={20} color={COLORS.warning} />
+        <View style={[styles.quickActionIcon, { backgroundColor: `${colors.warning}18` }]}>
+          <Ionicons name="bar-chart-outline" size={20} color={colors.warning} />
         </View>
         <Text style={styles.quickActionLabel}>Analytics</Text>
       </TouchableOpacity>
@@ -307,14 +310,14 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const renderRevenueChart = () => (
     <LiquidGlass variant="elevated" style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <Ionicons name="trending-up-outline" size={20} color={COLORS.primary} />
+        <Ionicons name="trending-up-outline" size={20} color={colors.primary} />
         <Text style={styles.sectionTitle}>Revenue Overview</Text>
         <Text style={styles.sectionPeriod}>Last 30 days</Text>
       </View>
       <View style={styles.chartBars}>
         {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 50].map((h, i) => (
           <View key={i} style={styles.chartBarWrapper}>
-            <View style={[styles.chartBar, { height: `${h}%`, backgroundColor: i % 2 === 0 ? COLORS.primary : `${COLORS.primary}60` }]} />
+            <View style={[styles.chartBar, { height: `${h}%`, backgroundColor: i % 2 === 0 ? colors.primary : `${colors.primary}60` }]} />
           </View>
         ))}
       </View>
@@ -329,7 +332,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const renderRecentBookings = () => (
     <LiquidGlass variant="elevated" style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <Ionicons name="calendar-outline" size={20} color={COLORS.primary} />
+        <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         <Text style={styles.sectionTitle}>Recent Bookings</Text>
         <TouchableOpacity onPress={() => switchTab('bookings')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={styles.viewAllText}>View all</Text>
@@ -344,9 +347,9 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
             <Text style={styles.rowTitle}>{booking.property}</Text>
             <Text style={styles.rowSub}>{booking.tenant} · {booking.date}</Text>
           </View>
-          <View style={[styles.statusPill, { backgroundColor: `${BOOKING_STATUS[booking.status].color}15` }]}>
-            <Ionicons name={BOOKING_STATUS[booking.status].icon} size={12} color={BOOKING_STATUS[booking.status].color} />
-            <Text style={[styles.statusPillText, { color: BOOKING_STATUS[booking.status].color }]}>{booking.status}</Text>
+          <View style={[styles.statusPill, { backgroundColor: `${getBookingStatus(colors)[booking.status].color}15` }]}>
+            <Ionicons name={getBookingStatus(colors)[booking.status].icon} size={12} color={getBookingStatus(colors)[booking.status].color} />
+            <Text style={[styles.statusPillText, { color: getBookingStatus(colors)[booking.status].color }]}>{booking.status}</Text>
           </View>
         </View>
       ))}
@@ -356,7 +359,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const renderRecentReviews = () => (
     <LiquidGlass variant="elevated" style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <Ionicons name="star-outline" size={20} color={COLORS.warning} />
+        <Ionicons name="star-outline" size={20} color={colors.warning} />
         <Text style={styles.sectionTitle}>Recent Reviews</Text>
       </View>
       {REVIEWS.slice(0, 2).map((review, i) => (
@@ -385,7 +388,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
       {renderVerificationBanner()}
       <View style={styles.kpiGrid}>
         <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
-          {KPI_DATA.map((item, i) => renderKpiCard(item, i))}
+          {getKpiData(colors).map((item, i) => renderKpiCard(item, i))}
         </ResponsiveGrid>
       </View>
       {renderQuickActions()}
@@ -398,7 +401,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   const renderPropertiesTab = () => (
     <Animated.View style={{ opacity: fadeAnim }}>
       <TouchableOpacity style={styles.addListingButton} onPress={() => navigation.navigate('LandlordOnboarding')} activeOpacity={0.85}>
-        <Ionicons name="add-circle-outline" size={20} color={COLORS.text} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.text} />
         <Text style={styles.addListingText}>Add New Property</Text>
       </TouchableOpacity>
       {OWNED_PROPERTIES.map((property) => (
@@ -410,7 +413,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
             <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
             <View style={styles.metaRow}>
               <View style={[styles.metaPill, property.status === 'Occupied' ? styles.metaPillOccupied : styles.metaPillAvailable]}>
-                <Text style={[styles.metaPillText, property.status === 'Occupied' ? { color: COLORS.success } : { color: COLORS.warning }]}>{property.status}</Text>
+                <Text style={[styles.metaPillText, property.status === 'Occupied' ? { color: colors.success } : { color: colors.warning }]}>{property.status}</Text>
               </View>
               {property.furnished && (
                 <View style={styles.metaPill}>
@@ -422,7 +425,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
               </View>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
         </TouchableOpacity>
       ))}
     </Animated.View>
@@ -447,7 +450,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
       {filteredBookings.length === 0 ? (
         <LiquidGlass variant="elevated" style={styles.emptyStateCard}>
           <View style={styles.emptyStateIcon}>
-            <Ionicons name="calendar-outline" size={36} color={COLORS.primary} />
+            <Ionicons name="calendar-outline" size={36} color={colors.primary} />
           </View>
           <Text style={styles.emptyStateTitle}>No {bookingFilter} bookings</Text>
           <Text style={styles.emptyStateDesc}>Bookings with this status will appear here.</Text>
@@ -460,9 +463,9 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
                 <Text style={styles.bookingProperty}>{booking.property}</Text>
                 <Text style={styles.bookingTenant}>{booking.tenant} · {booking.date}</Text>
               </View>
-              <View style={[styles.statusPill, { backgroundColor: `${BOOKING_STATUS[booking.status].color}15` }]}>
-                <Ionicons name={BOOKING_STATUS[booking.status].icon} size={13} color={BOOKING_STATUS[booking.status].color} />
-                <Text style={[styles.statusPillText, { color: BOOKING_STATUS[booking.status].color }]}>{booking.status}</Text>
+              <View style={[styles.statusPill, { backgroundColor: `${getBookingStatus(colors)[booking.status].color}15` }]}>
+                <Ionicons name={getBookingStatus(colors)[booking.status].icon} size={13} color={getBookingStatus(colors)[booking.status].color} />
+                <Text style={[styles.statusPillText, { color: getBookingStatus(colors)[booking.status].color }]}>{booking.status}</Text>
               </View>
             </View>
             <Text style={styles.bookingAmount}>{formatPrice(booking.amount)}</Text>
@@ -494,7 +497,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
               <Text style={styles.reviewProperty}>{review.property}</Text>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name="star" size={12} color={s <= review.rating ? '#FFD700' : COLORS.textTertiary} />
+                  <Ionicons key={s} name="star" size={12} color={s <= review.rating ? '#FFD700' : colors.textTertiary} />
                 ))}
               </View>
             </View>
@@ -512,7 +515,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
           { label: 'Listing Success Rate', value: '92%', icon: 'trending-up-outline' as const },
         ].map((stat, i) => (
           <View key={i} style={[styles.statRow, i < 3 && styles.rowBorder]}>
-            <Ionicons name={stat.icon} size={16} color={COLORS.textTertiary} />
+            <Ionicons name={stat.icon} size={16} color={colors.textTertiary} />
             <Text style={styles.statLabel}>{stat.label}</Text>
             <Text style={styles.statValue}>{stat.value}</Text>
           </View>
@@ -525,7 +528,7 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <LinearGradient colors={COLORS.gradientNight} style={styles.header}>
+        <LinearGradient colors={colors.gradientNight} style={styles.header}>
           <View style={styles.headerContent}>
             <View>
               <Text style={styles.headerTitle}>Landlord Dashboard</Text>
@@ -550,17 +553,17 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={COLORS.gradientNight} style={[styles.header, { paddingTop: insets.top + 10 }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.greetingLabel}>{getGreeting()}</Text>
             <Text style={styles.headerTitle}>{firstName}</Text>
           </View>
           <TouchableOpacity style={styles.plansChip} onPress={() => navigation.navigate('LandlordPlans')} activeOpacity={0.8}>
-            <Ionicons name="diamond-outline" size={14} color={COLORS.primary} />
+            <Ionicons name="diamond-outline" size={14} color={colors.primary} />
             <Text style={styles.plansChipText}>Plans & Pricing</Text>
           </TouchableOpacity>
         </View>
@@ -589,15 +592,16 @@ export const LandlordDashboardScreen: React.FC<{ navigation: any; firstRun?: boo
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.gradientNight[0] },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.gradientNight[0] },
 
   // Header
   header: {
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   headerContent: {
     flexDirection: 'row',
@@ -612,15 +616,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  greetingLabel: { color: COLORS.textTertiary, fontSize: 11 },
-  headerTitle: { color: COLORS.text, fontSize: 19, fontWeight: '800' },
-  headerSubtitle: { color: COLORS.textTertiary, fontSize: 12, marginTop: 2 },
+  greetingLabel: { color: colors.textTertiary, fontSize: 11 },
+  headerTitle: { color: colors.text, fontSize: 19, fontWeight: '800' },
+  headerSubtitle: { color: colors.textTertiary, fontSize: 12, marginTop: 2 },
   plansChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -628,16 +632,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: `${COLORS.primary}12`,
+    backgroundColor: `${colors.primary}12`,
     borderWidth: 1,
-    borderColor: `${COLORS.primary}40`,
+    borderColor: `${colors.primary}40`,
   },
-  plansChipText: { color: COLORS.primary, fontSize: 12, fontWeight: '700' },
+  plansChipText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
 
   // Tabs
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.full,
     padding: 4,
     gap: 4,
@@ -651,9 +655,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     alignItems: 'center',
   },
-  tabActive: { backgroundColor: COLORS.bgElevated },
-  tabText: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '600' },
-  tabTextActive: { color: COLORS.text, fontWeight: '700' },
+  tabActive: { backgroundColor: colors.bgElevated },
+  tabText: { color: colors.textTertiary, fontSize: 12, fontWeight: '600' },
+  tabTextActive: { color: colors.text, fontWeight: '700' },
   tabBarSkeleton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -676,47 +680,47 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: `${COLORS.primary}18`,
+    backgroundColor: `${colors.primary}18`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  welcomeTitle: { color: COLORS.text, fontSize: 14, fontWeight: '700' },
-  welcomeDesc: { color: COLORS.textTertiary, fontSize: 12, marginTop: 3, lineHeight: 17 },
+  welcomeTitle: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  welcomeDesc: { color: colors.textTertiary, fontSize: 12, marginTop: 3, lineHeight: 17 },
 
   // Checklist
   checklistCard: { padding: SPACING.lg, marginBottom: SPACING.md },
   checklistHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md },
-  checklistSub: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2 },
+  checklistSub: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
   checklistProgress: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.full,
-    backgroundColor: `${COLORS.primary}15`,
+    backgroundColor: `${colors.primary}15`,
   },
-  checklistProgressText: { color: COLORS.primary, fontSize: 12, fontWeight: '800' },
-  checklistTrack: { height: 6, borderRadius: 3, backgroundColor: COLORS.bgCard, overflow: 'hidden', marginBottom: SPACING.sm },
-  checklistFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 3 },
+  checklistProgressText: { color: colors.primary, fontSize: 12, fontWeight: '800' },
+  checklistTrack: { height: 6, borderRadius: 3, backgroundColor: colors.bgCard, overflow: 'hidden', marginBottom: SPACING.sm },
+  checklistFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 3 },
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
     paddingVertical: 12,
   },
-  checklistItemBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
+  checklistItemBorder: { borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
   checklistCheck: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checklistCheckDone: { backgroundColor: COLORS.success, borderColor: COLORS.success },
-  checklistItemLabel: { color: COLORS.text, fontSize: 13, fontWeight: '600' },
-  checklistItemLabelDone: { color: COLORS.textTertiary, textDecorationLine: 'line-through' },
-  checklistItemDesc: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2 },
+  checklistCheckDone: { backgroundColor: colors.success, borderColor: colors.success },
+  checklistItemLabel: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  checklistItemLabelDone: { color: colors.textTertiary, textDecorationLine: 'line-through' },
+  checklistItemDesc: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
 
   // Verification banner
   verificationBanner: {
@@ -730,12 +734,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: `${COLORS.warning}15`,
+    backgroundColor: `${colors.warning}15`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  verificationTitle: { color: COLORS.text, fontSize: 13, fontWeight: '700' },
-  verificationDesc: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2, lineHeight: 16 },
+  verificationTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
+  verificationDesc: { color: colors.textTertiary, fontSize: 11, marginTop: 2, lineHeight: 16 },
 
   // KPI
   kpiGrid: {
@@ -746,11 +750,11 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     width: '100%',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   kpiIcon: {
     width: 36,
@@ -760,8 +764,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  kpiValue: { color: COLORS.text, fontSize: 22, fontWeight: '800', marginBottom: 2 },
-  kpiLabel: { color: COLORS.textTertiary, fontSize: 11, marginBottom: 6 },
+  kpiValue: { color: colors.text, fontSize: 22, fontWeight: '800', marginBottom: 2 },
+  kpiLabel: { color: colors.textTertiary, fontSize: 11, marginBottom: 6 },
   kpiChange: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -771,22 +775,22 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: RADIUS.sm,
   },
-  kpiChangeText: { color: COLORS.success, fontSize: 10, fontWeight: '700' },
+  kpiChangeText: { color: colors.success, fontSize: 10, fontWeight: '700' },
 
   // Quick actions
   quickActionsRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   quickActionBtn: {
     flex: 1,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     paddingVertical: SPACING.md,
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   quickActionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  quickActionLabel: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '600' },
+  quickActionLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
 
   // Sections
   sectionCard: { padding: SPACING.lg, marginBottom: SPACING.md },
@@ -796,9 +800,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: SPACING.md,
   },
-  sectionTitle: { color: COLORS.text, fontSize: 15, fontWeight: '700', flex: 1 },
-  sectionPeriod: { color: COLORS.textTertiary, fontSize: 11 },
-  viewAllText: { color: COLORS.primary, fontSize: 12, fontWeight: '700' },
+  sectionTitle: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
+  sectionPeriod: { color: colors.textTertiary, fontSize: 11 },
+  viewAllText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
 
   // Chart
   chartBars: {
@@ -811,10 +815,10 @@ const styles = StyleSheet.create({
   chartBarWrapper: { flex: 1, height: '100%', justifyContent: 'flex-end' },
   chartBar: { borderTopLeftRadius: 4, borderTopRightRadius: 4 },
   chartLabels: { flexDirection: 'row', gap: 6 },
-  chartLabel: { flex: 1, color: COLORS.textTertiary, fontSize: 8, textAlign: 'center' },
+  chartLabel: { flex: 1, color: colors.textTertiary, fontSize: 8, textAlign: 'center' },
 
   // Rows
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
   bookingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -825,13 +829,13 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: `${COLORS.primary}18`,
+    backgroundColor: `${colors.primary}18`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bookingAvatarText: { color: COLORS.text, fontSize: 14, fontWeight: '700' },
-  rowTitle: { color: COLORS.text, fontSize: 13, fontWeight: '600' },
-  rowSub: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2 },
+  bookingAvatarText: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  rowTitle: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  rowSub: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -846,11 +850,11 @@ const styles = StyleSheet.create({
   reviewRow: { paddingVertical: 12 },
   reviewTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   starsRow: { flexDirection: 'row', gap: 1 },
-  reviewComment: { color: COLORS.textSecondary, fontSize: 12, lineHeight: 17 },
+  reviewComment: { color: colors.textSecondary, fontSize: 12, lineHeight: 17 },
   reviewItem: { paddingVertical: 12 },
-  reviewBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
-  reviewProperty: { color: COLORS.text, fontSize: 13, fontWeight: '600' },
-  reviewMeta: { color: COLORS.textTertiary, fontSize: 11, marginTop: 4 },
+  reviewBorder: { borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
+  reviewProperty: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  reviewMeta: { color: colors.textTertiary, fontSize: 11, marginTop: 4 },
 
   // Properties
   addListingButton: {
@@ -860,39 +864,39 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     borderStyle: 'dashed',
     marginBottom: SPACING.md,
   },
-  addListingText: { color: COLORS.text, fontSize: 14, fontWeight: '700' },
+  addListingText: { color: colors.text, fontSize: 14, fontWeight: '700' },
   propertyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     marginBottom: SPACING.md,
   },
   propertyImage: { width: 72, height: 72, borderRadius: RADIUS.md },
   propertyInfo: { flex: 1 },
-  propertyTitle: { color: COLORS.text, fontSize: 13, fontWeight: '700' },
-  propertyLocation: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2 },
-  propertyPrice: { color: COLORS.primary, fontSize: 13, fontWeight: '800', marginTop: 4 },
+  propertyTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
+  propertyLocation: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
+  propertyPrice: { color: colors.primary, fontSize: 13, fontWeight: '800', marginTop: 4 },
   metaRow: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' },
   metaPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
-  metaPillOccupied: { backgroundColor: `${COLORS.success}15` },
-  metaPillAvailable: { backgroundColor: `${COLORS.warning}15` },
-  metaPillText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '600' },
+  metaPillOccupied: { backgroundColor: `${colors.success}15` },
+  metaPillAvailable: { backgroundColor: `${colors.warning}15` },
+  metaPillText: { color: colors.textSecondary, fontSize: 10, fontWeight: '600' },
 
   // Bookings
   filterScroll: { flexGrow: 0, marginBottom: SPACING.md },
@@ -901,34 +905,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
-  filterChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  filterChipText: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
+  filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterChipText: { color: colors.textTertiary, fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   filterChipTextActive: { color: '#fff', fontWeight: '700' },
   bookingCard: { padding: SPACING.lg, marginBottom: SPACING.md },
   bookingTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm },
-  bookingProperty: { color: COLORS.text, fontSize: 14, fontWeight: '700' },
-  bookingTenant: { color: COLORS.textTertiary, fontSize: 11, marginTop: 2 },
-  bookingAmount: { color: COLORS.primary, fontSize: 15, fontWeight: '800' },
+  bookingProperty: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  bookingTenant: { color: colors.textTertiary, fontSize: 11, marginTop: 2 },
+  bookingAmount: { color: colors.primary, fontSize: 15, fontWeight: '800' },
 
   // Analytics
-  analyticsTitle: { color: COLORS.text, fontSize: 13, fontWeight: '700', marginBottom: SPACING.sm },
-  analyticsValue: { color: COLORS.text, fontSize: 20, fontWeight: '800' },
-  analyticsSub: { color: COLORS.textTertiary, fontSize: 11, marginTop: 4 },
+  analyticsTitle: { color: colors.text, fontSize: 13, fontWeight: '700', marginBottom: SPACING.sm },
+  analyticsValue: { color: colors.text, fontSize: 20, fontWeight: '800' },
+  analyticsSub: { color: colors.textTertiary, fontSize: 11, marginTop: 4 },
   occupancyBar: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     overflow: 'hidden',
     marginBottom: SPACING.sm,
   },
-  occupancyFill: { height: '100%', backgroundColor: COLORS.success, borderRadius: 4 },
+  occupancyFill: { height: '100%', backgroundColor: colors.success, borderRadius: 4 },
   statRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
-  statLabel: { flex: 1, color: COLORS.textSecondary, fontSize: 13 },
-  statValue: { color: COLORS.text, fontSize: 13, fontWeight: '700' },
+  statLabel: { flex: 1, color: colors.textSecondary, fontSize: 13 },
+  statValue: { color: colors.text, fontSize: 13, fontWeight: '700' },
 
   // Empty state
   emptyStateCard: {
@@ -940,11 +944,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: `${COLORS.primary}15`,
+    backgroundColor: `${colors.primary}15`,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,
   },
-  emptyStateTitle: { color: COLORS.text, fontSize: 15, fontWeight: '700' },
-  emptyStateDesc: { color: COLORS.textTertiary, fontSize: 12, textAlign: 'center', lineHeight: 17 },
+  emptyStateTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  emptyStateDesc: { color: colors.textTertiary, fontSize: 12, textAlign: 'center', lineHeight: 17 },
 });

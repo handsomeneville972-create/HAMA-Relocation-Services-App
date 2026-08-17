@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../src/utils/supabaseClient';
-import { COLORS, RADIUS, SPACING, SHADOWS } from '../../src/constants/theme';
+import { RADIUS, SPACING, SHADOWS, type ThemeColors } from '../../src/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../src/contexts/ThemeContext';
 
 export default function UpdatePassword() {
+  const { colors } = useTheme();
   const router = useRouter();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -63,13 +66,13 @@ export default function UpdatePassword() {
       <View style={styles.card}>
         {status === 'loading' && (
           <>
-            <ActivityIndicator size="large" color={COLORS.primary} />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.title}>Verifying...</Text>
           </>
         )}
         {status === 'error' && (
           <>
-            <Ionicons name="alert-circle" size={48} color={COLORS.error} />
+            <Ionicons name="alert-circle" size={48} color={colors.error} />
             <Text style={styles.title}>Error</Text>
             <Text style={styles.message}>{message}</Text>
             <TouchableOpacity style={styles.button} onPress={() => router.replace('/Login')}>
@@ -79,26 +82,26 @@ export default function UpdatePassword() {
         )}
         {status === 'form' && (
           <>
-            <Ionicons name="lock-closed" size={48} color={COLORS.primary} />
+            <Ionicons name="lock-closed" size={48} color={colors.primary} />
             <Text style={styles.title}>Set New Password</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
                 placeholder="New password"
-                placeholderTextColor={COLORS.textTertiary}
+                placeholderTextColor={colors.textTertiary}
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={COLORS.textTertiary} />
+                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textTertiary} />
               </TouchableOpacity>
             </View>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
                 placeholder="Confirm password"
-                placeholderTextColor={COLORS.textTertiary}
+                placeholderTextColor={colors.textTertiary}
                 secureTextEntry={!showPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -110,7 +113,7 @@ export default function UpdatePassword() {
               onPress={handleUpdatePassword}
               disabled={!password || !confirmPassword}
             >
-              <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientButton}>
+              <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientButton}>
                 <Text style={styles.buttonText}>Update Password</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -118,7 +121,7 @@ export default function UpdatePassword() {
         )}
         {status === 'success' && (
           <>
-            <Ionicons name="checkmark-circle" size={48} color={COLORS.success} />
+            <Ionicons name="checkmark-circle" size={48} color={colors.success} />
             <Text style={styles.title}>Password Updated!</Text>
             <Text style={styles.message}>{message}</Text>
           </>
@@ -128,16 +131,17 @@ export default function UpdatePassword() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: 20,
     padding: 40,
     alignItems: 'center',
@@ -145,22 +149,22 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   message: {
     fontSize: 15,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   errorText: {
     fontSize: 14,
-    color: COLORS.error,
+    color: colors.error,
     textAlign: 'center',
   },
   inputContainer: {
@@ -171,11 +175,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     width: '100%',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   input: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
   },

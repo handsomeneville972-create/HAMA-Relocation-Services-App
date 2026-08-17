@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Property } from '../constants/types';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING, type ThemeColors } from '../constants/theme';
 
 interface PropertyCardProps {
   property: Property;
@@ -27,6 +28,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   isFavourited = false,
   style,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const reducedMotion = useReducedMotion();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -139,7 +142,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
               <Ionicons
                 name={isFavourited ? 'heart' : 'heart-outline'}
                 size={18}
-                color={isFavourited ? COLORS.error : '#fff'}
+                color={isFavourited ? colors.error : '#fff'}
               />
             </TouchableOpacity>
 
@@ -164,7 +167,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
             {/* Location */}
             <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={13} color={COLORS.textSecondary} />
+              <Ionicons name="location-outline" size={13} color={colors.textSecondary} />
               <Text style={styles.location} numberOfLines={1}>
                 {property.location}
               </Text>
@@ -179,28 +182,28 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             {/* Property Details */}
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
-                <Ionicons name="bed-outline" size={14} color={COLORS.textSecondary} />
+                <Ionicons name="bed-outline" size={14} color={colors.textSecondary} />
                 <Text style={styles.detailText}>
                   {property.bedrooms} {property.bedrooms === 1 ? 'Bed' : 'Beds'}
                 </Text>
               </View>
               <View style={styles.detailDivider} />
               <View style={styles.detailItem}>
-                <Ionicons name="water-outline" size={14} color={COLORS.textSecondary} />
+                <Ionicons name="water-outline" size={14} color={colors.textSecondary} />
                 <Text style={styles.detailText}>
                   {property.bathrooms} {property.bathrooms === 1 ? 'Bath' : 'Baths'}
                 </Text>
               </View>
               <View style={styles.detailDivider} />
               <View style={styles.detailItem}>
-                <Ionicons name="resize-outline" size={14} color={COLORS.textSecondary} />
+                <Ionicons name="resize-outline" size={14} color={colors.textSecondary} />
                 <Text style={styles.detailText}>{property.size} m²</Text>
               </View>
             </View>
 
             {/* Instant Booking Badge */}
             <View style={styles.instantBookingBadge}>
-              <Ionicons name="flash" size={12} color={COLORS.success} />
+              <Ionicons name="flash" size={12} color={colors.success} />
               <Text style={styles.instantBookingText}>Instant Booking</Text>
             </View>
           </View>
@@ -210,7 +213,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     width: '100%',
     marginBottom: SPACING.md,
@@ -281,14 +285,14 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   featuredBadgeText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   title: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     lineHeight: 20,
   },
@@ -299,7 +303,7 @@ const styles = StyleSheet.create({
   },
   location: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     flex: 1,
   },
   priceRow: {
@@ -310,11 +314,11 @@ const styles = StyleSheet.create({
   },
   price: {
     ...FONTS.price,
-    color: COLORS.text,
+    color: colors.text,
   },
   priceUnit: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   detailsRow: {
     flexDirection: 'row',
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
   },
   detailDivider: {
@@ -349,7 +353,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   instantBookingText: {
-    color: COLORS.success,
+    color: colors.success,
     fontSize: 10,
     fontWeight: '600',
   },

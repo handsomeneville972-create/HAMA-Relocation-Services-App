@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ServiceProvider } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ServiceCardProps {
   provider: ServiceProvider;
@@ -11,17 +12,20 @@ interface ServiceCardProps {
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = ({ provider, onPress }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
       <View style={styles.card}>
-        <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
+        <LinearGradient colors={colors.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
           <View style={styles.header}>
             <Image source={{ uri: provider.logo }} style={styles.logo} />
             <View style={styles.headerInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.name} numberOfLines={1}>{provider.name}</Text>
                 {provider.verified && (
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
                 )}
               </View>
               <Text style={styles.category}>{provider.subcategory}</Text>
@@ -34,11 +38,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ provider, onPress }) =
           <Text style={styles.description} numberOfLines={2}>{provider.description}</Text>
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={14} color={COLORS.textSecondary} />
+              <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
               <Text style={styles.metaText}>{provider.location}</Text>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={14} color={COLORS.textSecondary} />
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
               <Text style={styles.metaText}>{provider.responseTime}</Text>
             </View>
           </View>
@@ -56,12 +60,12 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ provider, onPress }) =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     marginBottom: SPACING.md,
     ...SHADOWS.sm,
   },
@@ -88,12 +92,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   name: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   category: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -107,12 +111,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   ratingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 13,
     fontWeight: '700',
   },
   description: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: SPACING.sm,
@@ -128,7 +132,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   footer: {
@@ -143,12 +147,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   priceText: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 13,
     fontWeight: '700',
   },
   bookButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: RADIUS.sm,

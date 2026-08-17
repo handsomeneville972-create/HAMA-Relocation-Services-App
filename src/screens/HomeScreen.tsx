@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, Image, Linking, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,9 +16,12 @@ import { getProperties, getNeighborhoods } from '../services/propertyService';
 import { formatPrice } from '../utils/currency';
 import { useResponsive } from '../utils/responsive';
 import type { Product, Property, Neighborhood } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { width, height, isPhone, isTablet } = useResponsive();
   const { isSeekerLocked } = useSubscriptions();
@@ -147,7 +150,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
-                <Ionicons name="home-outline" size={18} color={COLORS.primary} />
+                <Ionicons name="home-outline" size={18} color={colors.primary} />
                 <Text style={styles.sectionTitle}>Featured Properties</Text>
               </View>
               <TouchableOpacity onPress={() => {
@@ -230,7 +233,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
-                <Ionicons name="cart-outline" size={18} color={COLORS.primary} />
+                <Ionicons name="cart-outline" size={18} color={colors.primary} />
                 <Text style={styles.sectionTitle}>Featured Products</Text>
               </View>
               <TouchableOpacity onPress={() => {
@@ -241,7 +244,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             {loading ? (
-              <ResponsiveGrid columns={2}>
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <View key={i} style={{ width: '100%' }}>
                     <SkeletonLoader type="card" />
@@ -249,7 +252,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 ))}
               </ResponsiveGrid>
             ) : (
-              <ResponsiveGrid columns={2}>
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
                 {featuredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -271,10 +274,10 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
-                <Ionicons name="map-outline" size={18} color={COLORS.primary} />
+                <Ionicons name="map-outline" size={18} color={colors.primary} />
                 <Text style={styles.sectionTitle}>Explore Neighborhoods</Text>
               </View>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('ExploreNeighborhoods')}>
                 <Text style={styles.seeAll}>See All</Text>
               </TouchableOpacity>
             </View>
@@ -351,8 +354,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Text style={styles.footerColumnTitle}>Support</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help & Support</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('Faq')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Legal')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy' as never)}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
               </View>
 
@@ -408,10 +411,11 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   scrollView: {
     flex: 1,
@@ -493,12 +497,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 20,
     fontWeight: '800',
   },
   logoSlogan: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
   },
   searchBar: {
@@ -512,6 +516,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.35)',
     marginBottom: SPACING.md,
+    width: '90%',
+    alignSelf: 'center',
   },
   searchPlaceholder: {
     color: 'rgba(255,255,255,0.7)',
@@ -530,7 +536,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -538,7 +544,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   seeAll: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -559,13 +565,13 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
   },
   propertyTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   propertyPrice: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
@@ -575,11 +581,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   propertyMetaText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   propertyLocation: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   neighborhoodScroll: {
@@ -726,14 +732,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   footerEmailBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -1,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   footerBottomBar: {
     borderTopWidth: 1,

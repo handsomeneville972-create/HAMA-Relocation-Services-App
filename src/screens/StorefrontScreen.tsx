@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,13 +6,16 @@ import { ProductCard } from '../components/ProductCard';
 import { ResponsiveGrid } from '../components/ResponsiveGrid';
 import { getSellerById, getProducts } from '../services/productService';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Seller, Product } from '../constants/types';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 
 const BANNER_HEIGHT = 200;
 
 export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { sellerId } = route.params;
   const { isPhone, isTablet } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -73,7 +76,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
         {/* Banner with Parallax */}
         <Animated.View style={[styles.bannerContainer, { transform: [{ translateY: bannerTranslateY }, { scale: bannerScale }] }]}>
           <Image source={{ uri: seller.banner }} style={styles.bannerImage} />
-          <LinearGradient colors={['transparent', COLORS.bg]} style={styles.bannerGradient} />
+          <LinearGradient colors={['transparent', colors.bg]} style={styles.bannerGradient} />
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
@@ -86,7 +89,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
             <View style={styles.storeNameRow}>
               <Text style={styles.storeName}>{seller.name}</Text>
               {seller.verified && (
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
+                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
               )}
             </View>
             <Text style={styles.storeLocation}>{seller.location}</Text>
@@ -97,7 +100,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <View style={styles.statIcon}>
-              <Ionicons name="star" size={16} color={COLORS.warning} />
+              <Ionicons name="star" size={16} color={colors.warning} />
             </View>
             <Text style={styles.statValue}>{seller.rating}</Text>
             <Text style={styles.statLabel}>Rating</Text>
@@ -105,7 +108,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <View style={styles.statIcon}>
-              <Ionicons name="people" size={16} color={COLORS.primary} />
+              <Ionicons name="people" size={16} color={colors.primary} />
             </View>
             <Text style={styles.statValue}>{seller.followers}</Text>
             <Text style={styles.statLabel}>Followers</Text>
@@ -113,7 +116,7 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <View style={styles.statIcon}>
-              <Ionicons name="cube" size={16} color={COLORS.accent} />
+              <Ionicons name="cube" size={16} color={colors.accent} />
             </View>
             <Text style={styles.statValue}>{products.length}</Text>
             <Text style={styles.statLabel}>Products</Text>
@@ -129,11 +132,11 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
         {/* Contact */}
         <View style={styles.contactSection}>
           <View style={styles.contactItem}>
-            <Ionicons name="call-outline" size={18} color={COLORS.textSecondary} />
+            <Ionicons name="call-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.contactText}>{seller.contact}</Text>
           </View>
           <View style={styles.contactItem}>
-            <Ionicons name="location-outline" size={18} color={COLORS.textSecondary} />
+            <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.contactText}>{seller.location}</Text>
           </View>
         </View>
@@ -157,9 +160,9 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
 
       {/* Follow Button */}
       <View style={styles.followBar}>
-        <LinearGradient colors={[COLORS.bgBlur, COLORS.bg]} style={styles.followGradient}>
+        <LinearGradient colors={[colors.bgBlur, colors.bg]} style={styles.followGradient}>
           <TouchableOpacity style={styles.followButton}>
-            <Ionicons name="person-add-outline" size={20} color={COLORS.text} />
+            <Ionicons name="person-add-outline" size={20} color={colors.text} />
             <Text style={styles.followText}>Follow Store</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.contactFloatingButton}>
@@ -171,10 +174,11 @@ export const StorefrontScreen: React.FC<{ route: any; navigation: any }> = ({ ro
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   bannerContainer: {
     height: BANNER_HEIGHT,
@@ -215,7 +219,7 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 3,
-    borderColor: COLORS.bg,
+    borderColor: colors.bg,
   },
   storeText: {
     flex: 1,
@@ -227,10 +231,10 @@ const styles = StyleSheet.create({
   },
   storeName: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   storeLocation: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
@@ -238,11 +242,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: SPACING.md,
     marginTop: SPACING.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     paddingVertical: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   statItem: {
     flex: 1,
@@ -253,17 +257,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statValue: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   statLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   statDivider: {
     width: 1,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   descriptionSection: {
     paddingHorizontal: SPACING.md,
@@ -271,11 +275,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
   },
   descriptionText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
   },
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   contactText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   productsSection: {
@@ -318,14 +322,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   followText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -333,7 +337,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

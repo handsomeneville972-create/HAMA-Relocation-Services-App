@@ -10,13 +10,14 @@
  * - Feature Request Rankings
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { featureRequestService } from '../services/earlyAccessService';
 import { formatPrice } from '../utils/currency';
@@ -52,6 +53,8 @@ interface FounderDashboardScreenProps {
 }
 
 export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUser } = useAuth();
   const [featureRequestCount, setFeatureRequestCount] = useState(0);
@@ -74,9 +77,9 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>Founder Dashboard</Text>
@@ -88,24 +91,24 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
         {/* Users Section */}
         <Text style={styles.sectionTitle}>Users</Text>
         <View style={styles.metricsGrid}>
-          <MetricCard icon="people" value={analytics.totalUsers.toLocaleString()} label="Total Users" color={COLORS.primary} />
-          <MetricCard icon="person-check" value={analytics.activeUsers.toLocaleString()} label="Active Users" color={COLORS.accent} />
-          <MetricCard icon="person-add" value={analytics.newRegistrations.toString()} label="New Registrations" color={COLORS.info} />
+          <MetricCard icon="people" value={analytics.totalUsers.toLocaleString()} label="Total Users" color={colors.primary} />
+          <MetricCard icon="person-check" value={analytics.activeUsers.toLocaleString()} label="Active Users" color={colors.accent} />
+          <MetricCard icon="person-add" value={analytics.newRegistrations.toString()} label="New Registrations" color={colors.info} />
         </View>
 
         {/* Growth Section */}
         <Text style={styles.sectionTitle}>Growth</Text>
         <View style={styles.metricsGrid}>
-          <MetricCard icon="trending-up" value={`${analytics.dailyGrowthRate}%`} label="Daily Growth" color={COLORS.accent} />
-          <MetricCard icon="trending-up" value={`${analytics.weeklyGrowthRate}%`} label="Weekly Growth" color={COLORS.primary} />
+          <MetricCard icon="trending-up" value={`${analytics.dailyGrowthRate}%`} label="Daily Growth" color={colors.accent} />
+          <MetricCard icon="trending-up" value={`${analytics.weeklyGrowthRate}%`} label="Weekly Growth" color={colors.primary} />
         </View>
 
         {/* Engagement Section */}
         <Text style={styles.sectionTitle}>Engagement</Text>
         <View style={styles.metricsGrid}>
-          <MetricCard icon="time" value={analytics.avgSessionDuration} label="Avg Session" color={COLORS.warning} />
-          <MetricCard icon="sparkles" value={`${analytics.featureUsage}%`} label="Feature Usage" color={COLORS.primary} />
-          <MetricCard icon="heart" value={`${analytics.retentionRate}%`} label="Retention" color={COLORS.accent} />
+          <MetricCard icon="time" value={analytics.avgSessionDuration} label="Avg Session" color={colors.warning} />
+          <MetricCard icon="sparkles" value={`${analytics.featureUsage}%`} label="Feature Usage" color={colors.primary} />
+          <MetricCard icon="heart" value={`${analytics.retentionRate}%`} label="Retention" color={colors.accent} />
         </View>
 
         {/* Monetization Readiness */}
@@ -136,7 +139,7 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
             end={{ x: 1, y: 1 }}
             style={styles.forecastCard}
           >
-            <Ionicons name="cash-outline" size={32} color={COLORS.accent} />
+            <Ionicons name="cash-outline" size={32} color={colors.accent} />
             <Text style={styles.forecastTitle}>Revenue Forecast</Text>
             <Text style={styles.forecastValue}>{formatPrice(totalForecast, 'KSh')}/mo</Text>
             <Text style={styles.forecastSub}>
@@ -147,7 +150,7 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
 
         {/* Feature Requests */}
         <View style={styles.metricsGrid}>
-          <MetricCard icon="bulb" value={featureRequestCount.toLocaleString()} label="Feature Requests" color={COLORS.warning} />
+          <MetricCard icon="bulb" value={featureRequestCount.toLocaleString()} label="Feature Requests" color={colors.warning} />
         </View>
 
         {/* Top Feature Requests */}
@@ -159,7 +162,7 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
               <View style={styles.requestInfo}>
                 <Text style={styles.requestTitle}>{req.title}</Text>
                 <View style={styles.requestVoteRow}>
-                  <Ionicons name="arrow-up-circle" size={12} color={COLORS.primary} />
+                  <Ionicons name="arrow-up-circle" size={12} color={colors.primary} />
                   <Text style={styles.requestVotes}>{req.votes} requests</Text>
                 </View>
               </View>
@@ -175,7 +178,10 @@ export const FounderDashboardScreen: React.FC<FounderDashboardScreenProps> = ({ 
 
 // ===== Metric Card Sub-component =====
 
-const MetricCard: React.FC<{ icon: string; value: string; label: string; color: string }> = ({ icon, value, label, color }) => (
+const MetricCard: React.FC<{ icon: string; value: string; label: string; color: string }> = ({ icon, value, label, color }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
   <GlassCard style={styles.metricCard}>
     <View style={[styles.metricIcon, { backgroundColor: color + '15' }]}>
       <Ionicons name={icon as any} size={20} color={color} />
@@ -183,12 +189,14 @@ const MetricCard: React.FC<{ icon: string; value: string; label: string; color: 
     <Text style={styles.metricValue}>{value}</Text>
     <Text style={styles.metricLabel}>{label}</Text>
   </GlassCard>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -198,7 +206,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -210,10 +218,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -226,7 +234,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginTop: SPACING.sm,
@@ -251,21 +259,21 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   metricLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
   cardTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   cardSubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginBottom: SPACING.md,
   },
@@ -275,22 +283,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   interestInfo: {
     gap: 2,
   },
   interestPlan: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   interestCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   revenueProjection: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -301,14 +309,14 @@ const styles = StyleSheet.create({
   },
   forecastTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   forecastValue: {
     ...FONTS.h1,
-    color: COLORS.accent,
+    color: colors.accent,
   },
   forecastSub: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     textAlign: 'center',
   },
@@ -318,11 +326,11 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   requestRank: {
     ...FONTS.h3,
-    color: COLORS.primary,
+    color: colors.primary,
     width: 28,
     textAlign: 'center',
   },
@@ -331,7 +339,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   requestTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -341,7 +349,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   requestVotes: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
 });

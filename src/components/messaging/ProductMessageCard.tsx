@@ -5,10 +5,11 @@
  * Loads product data by ID and shows image, name, price, seller, and a CTA to view.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getProductById } from '../../services/productService';
 
 interface ProductMessageCardProps {
@@ -20,6 +21,9 @@ export const ProductMessageCard: React.FC<ProductMessageCardProps> = ({
   productId,
   onPress,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +64,7 @@ export const ProductMessageCard: React.FC<ProductMessageCardProps> = ({
           {product.condition && <Text style={styles.condition}>{product.condition}</Text>}
         </View>
         <View style={styles.ctaRow}>
-          <Ionicons name="open-outline" size={12} color={COLORS.primary} />
+          <Ionicons name="open-outline" size={12} color={colors.primary} />
           <Text style={styles.cta}>View Product</Text>
         </View>
       </View>
@@ -68,25 +72,26 @@ export const ProductMessageCard: React.FC<ProductMessageCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     width: 200,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
     ...SHADOWS.sm,
   },
   image: {
     width: '100%',
     height: 110,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   imageSkeleton: {
     width: '100%',
     height: 110,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   content: {
     padding: SPACING.sm,
@@ -95,17 +100,17 @@ const styles = StyleSheet.create({
   skeletonLine: {
     height: 12,
     borderRadius: 4,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     width: '80%',
   },
   name: {
     ...FONTS.bodySmall,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   seller: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -115,12 +120,12 @@ const styles = StyleSheet.create({
   },
   price: {
     ...FONTS.price,
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
   },
   condition: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   ctaRow: {
     flexDirection: 'row',
@@ -130,7 +135,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     ...FONTS.caption,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

@@ -5,11 +5,12 @@
  * Loads provider data by ID and shows avatar, name, category, rating, and a CTA to view.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../../constants/theme';
 import { getServiceProviderById } from '../../services/serviceProviderService';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ServiceProviderMessageCardProps {
   serviceProviderId: string;
@@ -22,6 +23,8 @@ export const ServiceProviderMessageCard: React.FC<ServiceProviderMessageCardProp
 }) => {
   const [provider, setProvider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     getServiceProviderById(serviceProviderId).then(({ data }) => {
@@ -57,27 +60,27 @@ export const ServiceProviderMessageCard: React.FC<ServiceProviderMessageCardProp
           <Text style={styles.category} numberOfLines={1}>{provider.category || provider.service_category}</Text>
           {provider.rating != null && provider.rating > 0 && (
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={12} color={COLORS.warning} />
+              <Ionicons name="star" size={12} color={colors.warning} />
               <Text style={styles.rating}>{provider.rating.toFixed(1)}</Text>
             </View>
           )}
         </View>
       </View>
       <View style={styles.ctaRow}>
-        <Ionicons name="open-outline" size={12} color={COLORS.primary} />
+        <Ionicons name="open-outline" size={12} color={colors.primary} />
         <Text style={styles.cta}>View Provider</Text>
       </View>
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     width: 200,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.sm,
     gap: SPACING.sm,
     ...SHADOWS.sm,
@@ -90,13 +93,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
   },
   avatarSkeleton: {
     width: 48,
     height: 48,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   content: {
     flex: 1,
@@ -105,17 +108,17 @@ const styles = StyleSheet.create({
   skeletonLine: {
     height: 12,
     borderRadius: 4,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     width: '80%',
   },
   name: {
     ...FONTS.bodySmall,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   category: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -124,7 +127,7 @@ const styles = StyleSheet.create({
   },
   rating: {
     ...FONTS.caption,
-    color: COLORS.warning,
+    color: colors.warning,
     fontWeight: '600',
   },
   ctaRow: {
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     ...FONTS.caption,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

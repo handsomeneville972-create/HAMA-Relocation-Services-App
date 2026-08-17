@@ -5,7 +5,7 @@
  * Presents the 3 subscription plans (Basic/Premium/Pro) with STK push.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,9 +17,10 @@ import { PaymentModal } from './PaymentModal';
 import { recordSubscription } from '../utils/subscriptionStore';
 import { purchaseSubscription } from '../services/subscriptionService';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
 import type { SubscriptionPlan } from '../constants/types';
 import { formatPrice } from '../utils/currency';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LandlordSubscriptionModalProps {
   visible: boolean;
@@ -28,6 +29,8 @@ interface LandlordSubscriptionModalProps {
 
 export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps> = ({ visible, onClose }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUserId } = useAuth();
   const mpesa = useMpesaPayment();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
@@ -95,7 +98,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                 {/* Plan Selection */}
                 <View style={styles.headerRow}>
                   <View style={styles.iconWrap}>
-                    <Ionicons name="diamond" size={28} color={COLORS.primary} />
+                    <Ionicons name="diamond" size={28} color={colors.primary} />
                   </View>
                 </View>
 
@@ -113,7 +116,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                         style={[styles.planRow, highlighted && styles.planRowHighlighted]}
                       >
                         <View style={[styles.planIcon, { backgroundColor: highlighted ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.06)' }]}>
-                          <Ionicons name={highlighted ? 'diamond' : 'sparkles-outline'} size={20} color={highlighted ? COLORS.primary : COLORS.textSecondary} />
+                          <Ionicons name={highlighted ? 'diamond' : 'sparkles-outline'} size={20} color={highlighted ? colors.primary : colors.textSecondary} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <View style={styles.planTitleRow}>
@@ -129,12 +132,12 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                           </Text>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
-                          <Text style={[styles.planPrice, highlighted && { color: COLORS.primary }]}>
+                          <Text style={[styles.planPrice, highlighted && { color: colors.primary }]}>
                             {formatPrice(plan.price, plan.currency)}
                           </Text>
                           <Text style={styles.planPeriod}>/month</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={18} color={highlighted ? COLORS.primary : COLORS.textTertiary} />
+                        <Ionicons name="chevron-forward" size={18} color={highlighted ? colors.primary : colors.textTertiary} />
                       </TouchableOpacity>
                     );
                   })}
@@ -154,7 +157,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                 {/* Phone Input */}
                 <View style={styles.headerRow}>
                   <View style={styles.iconWrap}>
-                    <Ionicons name="phone-portrait-outline" size={28} color={COLORS.success} />
+                    <Ionicons name="phone-portrait-outline" size={28} color={colors.success} />
                   </View>
                 </View>
 
@@ -166,7 +169,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                   <TextInput
                     style={styles.textInput}
                     placeholder="712345678"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="phone-pad"
                     maxLength={9}
                     value={phoneNumber}
@@ -181,7 +184,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={[COLORS.success, '#34D399']}
+                    colors={[colors.success, '#34D399']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.payGradient}
@@ -192,7 +195,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedPlan(null)}>
-                  <Ionicons name="arrow-back" size={16} color={COLORS.textSecondary} />
+                  <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
                   <Text style={styles.backText}>Back to plans</Text>
                 </TouchableOpacity>
               </>
@@ -231,7 +234,7 @@ export const LandlordSubscriptionModal: React.FC<LandlordSubscriptionModalProps>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -271,12 +274,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -294,11 +297,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     marginBottom: 10,
   },
   planRowHighlighted: {
-    borderColor: `${COLORS.primary}80`,
+    borderColor: `${colors.primary}80`,
     backgroundColor: 'rgba(255,107,0,0.06)',
   },
   planIcon: {
@@ -314,12 +317,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   planName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   planDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -330,21 +333,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,107,0,0.18)',
   },
   popTagText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 10,
     fontWeight: '700',
   },
   planPrice: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },
   planPeriod: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   motivationalText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -357,7 +360,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   closeBtnText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -367,19 +370,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     paddingHorizontal: 14,
     marginBottom: 16,
   },
   inputPrefix: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,
   },
   textInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
   },
@@ -412,7 +415,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   backText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
 });

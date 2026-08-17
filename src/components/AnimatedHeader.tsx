@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AnimatedHeaderProps {
   title: string;
@@ -15,14 +16,16 @@ interface AnimatedHeaderProps {
 export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   title,
   subtitle,
-  gradient = COLORS.gradientNight,
+  gradient,
   style,
   children,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
   return (
-    <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.container, { paddingTop: insets.top + SPACING.md }, style]}>
+    <LinearGradient colors={gradient ?? colors.gradientNight} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.container, { paddingTop: insets.top + SPACING.md }, style]}>
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {children}
@@ -30,18 +33,19 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.lg,
   },
   title: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   subtitle: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
 });

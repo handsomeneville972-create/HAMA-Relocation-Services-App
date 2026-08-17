@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,7 +13,8 @@ import { SERVICE_CATEGORIES } from '../constants/data';
 import { getServiceProviders } from '../services/serviceProviderService';
 import { softSanitize } from '../utils/sanitize';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { ServiceProvider } from '../constants/types';
 
 interface ServicesScreenProps {
@@ -24,6 +25,8 @@ interface ServicesScreenProps {
 const PAGE_SIZE = 20;
 
 export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSeekerLocked = false }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { isPhone, isTablet } = useResponsive();
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -67,24 +70,24 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Home Services</Text>
           <Text style={styles.headerSubtitle}>Professional services for your home</Text>
         </View>
         <TouchableOpacity style={styles.historyButton}>
-          <Ionicons name="time-outline" size={22} color={COLORS.text} />
+          <Ionicons name="time-outline" size={22} color={colors.text} />
         </TouchableOpacity>
       </LinearGradient>
 
       {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={COLORS.textTertiary} />
+          <Ionicons name="search" size={18} color={colors.textTertiary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Find a service provider..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={(text) => setSearchQuery(softSanitize(text))}
           />
@@ -108,7 +111,7 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
                       <Text style={styles.bannerSubtitle}>Free to join — go live today and get found by nearby clients</Text>
                     </View>
                     <View style={styles.bannerIcon}>
-                      <Ionicons name="storefront" size={34} color={COLORS.primary} />
+                      <Ionicons name="storefront" size={34} color={colors.primary} />
                     </View>
                   </View>
                 </LinearGradient>
@@ -181,7 +184,7 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
                 activeOpacity={0.8}
               >
                 {loadingMore ? (
-                  <ActivityIndicator size="small" color={COLORS.primary} />
+                  <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
                   <Text style={styles.loadMoreText}>Load more</Text>
                 )}
@@ -202,10 +205,11 @@ export const ServicesScreen: React.FC<ServicesScreenProps> = ({ navigation, isSe
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -217,10 +221,10 @@ const styles = StyleSheet.create({
   headerContent: {},
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -239,16 +243,16 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     gap: 8,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     paddingVertical: 10,
   },
@@ -271,12 +275,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bannerTitle: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 18,
     fontWeight: '700',
   },
   bannerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 4,
   },
@@ -300,10 +304,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   providerCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   loadMoreBtn: {
@@ -311,13 +315,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     marginTop: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   loadMoreText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

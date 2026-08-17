@@ -6,10 +6,11 @@
  * Supports typing indicator emission.
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MessageComposerProps {
   value: string;
@@ -30,6 +31,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   sending = false,
   disabled = false,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const sendAnim = useRef(new Animated.Value(0)).current;
   const hasText = value.trim().length > 0;
 
@@ -51,14 +55,14 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     <View style={styles.container}>
       <View style={styles.row}>
         <TouchableOpacity style={styles.attachButton} onPress={onAttach} activeOpacity={0.7}>
-          <Ionicons name="add-circle-outline" size={26} color={COLORS.textSecondary} />
+          <Ionicons name="add-circle-outline" size={26} color={colors.textSecondary} />
         </TouchableOpacity>
 
         <View style={styles.textInputContainer}>
           <TextInput
             style={styles.textInput}
             placeholder="Type a message..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={value}
             onChangeText={handleChangeText}
             multiline
@@ -85,12 +89,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             activeOpacity={0.7}
           >
             {sending ? (
-              <Ionicons name="hourglass" size={20} color={COLORS.textTertiary} />
+              <Ionicons name="hourglass" size={20} color={colors.textTertiary} />
             ) : (
               <Ionicons
                 name="send"
                 size={20}
-                color={hasText ? '#fff' : COLORS.textTertiary}
+                color={hasText ? '#fff' : colors.textTertiary}
               />
             )}
           </TouchableOpacity>
@@ -100,11 +104,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
-    backgroundColor: COLORS.bgBlur,
+    borderTopColor: colors.glassBorder,
+    backgroundColor: colors.bgBlur,
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.sm,
   },
@@ -123,16 +128,16 @@ const styles = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     paddingHorizontal: 16,
     paddingVertical: 8,
     maxHeight: 100,
   },
   textInput: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     maxHeight: 80,
     padding: 0,
@@ -141,15 +146,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   sendButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
 });

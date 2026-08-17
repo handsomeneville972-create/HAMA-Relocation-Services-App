@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { WORKSPACE_PLAN_PRICES } from '../constants/plans';
 import { activateWorkspace, getActiveWorkspaces, subscribeWorkspaces, type WorkspaceRole } from '../utils/workspaces';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface WorkspacePlan {
   id: WorkspaceRole;
@@ -42,6 +43,8 @@ const MANAGE_ROUTES: Record<WorkspaceRole, string | null> = {
 
 export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUserId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [activeWorkspaces, setActiveWorkspaces] = useState<Set<string>>(new Set(getActiveWorkspaces()));
@@ -62,7 +65,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       title: 'House Seeker',
       icon: 'home-outline',
       description: 'Your default workspace for finding properties, booking services, and connecting with landlords.',
-      color: COLORS.primary,
+      color: colors.primary,
       benefits: [
         'Access to all property listings and property details',
         'Message landlords and schedule viewings',
@@ -91,7 +94,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       title: 'Landlord',
       icon: 'business-outline',
       description: 'Advertise rental properties, connect with renters, and manage your portfolio remotely.',
-      color: COLORS.secondary,
+      color: colors.secondary,
       benefits: [
         'Property listing with 30-day free advertising',
         'Direct communication with renters',
@@ -119,7 +122,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       title: 'Seller',
       icon: 'pricetag-outline',
       description: 'Sell properties, manage offers, and connect with real estate agents for your listings.',
-      color: COLORS.accent,
+      color: colors.accent,
       benefits: [
         'Property listing with professional photography',
         'Connected to verified real estate agents',
@@ -147,7 +150,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
       title: 'Service Provider',
       icon: 'construct-outline',
       description: 'List your services, manage bookings, and connect with customers actively looking for help.',
-      color: COLORS.warning,
+      color: colors.warning,
       benefits: [
         'Professional service profile with ratings',
         'Direct messaging from customers',
@@ -236,15 +239,15 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
   const getVerificationStatusColor = (status: string) => {
     switch (status) {
       case 'verified':
-        return COLORS.success;
+        return colors.success;
       case 'pending':
-        return COLORS.warning;
+        return colors.warning;
       case 'in_progress':
-        return COLORS.primary;
+        return colors.primary;
       case 'rejected':
-        return COLORS.error;
+        return colors.error;
       default:
-        return COLORS.textTertiary;
+        return colors.textTertiary;
     }
   };
 
@@ -325,7 +328,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
                   },
                 ]}
               >
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                <Ionicons name="checkmark-circle" size={16} color={colors.success} />
               </Animated.View>
             ) : (
               <View style={styles.activeIndicator} />
@@ -357,7 +360,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
           <View style={styles.benefitsSection}>
             {plan.benefits.slice(0, 2).map((benefit, index) => (
               <View key={index} style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
+                <Ionicons name="checkmark-circle" size={12} color={colors.success} />
                 <Text style={styles.benefitText} numberOfLines={1}>
                   {benefit}
                 </Text>
@@ -372,7 +375,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
 
           {/* Subscription Badge */}
           <View style={[styles.subscriptionBadge, { backgroundColor: badgeColor }]}>
-            <Text style={[styles.subscriptionText, { color: plan.subscription.active ? plan.color : COLORS.text }]}>
+            <Text style={[styles.subscriptionText, { color: plan.subscription.active ? plan.color : colors.text }]}>
               {plan.subscription.active ? 'Active' : plan.subscription.name}
             </Text>
           </View>
@@ -420,7 +423,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
     <View style={styles.container}>
       {/* Header with gradient background */}
       <LinearGradient
-        colors={['#000000', '#0A0A0F']}
+        colors={colors.gradientNight}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <View style={styles.headerContent}>
@@ -429,7 +432,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
             <Text style={styles.headerSubtitle}>Manage all your HAMA workspaces in one place</Text>
           </View>
           <LiquidGlass variant="subtle" style={styles.headerIcon}>
-            <Ionicons name="layers-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="layers-outline" size={24} color={colors.primary} />
           </LiquidGlass>
         </View>
       </LinearGradient>
@@ -452,18 +455,18 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 {activeWorkspaces.has('house_seeker') ? (
-                  <Ionicons name="checkmark" size={20} color={COLORS.success} />
+                  <Ionicons name="checkmark" size={20} color={colors.success} />
                 ) : (
-                  <Ionicons name="remove" size={20} color={COLORS.textSecondary} />
+                  <Ionicons name="remove" size={20} color={colors.textSecondary} />
                 )}
                 <Text style={styles.summaryLabel}>House Seeker</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryItem}>
                 {activeWorkspaces.size > 1 ? (
-                  <Ionicons name="checkmark" size={20} color={COLORS.success} />
+                  <Ionicons name="checkmark" size={20} color={colors.success} />
                 ) : (
-                  <Ionicons name="remove" size={20} color={COLORS.textSecondary} />
+                  <Ionicons name="remove" size={20} color={colors.textSecondary} />
                 )}
                 <Text style={styles.summaryLabel}>Additional</Text>
               </View>
@@ -487,7 +490,7 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
         {/* Info Section */}
         <View style={styles.infoSection}>
           <View style={styles.infoHeader}>
-            <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
             <Text style={styles.infoTitle}>Workspace Information</Text>
           </View>
           <Text style={styles.infoText}>
@@ -503,10 +506,10 @@ export const WorkspacePlansScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -519,12 +522,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   headerSubtitle: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   headerIcon: {
     width: 48,
@@ -547,7 +550,7 @@ scrollContent: {
   },
   sectionTitle: {
     ...FONTS.bodyLarge,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.md,
     paddingHorizontal: SPACING.sm,
   },
@@ -575,7 +578,7 @@ scrollContent: {
     position: 'absolute',
     bottom: 4,
     right: 4,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     borderRadius: RADIUS.full,
     padding: 2,
   },
@@ -589,7 +592,7 @@ scrollContent: {
   },
   title: {
     ...FONTS.bodyLarge,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '700',
     marginRight: SPACING.sm,
   },
@@ -601,7 +604,7 @@ scrollContent: {
   },
   defaultText: {
     ...FONTS.caption,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   statusRow: {
@@ -616,11 +619,11 @@ scrollContent: {
   },
   statusText: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   description: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: SPACING.md,
   },
@@ -635,12 +638,12 @@ scrollContent: {
   },
   benefitText: {
     ...FONTS.caption,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
   },
   moreBenefitsText: {
     ...FONTS.caption,
-    color: COLORS.primary,
+    color: colors.primary,
     fontStyle: 'italic',
   },
   subscriptionBadge: {
@@ -673,7 +676,7 @@ scrollContent: {
     fontWeight: '600',
   },
   buttonTextActive: {
-    color: COLORS.text,
+    color: colors.text,
   },
   summaryCard: {
     padding: SPACING.lg,
@@ -690,17 +693,17 @@ scrollContent: {
   },
   summaryNumber: {
     ...FONTS.h2,
-    color: COLORS.primary,
+    color: colors.primary,
     marginBottom: 4,
   },
   summaryLabel: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   summaryDivider: {
     width: 1,
     height: 40,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   skeletonSection: {
     gap: SPACING.lg,
@@ -715,7 +718,7 @@ scrollContent: {
     padding: SPACING.lg,
     marginTop: SPACING.lg,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -725,12 +728,12 @@ scrollContent: {
   },
   infoTitle: {
     ...FONTS.bodyLarge,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   infoText: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
 });

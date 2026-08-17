@@ -8,17 +8,20 @@
  * Green "Got it!" button dismisses and returns user to their current page.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscriptions } from '../contexts/SubscriptionContext';
-import { COLORS, RADIUS, SPACING } from '../constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const TRIAL_NOTIFICATION_DELAY = 5 * 60 * 1000; // 5 minutes
 
 export const TrialNotification: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { trialActive, isSubscribed, trialNotificationShown, markTrialNotificationShown } = useSubscriptions();
   const [visible, setVisible] = React.useState(false);
 
@@ -75,7 +78,7 @@ export const TrialNotification: React.FC = () => {
 
           {/* Icon */}
           <View style={styles.iconWrap}>
-            <Ionicons name="gift-outline" size={28} color={COLORS.success} />
+            <Ionicons name="gift-outline" size={28} color={colors.success} />
           </View>
 
           {/* Content */}
@@ -93,7 +96,7 @@ export const TrialNotification: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -105,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: `${COLORS.success}40`,
+    borderColor: `${colors.success}40`,
     padding: SPACING.xl,
     alignItems: 'center',
     gap: SPACING.md,
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderRadius: 2,
   },
   iconWrap: {
@@ -129,14 +132,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   message: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
     lineHeight: 22,
   },
   button: {
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     paddingHorizontal: 40,

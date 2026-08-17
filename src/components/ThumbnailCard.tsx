@@ -9,11 +9,12 @@
  * Supports placeholder gradients until user images are uploaded.
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Image, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ThumbnailCardProps {
   /** Title displayed below the thumbnail */
@@ -53,6 +54,8 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   width,
   aspectRatio = 16 / 9,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -102,7 +105,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
           />
         ) : (
           <LinearGradient
-            colors={placeholderGradient || [COLORS.primary, COLORS.secondary]}
+            colors={placeholderGradient || [colors.primary, colors.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.placeholderGradient}
@@ -128,7 +131,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         {badge && (
           <View style={styles.badgeContainer}>
             <LinearGradient
-              colors={[COLORS.secondary, COLORS.warning]}
+              colors={[colors.secondary, colors.warning]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.badgeGradient}
@@ -158,7 +161,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         )}
         {meta && (
           <View style={styles.metaRow}>
-            <Ionicons name="ellipse" size={8} color={COLORS.textTertiary} />
+            <Ionicons name="ellipse" size={8} color={colors.textTertiary} />
             <Text style={styles.metaText}>{meta}</Text>
           </View>
         )}
@@ -191,6 +194,8 @@ interface ThumbnailGridProps {
 }
 
 export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({ children, style }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const items = React.Children.toArray(children);
   const rows: React.ReactNode[][] = [];
   
@@ -213,13 +218,13 @@ export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({ children, style })
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   // Card
   card: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
     ...SHADOWS.md,
   },
@@ -298,13 +303,13 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     lineHeight: 20,
   },
   description: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 16,
   },
   metaRow: {
@@ -315,7 +320,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   // Grid

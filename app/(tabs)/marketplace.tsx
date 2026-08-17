@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { MarketplaceScreen } from '../../src/screens/MarketplaceScreen';
 import { PaywallOverlay } from '../../src/components/PaywallOverlay';
 import { useSubscriptions } from '../../src/contexts/SubscriptionContext';
-import { COLORS, RADIUS, SPACING } from '../../src/constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
 
 export default function MarketplaceTab() {
+  const { colors } = useTheme();
   const { isSeekerLocked } = useSubscriptions();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [paywallVisible, setPaywallVisible] = useState(isSeekerLocked);
   const navigation = {
     navigate: (route: string, params?: any) => {
@@ -40,7 +43,8 @@ export default function MarketplaceTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -55,12 +59,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
     alignItems: 'center',
   },
   blurMessage: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',

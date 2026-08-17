@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeInput } from '../utils/sanitize';
 import { validatePassword, PASSWORD_REQUIREMENTS } from '../utils/validation';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { BlurText, FadeInView } from '../components/BlurText';
 
 const BG_IMAGE = require('../../assets/login-bg.jpg');
@@ -26,7 +27,8 @@ const BG_IMAGE = require('../../assets/login-bg.jpg');
 type EmailMode = 'login' | 'signup';
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { signIn, signUp, isLoading } = useAuth();
 
   const [emailMode, setEmailMode] = useState<EmailMode>('login');
@@ -83,167 +85,171 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={[styles.topSection, { paddingTop: insets.top + 16 }]}>
-          <FadeInView delay={100} duration={600}>
-            <View style={styles.logoCircle}>
-              <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
-            </View>
-          </FadeInView>
-          <BlurText text="HAMA" variant="h1" delay={300} duration={800} />
-          <BlurText text="Find. Move. Settle." variant="caption" delay={600} duration={800} color={COLORS.textSecondary} />
-        </View>
-
-        <FadeInView delay={400} duration={700} slideUp slideDistance={30} style={styles.bottomSheet}>
-          <LinearGradient
-            colors={['rgba(0, 0, 0, 0.92)', 'rgba(0, 0, 0, 0.98)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.sheetGradient}
+        <FadeInView delay={300} duration={700} slideUp slideDistance={20} style={styles.cardContainer}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.dragHandle} />
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-            >
-              <Text style={styles.formTitle}>{emailMode === 'login' ? 'Welcome Back' : 'Create Account'}</Text>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={18} color={COLORS.textTertiary} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email address"
-                  placeholderTextColor={COLORS.textTertiary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={email}
-                  onChangeText={(t) => { setEmail(sanitizeInput(t, 254)); if (errorMsg) setErrorMsg(''); }}
-                  editable={!isLoading}
-                />
-                {email.length > 0 && (
-                  <TouchableOpacity onPress={() => setEmail('')}>
-                    <Ionicons name="close-circle" size={18} color={COLORS.textTertiary} />
-                  </TouchableOpacity>
-                )}
+            <View style={styles.logoWrap}>
+              <View style={styles.logoCircle}>
+                <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
               </View>
+            </View>
+            <BlurText text="HAMA" variant="h1" delay={100} duration={600} />
+            <BlurText text="Find. Move. Settle." variant="caption" delay={300} duration={600} color={colors.textSecondary} />
 
+            <Text style={styles.formTitle}>{emailMode === 'login' ? 'Welcome Back' : 'Create Account'}</Text>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={18} color={colors.textTertiary} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email address"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={email}
+                onChangeText={(t) => { setEmail(sanitizeInput(t, 254)); if (errorMsg) setErrorMsg(''); }}
+                editable={!isLoading}
+              />
+              {email.length > 0 && (
+                <TouchableOpacity onPress={() => setEmail('')}>
+                  <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={colors.textTertiary}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                value={password}
+                onChangeText={(t) => { setPassword(sanitizeInput(t, 128, { trim: false, stripSql: false })); if (errorMsg) setErrorMsg(''); }}
+                editable={!isLoading}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+
+            {emailMode === 'signup' && password.length > 0 && passwordValidation && (
+              <View style={styles.passwordRequirements}>
+                {PASSWORD_REQUIREMENTS.map((req) => {
+                  const met = passwordValidation.checks[req.key];
+                  return (
+                    <View key={req.key} style={styles.requirementRow}>
+                      <Ionicons name={met ? 'checkmark-circle' : 'ellipse-outline'} size={12} color={met ? colors.success : colors.textTertiary} />
+                      <Text style={[styles.requirementText, met && styles.requirementMet]}>{req.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {emailMode === 'signup' && (
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={18} color={COLORS.textTertiary} />
+                <Ionicons name="lock-closed-outline" size={18} color={colors.textTertiary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor={COLORS.textTertiary}
+                  placeholder="Confirm password"
+                  placeholderTextColor={colors.textTertiary}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
-                  value={password}
-                  onChangeText={(t) => { setPassword(sanitizeInput(t, 128, { trim: false, stripSql: false })); if (errorMsg) setErrorMsg(''); }}
+                  value={confirmPassword}
+                  onChangeText={(t) => { setConfirmPassword(sanitizeInput(t, 128, { trim: false, stripSql: false })); if (errorMsg) setErrorMsg(''); }}
                   editable={!isLoading}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={COLORS.textTertiary} />
-                </TouchableOpacity>
+                {confirmPassword.length > 0 && (
+                  <Ionicons name={doPasswordsMatch ? 'checkmark-circle' : 'close-circle'} size={18} color={doPasswordsMatch ? colors.success : colors.error} />
+                )}
               </View>
+            )}
 
-              {emailMode === 'signup' && password.length > 0 && passwordValidation && (
-                <View style={styles.passwordRequirements}>
-                  {PASSWORD_REQUIREMENTS.map((req) => {
-                    const met = passwordValidation.checks[req.key];
-                    return (
-                      <View key={req.key} style={styles.requirementRow}>
-                        <Ionicons name={met ? 'checkmark-circle' : 'ellipse-outline'} size={12} color={met ? COLORS.success : COLORS.textTertiary} />
-                        <Text style={[styles.requirementText, met && styles.requirementMet]}>{req.label}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+            {errorMsg.length > 0 && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{errorMsg}</Text>
+              </View>
+            )}
 
-              {emailMode === 'signup' && (
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={18} color={COLORS.textTertiary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm password"
-                    placeholderTextColor={COLORS.textTertiary}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    value={confirmPassword}
-                    onChangeText={(t) => { setConfirmPassword(sanitizeInput(t, 128, { trim: false, stripSql: false })); if (errorMsg) setErrorMsg(''); }}
-                    editable={!isLoading}
-                  />
-                  {confirmPassword.length > 0 && (
-                    <Ionicons name={doPasswordsMatch ? 'checkmark-circle' : 'close-circle'} size={18} color={doPasswordsMatch ? COLORS.success : COLORS.error} />
-                  )}
-                </View>
-              )}
-
-              {errorMsg.length > 0 && (
-                <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle" size={16} color={COLORS.error} />
-                  <Text style={styles.errorText}>{errorMsg}</Text>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={[styles.submitButton, (!canSubmit || isLoading) && styles.submitButtonDisabled]}
-                onPress={handleSubmit}
-                disabled={!canSubmit || isLoading}
-                activeOpacity={0.8}
+            <TouchableOpacity
+              style={[styles.submitButton, (!canSubmit || isLoading) && styles.submitButtonDisabled]}
+              onPress={handleSubmit}
+              disabled={!canSubmit || isLoading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={canSubmit && !isLoading ? colors.gradientPremium : [colors.textTertiary, colors.textTertiary]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={styles.gradientButton}
               >
-                <LinearGradient
-                  colors={canSubmit && !isLoading ? COLORS.gradientPremium : [COLORS.textTertiary, COLORS.textTertiary]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={styles.gradientButton}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text style={styles.submitText}>{emailMode === 'login' ? 'Sign In' : 'Create Account'}</Text>
-                  )}
-                </LinearGradient>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.submitText}>{emailMode === 'login' ? 'Sign In' : 'Create Account'}</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {emailMode === 'login' && (
+              <TouchableOpacity style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
+            )}
 
-              {emailMode === 'login' && (
-                <TouchableOpacity style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')}>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              )}
-
-              <View style={styles.toggleRow}>
-                <Text style={styles.toggleText}>
-                  {emailMode === 'login' ? "Don't have an account?" : 'Already have an account?'}
-                </Text>
-                <TouchableOpacity onPress={() => { setEmailMode(prev => prev === 'login' ? 'signup' : 'login'); setErrorMsg(''); setConfirmPassword(''); }} disabled={isLoading}>
-                  <Text style={styles.toggleLink}>{emailMode === 'login' ? 'Sign Up' : 'Sign In'}</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </LinearGradient>
+            <View style={styles.toggleRow}>
+              <Text style={styles.toggleText}>
+                {emailMode === 'login' ? "Don't have an account?" : 'Already have an account?'}
+              </Text>
+              <TouchableOpacity onPress={() => { setEmailMode(prev => prev === 'login' ? 'signup' : 'login'); setErrorMsg(''); setConfirmPassword(''); }} disabled={isLoading}>
+                <Text style={styles.toggleLink}>{emailMode === 'login' ? 'Sign Up' : 'Sign In'}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </FadeInView>
       </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   flex: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
-  topSection: {
+  cardContainer: {
+    marginHorizontal: 20,
+    maxWidth: 420,
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  scrollContent: {
+    padding: 24,
+    gap: 12,
+  },
+  logoWrap: {
     alignItems: 'center',
-    paddingBottom: SPACING.lg,
-    gap: 6,
+    marginBottom: 4,
   },
   logoCircle: {
     width: 72,
@@ -261,37 +267,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
   },
-  bottomSheet: {
-    flex: 1,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: 'hidden',
-    maxHeight: '60%',
-  },
-  sheetGradient: {
-    flex: 1,
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-scrollContent: {
-      paddingHorizontal: SPACING.lg,
-      paddingBottom: 32,
-      gap: 10,
-      maxWidth: 720,
-      width: '100%',
-      alignSelf: 'center',
-  },
   formTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginTop: 4,
   },
   inputContainer: {
@@ -308,7 +287,7 @@ scrollContent: {
   },
   input: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
   },
   passwordRequirements: {
@@ -320,11 +299,11 @@ scrollContent: {
     gap: 6,
   },
   requirementText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   requirementMet: {
-    color: COLORS.success,
+    color: colors.success,
   },
   errorContainer: {
     flexDirection: 'row',
@@ -337,7 +316,7 @@ scrollContent: {
     borderColor: 'rgba(255, 77, 106, 0.25)',
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 13,
     flex: 1,
   },
@@ -364,7 +343,7 @@ scrollContent: {
     paddingVertical: 2,
   },
   forgotText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -375,11 +354,11 @@ scrollContent: {
     gap: 6,
   },
   toggleText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   toggleLink: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
   },

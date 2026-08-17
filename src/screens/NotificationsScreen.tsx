@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,10 +8,13 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getNotifications, markAllAsRead } from '../services/notificationService';
 import { useAuth } from '../contexts/AuthContext';
 import type { Notification } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUserId } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +38,7 @@ export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Notifications</Text>
           {unread.length > 0 && (
@@ -83,7 +86,7 @@ export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation 
 
             {notifications.length === 0 && (
               <View style={styles.emptyContainer}>
-                <Ionicons name="notifications-off-outline" size={48} color={COLORS.textTertiary} />
+                <Ionicons name="notifications-off-outline" size={48} color={colors.textTertiary} />
                 <Text style={styles.emptyTitle}>No notifications yet</Text>
                 <Text style={styles.emptySubtitle}>We'll let you know when something arrives</Text>
               </View>
@@ -97,10 +100,10 @@ export const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation 
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   skeletonSection: {
     padding: SPACING.md,
@@ -112,10 +115,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   emptySubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 40,
@@ -132,10 +135,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   unreadBadge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: RADIUS.full,
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   markAllText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -161,7 +164,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   sectionLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',

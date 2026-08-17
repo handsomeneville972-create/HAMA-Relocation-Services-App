@@ -4,13 +4,14 @@
  * Displays the latest platform improvements and version history.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const VERSION_HISTORY = [
   {
@@ -49,11 +50,11 @@ const VERSION_HISTORY = [
   },
 ];
 
-const CHIP_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  feature: { label: 'New', color: COLORS.accent, bg: 'rgba(0, 212, 170, 0.15)' },
-  improvement: { label: 'Improved', color: COLORS.primaryLight, bg: 'rgba(255, 107, 0, 0.15)' },
-  fix: { label: 'Fixed', color: COLORS.warning, bg: 'rgba(255, 184, 77, 0.15)' },
-};
+const createChipConfig = (colors: ThemeColors): Record<string, { label: string; color: string; bg: string }> => ({
+  feature: { label: 'New', color: colors.accent, bg: 'rgba(0, 212, 170, 0.15)' },
+  improvement: { label: 'Improved', color: colors.primaryLight, bg: 'rgba(255, 107, 0, 0.15)' },
+  fix: { label: 'Fixed', color: colors.warning, bg: 'rgba(255, 184, 77, 0.15)' },
+});
 
 interface WhatsNewScreenProps {
   navigation?: any;
@@ -61,13 +62,16 @@ interface WhatsNewScreenProps {
 
 export const WhatsNewScreen: React.FC<WhatsNewScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const chipConfig = useMemo(() => createChipConfig(colors), [colors]);
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>What's New</Text>
         <Text style={styles.headerSubtitle}>Latest platform improvements and updates</Text>
@@ -82,7 +86,7 @@ export const WhatsNewScreen: React.FC<WhatsNewScreenProps> = ({ navigation }) =>
           style={styles.currentVersionBanner}
         >
           <View style={styles.versionChip}>
-            <Ionicons name="sparkles" size={16} color={COLORS.primary} />
+            <Ionicons name="sparkles" size={16} color={colors.primary} />
             <Text style={styles.versionChipText}>v{VERSION_HISTORY[0].version}</Text>
           </View>
           <Text style={styles.currentVersionTitle}>What's New in HAMA™</Text>
@@ -98,7 +102,7 @@ export const WhatsNewScreen: React.FC<WhatsNewScreenProps> = ({ navigation }) =>
             </View>
             <View style={styles.changesList}>
               {version.changes.map((change, ci) => {
-                const chip = CHIP_CONFIG[change.type] || CHIP_CONFIG.feature;
+                const chip = chipConfig[change.type] || chipConfig.feature;
                 return (
                   <View key={ci} style={styles.changeRow}>
                     <View style={[styles.changeChip, { backgroundColor: chip.bg }]}>
@@ -118,10 +122,10 @@ export const WhatsNewScreen: React.FC<WhatsNewScreenProps> = ({ navigation }) =>
           <Text style={styles.roadmapDesc}>See what we're building next</Text>
           <View style={styles.roadmapCategories}>
             {[
-              { status: 'Planned', color: COLORS.primary, examples: 'Advanced AI Forecasting' },
-              { status: 'In Development', color: COLORS.warning, examples: 'Smart Inventory Automation' },
-              { status: 'Testing', color: COLORS.info, examples: 'Business Analytics Dashboard' },
-              { status: 'Released', color: COLORS.success, examples: 'AI Assistant, Marketplace' },
+              { status: 'Planned', color: colors.primary, examples: 'Advanced AI Forecasting' },
+              { status: 'In Development', color: colors.warning, examples: 'Smart Inventory Automation' },
+              { status: 'Testing', color: colors.info, examples: 'Business Analytics Dashboard' },
+              { status: 'Released', color: colors.success, examples: 'AI Assistant, Marketplace' },
             ].map((cat, i) => (
               <View key={i} style={styles.roadmapRow}>
                 <View style={[styles.roadmapDot, { backgroundColor: cat.color }]} />
@@ -140,10 +144,10 @@ export const WhatsNewScreen: React.FC<WhatsNewScreenProps> = ({ navigation }) =>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -153,17 +157,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -192,17 +196,17 @@ scrollContent: {
     borderRadius: RADIUS.full,
   },
   versionChipText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 13,
     fontWeight: '700',
   },
   currentVersionTitle: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   currentVersionDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   versionCard: {
@@ -216,10 +220,10 @@ scrollContent: {
   },
   versionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   versionDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   changesList: {
@@ -242,7 +246,7 @@ scrollContent: {
   },
   changeText: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -251,11 +255,11 @@ scrollContent: {
   },
   roadmapTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   roadmapDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     marginBottom: SPACING.md,
   },
@@ -276,12 +280,12 @@ scrollContent: {
     flex: 1,
   },
   roadmapStatus: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   roadmapExamples: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 1,
   },

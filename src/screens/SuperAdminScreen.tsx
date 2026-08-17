@@ -17,13 +17,14 @@
  * - Audit Logs: Track all platform actions
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { ADMIN_PRICING_ROWS, TIER_COLORS } from '../constants/plans';
@@ -104,6 +105,8 @@ interface SuperAdminScreenProps {
 
 export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [overview, setOverview] = useState<any>(null);
@@ -161,9 +164,9 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
 
   // ===== PLATFORM HEALTH =====
   const healthStatus = (status: string) => {
-    const colors: Record<string, string> = { healthy: COLORS.success, warning: COLORS.warning, critical: COLORS.error };
+    const statusColorMap: Record<string, string> = { healthy: colors.success, warning: colors.warning, critical: colors.error };
     const labels: Record<string, string> = { healthy: 'Healthy', warning: 'Warning', critical: 'Critical' };
-    return { color: colors[status] || COLORS.textTertiary, label: labels[status] || status };
+    return { color: statusColorMap[status] || colors.textTertiary, label: labels[status] || status };
   };
 
   // ===== TOGGLE FEATURE FLAG =====
@@ -281,14 +284,14 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
     <>
       <Text style={styles.sectionTitle}>Overview</Text>
       <View style={styles.metricsGrid}>
-        <MetricCard icon="people" value={overview?.totalUsers.toLocaleString() ?? '---'} label="Total Users" color={COLORS.primary} />
-        <MetricCard icon="person-check" value={overview?.activeUsersToday.toLocaleString() ?? '---'} label="Active Today" color={COLORS.accent} />
-        <MetricCard icon="trending-up" value={overview?.newRegistrations.toString() ?? '---'} label="New Today" color={COLORS.info} />
+        <MetricCard icon="people" value={overview?.totalUsers.toLocaleString() ?? '---'} label="Total Users" color={colors.primary} />
+        <MetricCard icon="person-check" value={overview?.activeUsersToday.toLocaleString() ?? '---'} label="Active Today" color={colors.accent} />
+        <MetricCard icon="trending-up" value={overview?.newRegistrations.toString() ?? '---'} label="New Today" color={colors.info} />
       </View>
       <View style={styles.metricsGrid}>
-        <MetricCard icon="star" value={overview?.premiumMembers.toLocaleString() ?? '---'} label="Premium Members" color={COLORS.warning} />
-        <MetricCard icon="notifications" value={overview?.waitlistMembers.toLocaleString() ?? '---'} label="Waitlist" color={COLORS.secondary} />
-        <MetricCard icon="headset" value={overview?.supportTicketsOpen.toString() ?? '---'} label="Open Tickets" color={COLORS.error} />
+        <MetricCard icon="star" value={overview?.premiumMembers.toLocaleString() ?? '---'} label="Premium Members" color={colors.warning} />
+        <MetricCard icon="notifications" value={overview?.waitlistMembers.toLocaleString() ?? '---'} label="Waitlist" color={colors.secondary} />
+        <MetricCard icon="headset" value={overview?.supportTicketsOpen.toString() ?? '---'} label="Open Tickets" color={colors.error} />
       </View>
 
       <Text style={styles.sectionTitle}>Platform Health</Text>
@@ -312,14 +315,14 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             <View style={styles.healthRow}>
               <Text style={styles.healthLabel}>Storage Usage</Text>
               <View style={styles.healthBarBg}>
-                <View style={[styles.healthBarFill, { width: `${overview.platformHealth.storageUsage}%`, backgroundColor: overview.platformHealth.storageUsage > 80 ? COLORS.warning : COLORS.accent }]} />
+                <View style={[styles.healthBarFill, { width: `${overview.platformHealth.storageUsage}%`, backgroundColor: overview.platformHealth.storageUsage > 80 ? colors.warning : colors.accent }]} />
               </View>
               <Text style={styles.healthValue}>{overview.platformHealth.storageUsage}%</Text>
             </View>
             <View style={[styles.healthRow, { borderBottomWidth: 0 }]}>
               <Text style={styles.healthLabel}>Response Time</Text>
               <Text style={styles.healthValue}>{overview.platformHealth.serverResponseTime}ms</Text>
-              <Text style={[styles.healthDotText, { color: overview.platformHealth.serverResponseTime < 200 ? COLORS.success : COLORS.warning }]}>
+              <Text style={[styles.healthDotText, { color: overview.platformHealth.serverResponseTime < 200 ? colors.success : colors.warning }]}>
                 {overview.platformHealth.serverResponseTime < 200 ? 'Fast' : 'Slow'}
               </Text>
             </View>
@@ -335,17 +338,17 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
   const renderUsers = () => (
     <>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color={COLORS.textTertiary} />
+        <Ionicons name="search" size={18} color={colors.textTertiary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, email, phone, or ID..."
-          placeholderTextColor={COLORS.textTertiary}
+          placeholderTextColor={colors.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         )}
       </View>
@@ -374,12 +377,12 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
               </Text>
               <Text style={styles.userEmail}>{user.email}</Text>
               <View style={styles.userBadges}>
-                <View style={[styles.userBadge, { backgroundColor: COLORS.primary + '20' }]}>
-                  <Text style={[styles.userBadgeText, { color: COLORS.primary }]}>{user.role.replace('_', ' ')}</Text>
+                <View style={[styles.userBadge, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.userBadgeText, { color: colors.primary }]}>{user.role.replace('_', ' ')}</Text>
                 </View>
                 {user.verified && (
-                  <View style={[styles.userBadge, { backgroundColor: COLORS.accent + '20' }]}>
-                    <Text style={[styles.userBadgeText, { color: COLORS.accent }]}>Verified</Text>
+                  <View style={[styles.userBadge, { backgroundColor: colors.accent + '20' }]}>
+                    <Text style={[styles.userBadgeText, { color: colors.accent }]}>Verified</Text>
                   </View>
                 )}
               </View>
@@ -389,7 +392,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
               </Text>
             </View>
             <TouchableOpacity style={styles.userAction}>
-              <Ionicons name="ellipsis-vertical" size={18} color={COLORS.textTertiary} />
+              <Ionicons name="ellipsis-vertical" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         </GlassCard>
@@ -406,57 +409,57 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <Text style={styles.cardHelp}>View and manage all businesses registered on the HAMA™ platform.</Text>
 
       <View style={styles.metricsGrid}>
-        <MetricCard icon="business" value={MOCK_BUSINESSES.length.toString()} label="Total" color={COLORS.primary} />
-        <MetricCard icon="checkmark-circle" value={MOCK_BUSINESSES.filter(b => b.verified).length.toString()} label="Verified" color={COLORS.accent} />
-        <MetricCard icon="trending-up" value={MOCK_BUSINESSES.filter(b => b.activity === 'high').length.toString()} label="Active" color={COLORS.info} />
+        <MetricCard icon="business" value={MOCK_BUSINESSES.length.toString()} label="Total" color={colors.primary} />
+        <MetricCard icon="checkmark-circle" value={MOCK_BUSINESSES.filter(b => b.verified).length.toString()} label="Verified" color={colors.accent} />
+        <MetricCard icon="trending-up" value={MOCK_BUSINESSES.filter(b => b.activity === 'high').length.toString()} label="Active" color={colors.info} />
       </View>
 
       {MOCK_BUSINESSES.map((biz) => (
         <GlassCard key={biz.id}>
           <View style={styles.bizHeader}>
             <View style={styles.bizIcon}>
-              <Ionicons name="business" size={20} color={COLORS.primary} />
+              <Ionicons name="business" size={20} color={colors.primary} />
             </View>
             <View style={styles.bizInfo}>
               <Text style={styles.userName}>{biz.name}</Text>
               <Text style={styles.userEmail}>Owner: {biz.owner} • {biz.industry}</Text>
             </View>
-            <View style={[styles.userBadge, { backgroundColor: biz.verified ? COLORS.accent + '20' : COLORS.warning + '20' }]}>
-              <Text style={[styles.userBadgeText, { color: biz.verified ? COLORS.accent : COLORS.warning }]}>
+            <View style={[styles.userBadge, { backgroundColor: biz.verified ? colors.accent + '20' : colors.warning + '20' }]}>
+              <Text style={[styles.userBadgeText, { color: biz.verified ? colors.accent : colors.warning }]}>
                 {biz.verified ? 'Verified' : 'Unverified'}
               </Text>
             </View>
           </View>
           <View style={styles.bizDetails}>
             <View style={styles.bizDetailItem}>
-              <Ionicons name="globe" size={14} color={COLORS.textTertiary} />
+              <Ionicons name="globe" size={14} color={colors.textTertiary} />
               <Text style={styles.bizDetailText}>{biz.country}</Text>
             </View>
             <View style={styles.bizDetailItem}>
-              <Ionicons name="people" size={14} color={COLORS.textTertiary} />
+              <Ionicons name="people" size={14} color={colors.textTertiary} />
               <Text style={styles.bizDetailText}>{biz.employees} employees</Text>
             </View>
             <View style={styles.bizDetailItem}>
-              <Ionicons name="calendar" size={14} color={COLORS.textTertiary} />
+              <Ionicons name="calendar" size={14} color={colors.textTertiary} />
               <Text style={styles.bizDetailText}>Since {new Date(biz.registrationDate).toLocaleDateString()}</Text>
             </View>
             <View style={styles.bizDetailItem}>
-              <Ionicons name={biz.activity === 'high' ? 'pulse' : 'remove-circle'} size={14} color={biz.activity === 'high' ? COLORS.accent : COLORS.textTertiary} />
+              <Ionicons name={biz.activity === 'high' ? 'pulse' : 'remove-circle'} size={14} color={biz.activity === 'high' ? colors.accent : colors.textTertiary} />
               <Text style={styles.bizDetailText}>{biz.activity.charAt(0).toUpperCase() + biz.activity.slice(1)} activity</Text>
             </View>
           </View>
           <View style={styles.bizActions}>
             <TouchableOpacity style={styles.bizActionBtn} onPress={() => Alert.alert('Verify', `${biz.name} verified successfully.`)}>
-              <Ionicons name="checkmark-circle" size={16} color={COLORS.accent} />
-              <Text style={[styles.bizActionText, { color: COLORS.accent }]}>Verify</Text>
+              <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
+              <Text style={[styles.bizActionText, { color: colors.accent }]}>Verify</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.bizActionBtn} onPress={() => Alert.alert('Flag', `${biz.name} flagged for review.`)}>
-              <Ionicons name="flag" size={16} color={COLORS.warning} />
-              <Text style={[styles.bizActionText, { color: COLORS.warning }]}>Flag</Text>
+              <Ionicons name="flag" size={16} color={colors.warning} />
+              <Text style={[styles.bizActionText, { color: colors.warning }]}>Flag</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.bizActionBtn} onPress={() => Alert.alert('View', `Viewing ${biz.name} details.`)}>
-              <Ionicons name="eye" size={16} color={COLORS.primary} />
-              <Text style={[styles.bizActionText, { color: COLORS.primary }]}>View</Text>
+              <Ionicons name="eye" size={16} color={colors.primary} />
+              <Text style={[styles.bizActionText, { color: colors.primary }]}>View</Text>
             </TouchableOpacity>
           </View>
         </GlassCard>
@@ -473,8 +476,8 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <GlassCard>
         {featureFlags && (
           <View style={styles.flagsContainer}>
-            <FlagToggle label="Subscriptions Enabled" value={featureFlags.subscriptionsEnabled} onToggle={() => toggleFeatureFlag('subscriptionsEnabled')} color={COLORS.secondary} />
-            <FlagToggle label="Payments Enabled" value={featureFlags.paymentsEnabled} onToggle={() => toggleFeatureFlag('paymentsEnabled')} color={COLORS.accent} />
+            <FlagToggle label="Subscriptions Enabled" value={featureFlags.subscriptionsEnabled} onToggle={() => toggleFeatureFlag('subscriptionsEnabled')} color={colors.secondary} />
+            <FlagToggle label="Payments Enabled" value={featureFlags.paymentsEnabled} onToggle={() => toggleFeatureFlag('paymentsEnabled')} color={colors.accent} />
           </View>
         )}
       </GlassCard>
@@ -483,13 +486,13 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <GlassCard>
         {featureFlags && (
           <View style={styles.flagsContainer}>
-            <FlagToggle label="AI Assistant" value={featureFlags.aiAssistant} onToggle={() => toggleFeatureFlag('aiAssistant')} color={COLORS.primary} />
-            <FlagToggle label="Marketplace" value={featureFlags.marketplace} onToggle={() => toggleFeatureFlag('marketplace')} color={COLORS.accent} />
-            <FlagToggle label="Analytics" value={featureFlags.analytics} onToggle={() => toggleFeatureFlag('analytics')} color={COLORS.secondary} />
-            <FlagToggle label="Inventory" value={featureFlags.inventory} onToggle={() => toggleFeatureFlag('inventory')} color={COLORS.warning} />
-            <FlagToggle label="CRM" value={featureFlags.crm} onToggle={() => toggleFeatureFlag('crm')} color={COLORS.info} />
-            <FlagToggle label="Waitlist" value={featureFlags.waitlist} onToggle={() => toggleFeatureFlag('waitlist')} color={COLORS.secondary} />
-            <FlagToggle label="Beta Features" value={featureFlags.betaFeatures} onToggle={() => toggleFeatureFlag('betaFeatures')} color={COLORS.accent} />
+            <FlagToggle label="AI Assistant" value={featureFlags.aiAssistant} onToggle={() => toggleFeatureFlag('aiAssistant')} color={colors.primary} />
+            <FlagToggle label="Marketplace" value={featureFlags.marketplace} onToggle={() => toggleFeatureFlag('marketplace')} color={colors.accent} />
+            <FlagToggle label="Analytics" value={featureFlags.analytics} onToggle={() => toggleFeatureFlag('analytics')} color={colors.secondary} />
+            <FlagToggle label="Inventory" value={featureFlags.inventory} onToggle={() => toggleFeatureFlag('inventory')} color={colors.warning} />
+            <FlagToggle label="CRM" value={featureFlags.crm} onToggle={() => toggleFeatureFlag('crm')} color={colors.info} />
+            <FlagToggle label="Waitlist" value={featureFlags.waitlist} onToggle={() => toggleFeatureFlag('waitlist')} color={colors.secondary} />
+            <FlagToggle label="Beta Features" value={featureFlags.betaFeatures} onToggle={() => toggleFeatureFlag('betaFeatures')} color={colors.accent} />
           </View>
         )}
       </GlassCard>
@@ -510,13 +513,13 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
               </View>
               <Text style={[styles.planPrice, { color: TIER_COLORS[row.tier] }]}>{row.price === 0 ? 'Free' : `KSh ${row.price.toLocaleString()}`}</Text>
               <TouchableOpacity style={styles.planEditBtn}>
-                <Ionicons name="create-outline" size={16} color={COLORS.primary} />
+                <Ionicons name="create-outline" size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
           ))}
         </View>
         <TouchableOpacity style={styles.addPlanBtn} onPress={() => Alert.alert('Create Plan', 'New plan creation form would open here.')}>
-          <Ionicons name="add-circle-outline" size={18} color={COLORS.primary} />
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
           <Text style={styles.addPlanText}>Add New Plan</Text>
         </TouchableOpacity>
       </GlassCard>
@@ -531,9 +534,9 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       {/* User Analytics */}
       <Text style={styles.sectionTitle}>User Analytics</Text>
       <View style={styles.metricsGrid}>
-        <MetricCard icon="people" value={MOCK_ANALYTICS.monthlyActiveUsers.toLocaleString()} label="MAU" color={COLORS.primary} />
-        <MetricCard icon="heart" value={`${MOCK_ANALYTICS.userRetention}%`} label="Retention" color={COLORS.accent} />
-        <MetricCard icon="trending-down" value={`${MOCK_ANALYTICS.userChurn}%`} label="Churn" color={COLORS.error} />
+        <MetricCard icon="people" value={MOCK_ANALYTICS.monthlyActiveUsers.toLocaleString()} label="MAU" color={colors.primary} />
+        <MetricCard icon="heart" value={`${MOCK_ANALYTICS.userRetention}%`} label="Retention" color={colors.accent} />
+        <MetricCard icon="trending-down" value={`${MOCK_ANALYTICS.userChurn}%`} label="Churn" color={colors.error} />
       </View>
 
       {/* Growth Analytics */}
@@ -547,7 +550,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             return (
               <View key={i} style={styles.trendBarCol}>
                 <Text style={styles.trendBarValue}>{val}</Text>
-                <View style={[styles.trendBar, { height: `${height}%`, backgroundColor: COLORS.primary }]} />
+                <View style={[styles.trendBar, { height: `${height}%`, backgroundColor: colors.primary }]} />
                 <Text style={styles.trendBarLabel}>D{i + 1}</Text>
               </View>
             );
@@ -559,7 +562,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <Text style={styles.sectionTitle}>Revenue Forecast</Text>
       <GlassCard>
         <LinearGradient colors={['rgba(0, 212, 170, 0.08)', 'rgba(255, 107, 0, 0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.forecastCard}>
-          <Ionicons name="cash-outline" size={28} color={COLORS.accent} />
+          <Ionicons name="cash-outline" size={28} color={colors.accent} />
           <Text style={styles.forecastTitle}>Projected Monthly Revenue</Text>
           <Text style={styles.forecastValue}>{formatPrice(totalForecast, 'KSh')}/mo</Text>
           <Text style={styles.forecastSub}>Projected Annual: {formatPrice(totalForecast * 12, 'KSh')}/yr</Text>
@@ -580,7 +583,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
           <View key={feature} style={styles.adoptionRow}>
             <Text style={styles.adoptionLabel}>{feature.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</Text>
             <View style={styles.adoptionBarBg}>
-              <View style={[styles.adoptionBarFill, { width: `${rate}%`, backgroundColor: rate > 60 ? COLORS.accent : rate > 30 ? COLORS.warning : COLORS.error }]} />
+              <View style={[styles.adoptionBarFill, { width: `${rate}%`, backgroundColor: rate > 60 ? colors.accent : rate > 30 ? colors.warning : colors.error }]} />
             </View>
             <Text style={styles.adoptionRate}>{rate}%</Text>
           </View>
@@ -595,17 +598,17 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
   const renderSupport = () => (
     <>
       <View style={styles.metricsGrid}>
-        <MetricCard icon="mail-open" value={openTickets.length.toString()} label="Open" color={COLORS.error} />
-        <MetricCard icon="checkmark-circle" value={supportTickets.filter(t => t.status === 'resolved').length.toString()} label="Resolved" color={COLORS.accent} />
-        <MetricCard icon="people" value={supportTickets.length.toString()} label="Total" color={COLORS.primary} />
+        <MetricCard icon="mail-open" value={openTickets.length.toString()} label="Open" color={colors.error} />
+        <MetricCard icon="checkmark-circle" value={supportTickets.filter(t => t.status === 'resolved').length.toString()} label="Resolved" color={colors.accent} />
+        <MetricCard icon="people" value={supportTickets.length.toString()} label="Total" color={colors.primary} />
       </View>
 
       {supportTickets.map((ticket) => {
         const statusColors: Record<SupportTicketStatus, string> = {
-          open: COLORS.error,
-          in_progress: COLORS.warning,
-          resolved: COLORS.accent,
-          closed: COLORS.textTertiary,
+          open: colors.error,
+          in_progress: colors.warning,
+          resolved: colors.accent,
+          closed: colors.textTertiary,
         };
         return (
           <GlassCard key={ticket.id}>
@@ -645,15 +648,15 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       <Text style={styles.sectionTitle}>Feature Request Hub</Text>
 
       <View style={styles.metricsGrid}>
-        <MetricCard icon="bulb" value={featureRequests.length.toString()} label="Total" color={COLORS.warning} />
-        <MetricCard icon="hourglass" value={featureRequests.filter(r => r.status === 'planned').length.toString()} label="Planned" color={COLORS.info} />
-        <MetricCard icon="checkmark-circle" value={featureRequests.filter(r => r.status === 'released').length.toString()} label="Released" color={COLORS.accent} />
+        <MetricCard icon="bulb" value={featureRequests.length.toString()} label="Total" color={colors.warning} />
+        <MetricCard icon="hourglass" value={featureRequests.filter(r => r.status === 'planned').length.toString()} label="Planned" color={colors.info} />
+        <MetricCard icon="checkmark-circle" value={featureRequests.filter(r => r.status === 'released').length.toString()} label="Released" color={colors.accent} />
       </View>
 
       {featureRequests.length === 0 ? (
         <GlassCard>
           <View style={styles.emptyState}>
-            <Ionicons name="bulb-outline" size={48} color={COLORS.textTertiary} />
+            <Ionicons name="bulb-outline" size={48} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No feature requests yet</Text>
             <Text style={styles.emptyText}>Feature requests submitted by users will appear here. You can approve, reject, or add them to the roadmap.</Text>
           </View>
@@ -668,20 +671,20 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
               <GlassCard key={req.id}>
                 <View style={styles.featureHeader}>
                   <View style={styles.featureVotes}>
-                    <Ionicons name="arrow-up" size={16} color={COLORS.warning} />
+                    <Ionicons name="arrow-up" size={16} color={colors.warning} />
                     <Text style={styles.featureVoteCount}>{req.votes}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.featureTitle}>{req.title}</Text>
                     <Text style={styles.featureDesc} numberOfLines={2}>{req.description}</Text>
                     <View style={styles.featureMeta}>
-                      <View style={[styles.featureTag, { backgroundColor: (statusInfo?.color ?? COLORS.textTertiary) + '20' }]}>
-                        <Text style={[styles.featureTagText, { color: statusInfo?.color ?? COLORS.textTertiary }]}>
+                      <View style={[styles.featureTag, { backgroundColor: (statusInfo?.color ?? colors.textTertiary) + '20' }]}>
+                        <Text style={[styles.featureTagText, { color: statusInfo?.color ?? colors.textTertiary }]}>
                           {statusInfo?.label ?? req.status}
                         </Text>
                       </View>
-                      <View style={[styles.featureTag, { backgroundColor: COLORS.primary + '20' }]}>
-                        <Text style={[styles.featureTagText, { color: COLORS.primary }]}>{catInfo?.label ?? req.category}</Text>
+                      <View style={[styles.featureTag, { backgroundColor: colors.primary + '20' }]}>
+                        <Text style={[styles.featureTagText, { color: colors.primary }]}>{catInfo?.label ?? req.category}</Text>
                       </View>
                       <Text style={styles.featureTagText}>{req.userName ?? 'Anonymous'}</Text>
                     </View>
@@ -691,10 +694,10 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
                   {(['planned', 'in_development', 'testing', 'released'] as FeatureRequestStatus[]).map((status) => (
                     <TouchableOpacity
                       key={status}
-                      style={[styles.featureStatusBtn, req.status === status && { backgroundColor: (FEATURE_REQUEST_STATUSES.find(s => s.key === status)?.color ?? COLORS.primary) + '30' }]}
+                      style={[styles.featureStatusBtn, req.status === status && { backgroundColor: (FEATURE_REQUEST_STATUSES.find(s => s.key === status)?.color ?? colors.primary) + '30' }]}
                       onPress={() => updateFeatureRequestStatus(req.id, status)}
                     >
-                      <Text style={[styles.featureStatusBtnText, { color: FEATURE_REQUEST_STATUSES.find(s => s.key === status)?.color ?? COLORS.primary }]}>
+                      <Text style={[styles.featureStatusBtnText, { color: FEATURE_REQUEST_STATUSES.find(s => s.key === status)?.color ?? colors.primary }]}>
                         {FEATURE_REQUEST_STATUSES.find(s => s.key === status)?.label ?? status.replace(/_/g, ' ')}
                       </Text>
                     </TouchableOpacity>
@@ -718,14 +721,14 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
         <TextInput
           style={styles.announceInput}
           placeholder="Announcement title..."
-          placeholderTextColor={COLORS.textTertiary}
+          placeholderTextColor={colors.textTertiary}
           value={newAnnouncement.title}
           onChangeText={t => setNewAnnouncement(prev => ({ ...prev, title: t }))}
         />
         <TextInput
           style={[styles.announceInput, styles.announceInputMultiline]}
           placeholder="Brief excerpt..."
-          placeholderTextColor={COLORS.textTertiary}
+          placeholderTextColor={colors.textTertiary}
           value={newAnnouncement.excerpt}
           onChangeText={t => setNewAnnouncement(prev => ({ ...prev, excerpt: t }))}
           multiline
@@ -759,11 +762,11 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
           <View style={styles.announceRow}>
             <View style={{ flex: 1 }}>
               <View style={styles.featureMeta}>
-                <View style={[styles.featureTag, { backgroundColor: COLORS.primary + '20' }]}>
-                  <Text style={[styles.featureTagText, { color: COLORS.primary }]}>{ann.category}</Text>
+                <View style={[styles.featureTag, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.featureTagText, { color: colors.primary }]}>{ann.category}</Text>
                 </View>
-                <View style={[styles.featureTag, { backgroundColor: ann.published ? COLORS.accent + '20' : COLORS.textTertiary + '20' }]}>
-                  <Text style={[styles.featureTagText, { color: ann.published ? COLORS.accent : COLORS.textTertiary }]}>
+                <View style={[styles.featureTag, { backgroundColor: ann.published ? colors.accent + '20' : colors.textTertiary + '20' }]}>
+                  <Text style={[styles.featureTagText, { color: ann.published ? colors.accent : colors.textTertiary }]}>
                     {ann.published ? 'Published' : 'Draft'}
                   </Text>
                 </View>
@@ -775,10 +778,10 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             </View>
             <View style={styles.announceActions}>
               <TouchableOpacity onPress={() => toggleAnnouncement(ann.id)}>
-                <Ionicons name={ann.published ? 'eye-off' : 'eye'} size={18} color={ann.published ? COLORS.warning : COLORS.accent} />
+                <Ionicons name={ann.published ? 'eye-off' : 'eye'} size={18} color={ann.published ? colors.warning : colors.accent} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => deleteAnnouncement(ann.id)}>
-                <Ionicons name="trash-outline" size={18} color={COLORS.error} />
+                <Ionicons name="trash-outline" size={18} color={colors.error} />
               </TouchableOpacity>
             </View>
           </View>
@@ -819,15 +822,15 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             const totalPerms = Object.keys(perms).length;
             return (
               <View key={role} style={[styles.roleRow, i === Object.keys(ADMIN_ROLE_PERMISSIONS).length - 1 && { borderBottomWidth: 0 }]}>
-                <View style={[styles.roleIcon, { backgroundColor: role === 'super_admin' ? COLORS.warning + '20' : COLORS.primary + '15' }]}>
-                  <Ionicons name={roleIcons[role] as any} size={18} color={role === 'super_admin' ? COLORS.warning : COLORS.primary} />
+                <View style={[styles.roleIcon, { backgroundColor: role === 'super_admin' ? colors.warning + '20' : colors.primary + '15' }]}>
+                  <Ionicons name={roleIcons[role] as any} size={18} color={role === 'super_admin' ? colors.warning : colors.primary} />
                 </View>
                 <View style={styles.roleInfo}>
                   <Text style={styles.roleName}>{roleNames[role]}</Text>
                   <Text style={styles.roleUsers}>{permCount}/{totalPerms} permissions</Text>
                 </View>
                 <View style={styles.rolePermDot}>
-                  <View style={[styles.permBar, { width: `${(permCount / totalPerms) * 100}%`, backgroundColor: permCount === totalPerms ? COLORS.accent : permCount > totalPerms / 2 ? COLORS.warning : COLORS.error }]} />
+                  <View style={[styles.permBar, { width: `${(permCount / totalPerms) * 100}%`, backgroundColor: permCount === totalPerms ? colors.accent : permCount > totalPerms / 2 ? colors.warning : colors.error }]} />
                 </View>
               </View>
             );
@@ -837,11 +840,11 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
         <Text style={styles.sectionTitle}>Security Status</Text>
         <GlassCard>
           {[
-            { label: 'Two-Factor Authentication', status: 'Enabled', color: COLORS.accent, icon: 'shield-checkmark' },
-            { label: 'Session Monitoring', status: 'Active', color: COLORS.accent, icon: 'eye' },
-            { label: 'Suspicious Login Detection', status: 'Active', color: COLORS.accent, icon: 'warning' },
-            { label: 'Account Locking', status: 'After 5 attempts', color: COLORS.warning, icon: 'lock-closed' },
-            { label: 'Security Alerts', status: 'Enabled', color: COLORS.accent, icon: 'notifications' },
+            { label: 'Two-Factor Authentication', status: 'Enabled', color: colors.accent, icon: 'shield-checkmark' },
+            { label: 'Session Monitoring', status: 'Active', color: colors.accent, icon: 'eye' },
+            { label: 'Suspicious Login Detection', status: 'Active', color: colors.accent, icon: 'warning' },
+            { label: 'Account Locking', status: 'After 5 attempts', color: colors.warning, icon: 'lock-closed' },
+            { label: 'Security Alerts', status: 'Enabled', color: colors.accent, icon: 'notifications' },
           ].map((item, i) => (
             <View key={i} style={styles.securityRow}>
               <Ionicons name={item.icon as any} size={18} color={item.color} />
@@ -863,7 +866,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
       {adminActions.length === 0 ? (
         <GlassCard>
           <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={48} color={COLORS.textTertiary} />
+            <Ionicons name="document-text-outline" size={48} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No admin actions recorded yet</Text>
             <Text style={styles.emptyText}>Admin actions will appear here as they are performed (e.g., toggling feature flags, updating tickets).</Text>
           </View>
@@ -890,11 +893,11 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
   if (!isSuperAdmin) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+        <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
           <Text style={styles.headerTitle}>Access Denied</Text>
         </LinearGradient>
         <View style={styles.emptyState}>
-          <Ionicons name="shield-outline" size={64} color={COLORS.error} />
+          <Ionicons name="shield-outline" size={64} color={colors.error} />
           <Text style={styles.emptyTitle}>Super Admin Access Required</Text>
           <Text style={styles.emptyText}>You do not have permission to access this area. Only authorized Super Admin accounts may enter.</Text>
         </View>
@@ -905,10 +908,10 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>Admin Center</Text>
@@ -928,7 +931,7 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
             <Ionicons
               name={tab.icon as any}
               size={16}
-              color={activeTab === tab.key ? '#fff' : COLORS.textTertiary}
+              color={activeTab === tab.key ? '#fff' : colors.textTertiary}
             />
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
@@ -954,71 +957,79 @@ export const SuperAdminScreen: React.FC<SuperAdminScreenProps> = ({ navigation }
 
 // ===== SUB-COMPONENTS =====
 
-const MetricCard: React.FC<{ icon: string; value: string; label: string; color: string }> = ({ icon, value, label, color }) => (
-  <GlassCard style={styles.metricCard}>
-    <View style={[styles.metricIcon, { backgroundColor: color + '15' }]}>
-      <Ionicons name={icon as any} size={20} color={color} />
-    </View>
-    <Text style={styles.metricValue}>{value}</Text>
-    <Text style={styles.metricLabel}>{label}</Text>
-  </GlassCard>
-);
+const MetricCard: React.FC<{ icon: string; value: string; label: string; color: string }> = ({ icon, value, label, color }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <GlassCard style={styles.metricCard}>
+      <View style={[styles.metricIcon, { backgroundColor: color + '15' }]}>
+        <Ionicons name={icon as any} size={20} color={color} />
+      </View>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </GlassCard>
+  );
+};
 
-const FlagToggle: React.FC<{ label: string; value: boolean; onToggle: () => void; color: string }> = ({ label, value, onToggle, color }) => (
-  <TouchableOpacity style={styles.flagRow} onPress={onToggle}>
-    <View style={[styles.flagDot, { backgroundColor: value ? color : COLORS.textTertiary }]} />
-    <Text style={styles.flagLabel}>{label}</Text>
-    <View style={[styles.toggle, value && { backgroundColor: color + '30', borderColor: color }]}>
-      <View style={[styles.toggleKnob, value && { backgroundColor: color, transform: [{ translateX: 16 }] }]} />
-    </View>
-  </TouchableOpacity>
-);
+const FlagToggle: React.FC<{ label: string; value: boolean; onToggle: () => void; color: string }> = ({ label, value, onToggle, color }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <TouchableOpacity style={styles.flagRow} onPress={onToggle}>
+      <View style={[styles.flagDot, { backgroundColor: value ? color : colors.textTertiary }]} />
+      <Text style={styles.flagLabel}>{label}</Text>
+      <View style={[styles.toggle, value && { backgroundColor: color + '30', borderColor: color }]}>
+        <View style={[styles.toggleKnob, value && { backgroundColor: color, transform: [{ translateX: 16 }] }]} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.bgCard, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bgCard, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm },
   headerTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerTitleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerTitle: { ...FONTS.h1, color: COLORS.text },
-  headerSubtitle: { color: COLORS.textSecondary, fontSize: 14, marginTop: 4 },
+  headerTitle: { ...FONTS.h1, color: colors.text },
+  headerSubtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
   tabBar: { maxHeight: 52, marginBottom: SPACING.sm },
-  tabItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.glassBorder, marginLeft: SPACING.md },
-  tabItemActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  tabLabel: { color: COLORS.textTertiary, fontSize: 12, fontWeight: '500' },
+  tabItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.glassBorder, marginLeft: SPACING.md },
+  tabItemActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  tabLabel: { color: colors.textTertiary, fontSize: 12, fontWeight: '500' },
   tabLabelActive: { color: '#fff', fontWeight: '600' },
   scrollContent: { padding: SPACING.md, gap: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
-  sectionTitle: { ...FONTS.h3, color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginTop: SPACING.xs, marginBottom: -4 },
+  sectionTitle: { ...FONTS.h3, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginTop: SPACING.xs, marginBottom: -4 },
   metricsGrid: { flexDirection: 'row', gap: 8 },
   metricCard: { flex: 1, padding: SPACING.sm, alignItems: 'center', gap: 2 },
   metricIcon: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
-  metricValue: { ...FONTS.h3, color: COLORS.text, fontSize: 18 },
-  metricLabel: { color: COLORS.textTertiary, fontSize: 9, fontWeight: '600', textAlign: 'center' },
+  metricValue: { ...FONTS.h3, color: colors.text, fontSize: 18 },
+  metricLabel: { color: colors.textTertiary, fontSize: 9, fontWeight: '600', textAlign: 'center' },
 
   // Health
   healthGrid: { gap: 8 },
-  healthRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
-  healthLabel: { flex: 1, color: COLORS.text, fontSize: 13 },
+  healthRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
+  healthLabel: { flex: 1, color: colors.text, fontSize: 13 },
   healthDot: { width: 8, height: 8, borderRadius: 4 },
   healthDotText: { fontSize: 12, fontWeight: '600' },
   healthValue: { fontSize: 12, fontWeight: '600', minWidth: 40, textAlign: 'right' },
-  healthBarBg: { width: 60, height: 6, borderRadius: 3, backgroundColor: COLORS.glassBorder, overflow: 'hidden' },
+  healthBarBg: { width: 60, height: 6, borderRadius: 3, backgroundColor: colors.glassBorder, overflow: 'hidden' },
   healthBarFill: { height: '100%', borderRadius: 3 },
 
   // Search & Filters
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, gap: 8, borderWidth: 1, borderColor: COLORS.glassBorder },
-  searchInput: { flex: 1, color: COLORS.text, fontSize: 14, paddingVertical: 12 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgCard, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, gap: 8, borderWidth: 1, borderColor: colors.glassBorder },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 12 },
   filterBar: { marginBottom: 4 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.glassBorder, marginRight: 6 },
-  filterChipText: { color: COLORS.textSecondary, fontSize: 12 },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.glassBorder, marginRight: 6 },
+  filterChipText: { color: colors.textSecondary, fontSize: 12 },
 
   // User rows
   userRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  userAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.primary + '30', justifyContent: 'center', alignItems: 'center' },
-  userAvatarText: { color: COLORS.primary, fontSize: 16, fontWeight: '700' },
+  userAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary + '30', justifyContent: 'center', alignItems: 'center' },
+  userAvatarText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
   userInfo: { flex: 1 },
-  userName: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  userEmail: { color: COLORS.textTertiary, fontSize: 12 },
+  userName: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  userEmail: { color: colors.textTertiary, fontSize: 12 },
   userBadges: { flexDirection: 'row', gap: 4, marginTop: 2 },
   userBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: RADIUS.sm },
   userBadgeText: { fontSize: 9, fontWeight: '700' },
@@ -1026,119 +1037,119 @@ const styles = StyleSheet.create({
 
   // Feature flags
   flagsContainer: { gap: 4 },
-  flagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
+  flagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
   flagDot: { width: 8, height: 8, borderRadius: 4 },
-  flagLabel: { flex: 1, color: COLORS.text, fontSize: 13 },
-  toggle: { width: 40, height: 22, borderRadius: 11, backgroundColor: COLORS.glassBorder, borderWidth: 1, borderColor: COLORS.glassBorder, justifyContent: 'center', paddingHorizontal: 2 },
-  toggleKnob: { width: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.textTertiary },
+  flagLabel: { flex: 1, color: colors.text, fontSize: 13 },
+  toggle: { width: 40, height: 22, borderRadius: 11, backgroundColor: colors.glassBorder, borderWidth: 1, borderColor: colors.glassBorder, justifyContent: 'center', paddingHorizontal: 2 },
+  toggleKnob: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.textTertiary },
 
   // Pricing plans
   planRows: { gap: 8 },
   planDot: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   planDotInner: { width: 10, height: 10, borderRadius: 5 },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
-  planName: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  planDesc: { color: COLORS.textTertiary, fontSize: 11, marginTop: 1 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
+  planName: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  planDesc: { color: colors.textTertiary, fontSize: 11, marginTop: 1 },
   planPrice: { fontSize: 15, fontWeight: '700', minWidth: 80, textAlign: 'right' },
   planEditBtn: { padding: 4, marginLeft: 4 },
-  addPlanBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', padding: 10, marginTop: 8, borderWidth: 1, borderColor: COLORS.primary + '40', borderRadius: RADIUS.md, borderStyle: 'dashed' },
-  addPlanText: { color: COLORS.primary, fontSize: 13, fontWeight: '600' },
+  addPlanBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', padding: 10, marginTop: 8, borderWidth: 1, borderColor: colors.primary + '40', borderRadius: RADIUS.md, borderStyle: 'dashed' },
+  addPlanText: { color: colors.primary, fontSize: 13, fontWeight: '600' },
 
   // Analytics
   trendChart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, marginTop: SPACING.md },
   trendBarCol: { flex: 1, alignItems: 'center', gap: 4 },
-  trendBarValue: { color: COLORS.textTertiary, fontSize: 10 },
+  trendBarValue: { color: colors.textTertiary, fontSize: 10 },
   trendBar: { width: 20, borderRadius: RADIUS.sm, minHeight: 4 },
-  trendBarLabel: { color: COLORS.textTertiary, fontSize: 9 },
-  cardTitle: { ...FONTS.h3, color: COLORS.text, marginBottom: 4 },
-  cardHelp: { color: COLORS.textTertiary, fontSize: 12, marginBottom: SPACING.sm, lineHeight: 16 },
+  trendBarLabel: { color: colors.textTertiary, fontSize: 9 },
+  cardTitle: { ...FONTS.h3, color: colors.text, marginBottom: 4 },
+  cardHelp: { color: colors.textTertiary, fontSize: 12, marginBottom: SPACING.sm, lineHeight: 16 },
   forecastCard: { padding: SPACING.lg, alignItems: 'center', gap: 8 },
-  forecastTitle: { color: COLORS.textSecondary, fontSize: 13 },
-  forecastValue: { ...FONTS.h1, color: COLORS.accent, fontSize: 28 },
-  forecastSub: { color: COLORS.textTertiary, fontSize: 12 },
-  forecastBreakdown: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingVertical: 4, borderTopWidth: 1, borderTopColor: COLORS.glassBorder },
-  forecastBreakdownLabel: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '600' },
-  forecastBreakdownValue: { color: COLORS.textTertiary, fontSize: 11 },
+  forecastTitle: { color: colors.textSecondary, fontSize: 13 },
+  forecastValue: { ...FONTS.h1, color: colors.accent, fontSize: 28 },
+  forecastSub: { color: colors.textTertiary, fontSize: 12 },
+  forecastBreakdown: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', paddingVertical: 4, borderTopWidth: 1, borderTopColor: colors.glassBorder },
+  forecastBreakdownLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
+  forecastBreakdownValue: { color: colors.textTertiary, fontSize: 11 },
   adoptionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
-  adoptionLabel: { flex: 1, color: COLORS.text, fontSize: 13 },
-  adoptionBarBg: { width: 100, height: 8, borderRadius: 4, backgroundColor: COLORS.glassBorder, overflow: 'hidden' },
+  adoptionLabel: { flex: 1, color: colors.text, fontSize: 13 },
+  adoptionBarBg: { width: 100, height: 8, borderRadius: 4, backgroundColor: colors.glassBorder, overflow: 'hidden' },
   adoptionBarFill: { height: '100%', borderRadius: 4 },
-  adoptionRate: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '600', width: 36, textAlign: 'right' },
+  adoptionRate: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', width: 36, textAlign: 'right' },
 
   // Support
   ticketHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   ticketStatusDot: { width: 8, height: 8, borderRadius: 4 },
-  ticketSubject: { flex: 1, color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  ticketAction: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: COLORS.primary + '20' },
-  ticketActionText: { color: COLORS.primary, fontSize: 11, fontWeight: '700' },
-  ticketMeta: { color: COLORS.textTertiary, fontSize: 11, marginTop: 4 },
-  ticketDesc: { color: COLORS.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 16 },
+  ticketSubject: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
+  ticketAction: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: colors.primary + '20' },
+  ticketActionText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+  ticketMeta: { color: colors.textTertiary, fontSize: 11, marginTop: 4 },
+  ticketDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 16 },
 
   // Feature requests
   featureHeader: { flexDirection: 'row', gap: 10 },
   featureVotes: { alignItems: 'center', gap: 2, width: 32 },
-  featureVoteCount: { color: COLORS.warning, fontSize: 13, fontWeight: '700' },
-  featureTitle: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  featureDesc: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2, lineHeight: 16 },
+  featureVoteCount: { color: colors.warning, fontSize: 13, fontWeight: '700' },
+  featureTitle: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  featureDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 2, lineHeight: 16 },
   featureMeta: { flexDirection: 'row', gap: 4, marginTop: 4, flexWrap: 'wrap' },
   featureTag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: RADIUS.sm },
-  featureTagText: { fontSize: 9, fontWeight: '600', color: COLORS.textTertiary },
+  featureTagText: { fontSize: 9, fontWeight: '600', color: colors.textTertiary },
   featureActions: { flexDirection: 'row', gap: 4, marginTop: 8, flexWrap: 'wrap' },
-  featureStatusBtn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.glassBorder },
+  featureStatusBtn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.glassBorder },
   featureStatusBtnText: { fontSize: 10, fontWeight: '600' },
 
   // Announcements
-  announceInput: { backgroundColor: COLORS.bg, borderRadius: RADIUS.md, padding: SPACING.md, color: COLORS.text, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: COLORS.glassBorder },
+  announceInput: { backgroundColor: colors.bg, borderRadius: RADIUS.md, padding: SPACING.md, color: colors.text, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.glassBorder },
   announceInputMultiline: { minHeight: 60, textAlignVertical: 'top' },
   announcePickerRow: { marginBottom: 8 },
-  pickerLabel: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '600', marginBottom: 4 },
-  announceChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.glassBorder, marginRight: 4 },
-  announceChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  announceChipText: { fontSize: 11, color: COLORS.textSecondary },
+  pickerLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600', marginBottom: 4 },
+  announceChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.glassBorder, marginRight: 4 },
+  announceChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  announceChipText: { fontSize: 11, color: colors.textSecondary },
   announceChipTextActive: { color: '#fff', fontWeight: '600' },
-  createAnnounceBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 12 },
+  createAnnounceBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: RADIUS.md, padding: 12 },
   createAnnounceText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   announceRow: { flexDirection: 'row', gap: 8 },
   announceActions: { flexDirection: 'column', gap: 8, justifyContent: 'center' },
 
   // Business
   bizHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bizIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.primary + '20', justifyContent: 'center', alignItems: 'center' },
+  bizIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primary + '20', justifyContent: 'center', alignItems: 'center' },
   bizInfo: { flex: 1 },
-  bizDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: COLORS.glassBorder },
+  bizDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.glassBorder },
   bizDetailItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  bizDetailText: { color: COLORS.textTertiary, fontSize: 11 },
-  bizActions: { flexDirection: 'row', gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: COLORS.glassBorder },
-  bizActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.glassBorder },
+  bizDetailText: { color: colors.textTertiary, fontSize: 11 },
+  bizActions: { flexDirection: 'row', gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.glassBorder },
+  bizActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.sm, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.glassBorder },
   bizActionText: { fontSize: 11, fontWeight: '600' },
 
   // Security
-  roleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
+  roleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
   roleIcon: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   roleInfo: { flex: 1 },
-  roleName: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-  roleUsers: { color: COLORS.textTertiary, fontSize: 11, marginTop: 1 },
-  rolePermDot: { width: 60, height: 6, borderRadius: 3, backgroundColor: COLORS.glassBorder, overflow: 'hidden' },
+  roleName: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  roleUsers: { color: colors.textTertiary, fontSize: 11, marginTop: 1 },
+  rolePermDot: { width: 60, height: 6, borderRadius: 3, backgroundColor: colors.glassBorder, overflow: 'hidden' },
   permBar: { height: '100%', borderRadius: 3 },
-  securityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.glassBorder },
-  securityLabel: { flex: 1, color: COLORS.text, fontSize: 13 },
+  securityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.glassBorder },
+  securityLabel: { flex: 1, color: colors.text, fontSize: 13 },
   securityValue: { fontSize: 12, fontWeight: '600' },
 
   // Audit log
   actionRow: { gap: 4 },
   actionHeader: { flexDirection: 'row', justifyContent: 'space-between' },
-  actionType: { color: COLORS.primary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
-  actionTime: { color: COLORS.textTertiary, fontSize: 11 },
-  actionAdmin: { color: COLORS.textSecondary, fontSize: 12 },
-  actionResource: { color: COLORS.textTertiary, fontSize: 11 },
-  actionDetails: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  actionType: { color: colors.primary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
+  actionTime: { color: colors.textTertiary, fontSize: 11 },
+  actionAdmin: { color: colors.textSecondary, fontSize: 12 },
+  actionResource: { color: colors.textTertiary, fontSize: 11 },
+  actionDetails: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
 
   // States
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 8 },
-  emptyTitle: { ...FONTS.h3, color: COLORS.textSecondary, textAlign: 'center' },
-  emptyText: { color: COLORS.textTertiary, fontSize: 13, textAlign: 'center', lineHeight: 18, paddingHorizontal: 20 },
+  emptyTitle: { ...FONTS.h3, color: colors.textSecondary, textAlign: 'center' },
+  emptyText: { color: colors.textTertiary, fontSize: 13, textAlign: 'center', lineHeight: 18, paddingHorizontal: 20 },
 
   // Loading
   loadingContainer: { padding: SPACING.xl, alignItems: 'center' },
-  loadingText: { color: COLORS.textTertiary, fontSize: 14 },
+  loadingText: { color: colors.textTertiary, fontSize: 14 },
 });

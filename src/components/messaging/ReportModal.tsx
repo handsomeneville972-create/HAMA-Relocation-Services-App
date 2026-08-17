@@ -5,12 +5,13 @@
  * Provides category selection and description input.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { reportMessage } from '../../services/conversationService';
 import type { ReportCategory } from '../../constants/types';
 
@@ -39,6 +40,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   messageId,
   conversationId,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [selectedCategory, setSelectedCategory] = useState<ReportCategory | null>(null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -77,7 +81,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <View style={styles.header}>
             <Text style={styles.title}>Report</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -93,7 +97,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 <Ionicons
                   name={cat.icon as any}
                   size={18}
-                  color={selectedCategory === cat.value ? COLORS.primary : COLORS.textSecondary}
+                  color={selectedCategory === cat.value ? colors.primary : colors.textSecondary}
                 />
                 <Text style={[styles.categoryText, selectedCategory === cat.value && styles.categoryTextActive]}>
                   {cat.label}
@@ -105,7 +109,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Additional details (optional)"
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -125,7 +129,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -134,13 +139,13 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   modal: {
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   header: {
     flexDirection: 'row',
@@ -150,11 +155,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   subtitle: {
     ...FONTS.body,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginBottom: SPACING.md,
   },
   categories: {
@@ -168,34 +173,34 @@ const styles = StyleSheet.create({
     padding: SPACING.sm + 4,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   categoryActive: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     backgroundColor: 'rgba(255,107,0,0.08)',
   },
   categoryText: {
     ...FONTS.body,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   categoryTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   input: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.sm + 4,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     minHeight: 80,
     textAlignVertical: 'top',
     marginBottom: SPACING.md,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: RADIUS.md,
     paddingVertical: SPACING.sm + 4,
     alignItems: 'center',

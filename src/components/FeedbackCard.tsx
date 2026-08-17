@@ -5,12 +5,13 @@
  * Used across the platform to gather user insights during Early Access.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard } from './GlassCard';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { logEvent } from '../utils/analytics';
 
 interface FeedbackCardProps {
@@ -19,6 +20,8 @@ interface FeedbackCardProps {
 }
 
 export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [love, setLove] = useState('');
@@ -55,7 +58,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
       <GlassCard>
         <View style={styles.submittedContainer}>
           <LinearGradient
-            colors={COLORS.gradientPremium}
+            colors={colors.gradientPremium}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.successIcon}
@@ -96,7 +99,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
                 <Ionicons
                   name={star <= (hoveredRating || rating) ? 'star' : 'star-outline'}
                   size={compact ? 28 : 36}
-                  color={star <= (hoveredRating || rating) ? COLORS.warning : COLORS.textTertiary}
+                  color={star <= (hoveredRating || rating) ? colors.warning : colors.textTertiary}
                 />
               </TouchableOpacity>
             ))}
@@ -109,13 +112,13 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
         {/* What do you love? */}
         <View style={styles.fieldSection}>
           <View style={styles.sectionLabelRow}>
-            <Ionicons name="heart-outline" size={15} color={COLORS.secondary} />
+            <Ionicons name="heart-outline" size={15} color={colors.secondary} />
             <Text style={styles.sectionLabel}>What do you love?</Text>
           </View>
           <TextInput
             style={styles.textInput}
             placeholder="Tell us what's working well..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={love}
             onChangeText={setLove}
             multiline
@@ -126,13 +129,13 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
         {/* What can we improve? */}
         <View style={styles.fieldSection}>
           <View style={styles.sectionLabelRow}>
-            <Ionicons name="construct-outline" size={15} color={COLORS.warning} />
+            <Ionicons name="construct-outline" size={15} color={colors.warning} />
             <Text style={styles.sectionLabel}>What can we improve?</Text>
           </View>
           <TextInput
             style={styles.textInput}
             placeholder="Share suggestions for improvement..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={improve}
             onChangeText={setImprove}
             multiline
@@ -143,13 +146,13 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
         {/* What feature should we build next? */}
         <View style={styles.fieldSection}>
           <View style={styles.sectionLabelRow}>
-            <Ionicons name="rocket-outline" size={15} color={COLORS.primary} />
+            <Ionicons name="rocket-outline" size={15} color={colors.primary} />
             <Text style={styles.sectionLabel}>What feature should we build next?</Text>
           </View>
           <TextInput
             style={styles.textInput}
             placeholder="Describe your ideal feature..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={nextFeature}
             onChangeText={setNextFeature}
             multiline
@@ -164,7 +167,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
           disabled={rating === 0}
         >
           <LinearGradient
-            colors={[COLORS.primary, COLORS.secondary]}
+            colors={[colors.primary, colors.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.submitGradient}
@@ -178,7 +181,8 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ onSubmit, compact })
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     padding: SPACING.lg,
     gap: SPACING.md,
@@ -197,20 +201,20 @@ const styles = StyleSheet.create({
   },
   submittedTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   submittedText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   title: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: -8,
   },
@@ -220,7 +224,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
   },
   sectionLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
     alignSelf: 'flex-start',
@@ -239,7 +243,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   ratingLabel: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -247,11 +251,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   textInput: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    color: COLORS.text,
+    borderColor: colors.glassBorder,
+    color: colors.text,
     fontSize: 14,
     padding: SPACING.md,
     textAlignVertical: 'top',

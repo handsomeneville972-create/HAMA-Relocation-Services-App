@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +18,8 @@ import { trackFreemiumPlanViewed } from '../utils/analytics';
 import { getTrialState, startTrial, subscribeTrial } from '../utils/trial';
 import { recordSubscription } from '../utils/subscriptionStore';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { UserType, SubscriptionPlan } from '../constants/types';
 
 const USER_TYPES: { key: UserType; label: string; icon: string }[] = [
@@ -31,6 +32,8 @@ const USER_TYPES: { key: UserType; label: string; icon: string }[] = [
 type PaymentMethod = 'mpesa' | 'paystack' | 'stripe' | null;
 
 export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const [selectedUserType, setSelectedUserType] = useState<UserType>('seeker');
@@ -148,9 +151,9 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
           <Text style={styles.headerTitle}>Subscriptions</Text>
@@ -170,7 +173,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
               <Ionicons
                 name={type.icon as any}
                 size={18}
-                color={selectedUserType === type.key ? '#fff' : COLORS.textTertiary}
+                color={selectedUserType === type.key ? '#fff' : colors.textTertiary}
               />
               <Text style={[styles.userTypeLabel, selectedUserType === type.key && styles.userTypeLabelActive]}>
                 {type.label}
@@ -191,7 +194,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             <View style={styles.commissionBanner}>
               <LinearGradient colors={['rgba(255,255,255,0.1)', 'rgba(255,107,0,0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.commissionGradient}>
                 <View style={styles.commissionContent}>
-                  <Ionicons name="information-circle" size={22} color={COLORS.secondary} />
+                  <Ionicons name="information-circle" size={22} color={colors.secondary} />
                   <View style={styles.commissionText}>
                     <Text style={styles.commissionTitle}>Marketplace Commission</Text>
                     <Text style={styles.commissionDesc}>5% per completed sale • 10-15% per service booking</Text>
@@ -238,9 +241,9 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                       {plans.map((plan, pi) => (
                         <View key={pi} style={styles.comparisonCell}>
                           {plan.features?.includes(feature) ? (
-                            <Ionicons name="checkmark" size={20} color={COLORS.accent} />
+                            <Ionicons name="checkmark" size={20} color={colors.accent} />
                           ) : (
-                            <Ionicons name="close" size={20} color={COLORS.textTertiary} />
+                            <Ionicons name="close" size={20} color={colors.textTertiary} />
                           )}
                         </View>
                       ))}
@@ -263,10 +266,10 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
             style={styles.paymentSheet}
           >
             <TouchableOpacity style={styles.paymentClose} onPress={closeAll}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
 
-            <Ionicons name="star-outline" size={40} color={COLORS.primary} />
+            <Ionicons name="star-outline" size={40} color={colors.primary} />
             <Text style={styles.paymentTitle}>
               Subscribe to {selectedPlan.tier}
             </Text>
@@ -285,13 +288,13 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                   onPress={() => setPaymentMethod('mpesa')}
                 >
                   <View style={[styles.methodIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
-                    <Ionicons name="phone-portrait-outline" size={24} color={COLORS.primary} />
+                    <Ionicons name="phone-portrait-outline" size={24} color={colors.primary} />
                   </View>
                   <View style={styles.methodInfo}>
                     <Text style={styles.methodName}>M-Pesa</Text>
                     <Text style={styles.methodDesc}>Pay via M-Pesa STK Push</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+                  <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
 
                 {/* Paystack Option (hidden until backend keys are configured) */}
@@ -301,13 +304,13 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                     onPress={() => setPaymentMethod('paystack')}
                   >
                     <View style={[styles.methodIcon, { backgroundColor: 'rgba(0,212,170,0.15)' }]}>
-                      <Ionicons name="card-outline" size={24} color={COLORS.accent} />
+                      <Ionicons name="card-outline" size={24} color={colors.accent} />
                     </View>
                     <View style={styles.methodInfo}>
                       <Text style={styles.methodName}>Paystack</Text>
                       <Text style={styles.methodDesc}>Pay with card or M-Pesa</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+                    <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
                   </TouchableOpacity>
                 )}
 
@@ -318,13 +321,13 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                     onPress={() => setPaymentMethod('stripe')}
                   >
                     <View style={[styles.methodIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
-                      <Ionicons name="logo-usd" size={24} color={COLORS.info} />
+                      <Ionicons name="logo-usd" size={24} color={colors.info} />
                     </View>
                     <View style={styles.methodInfo}>
                       <Text style={styles.methodName}>Stripe</Text>
                       <Text style={styles.methodDesc}>Pay with international card (USD, EUR, GBP)</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+                    <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
                   </TouchableOpacity>
                 )}
               </>
@@ -335,7 +338,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                   style={styles.backToMethods}
                   onPress={() => setPaymentMethod(null)}
                 >
-                  <Ionicons name="arrow-back" size={20} color={COLORS.textSecondary} />
+                  <Ionicons name="arrow-back" size={20} color={colors.textSecondary} />
                   <Text style={styles.backToMethodsText}>Change method</Text>
                 </TouchableOpacity>
 
@@ -343,7 +346,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                 {paymentMethod === 'mpesa' && (
                   <>
                     <View style={styles.inputSection}>
-                      <Ionicons name="phone-portrait-outline" size={32} color={COLORS.primary} />
+                      <Ionicons name="phone-portrait-outline" size={32} color={colors.primary} />
                       <Text style={styles.inputLabel}>
                         Enter your M-Pesa phone number
                       </Text>
@@ -352,7 +355,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                         <TextInput
                           style={styles.textInput}
                           placeholder="712345678"
-                          placeholderTextColor={COLORS.textTertiary}
+                          placeholderTextColor={colors.textTertiary}
                           keyboardType="phone-pad"
                           maxLength={9}
                           value={phoneNumber}
@@ -381,7 +384,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                       }}
                     >
                       <LinearGradient
-                        colors={[COLORS.primary, COLORS.secondary]}
+                        colors={[colors.primary, colors.secondary]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.payButtonGradient}
@@ -402,12 +405,12 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                 {paymentMethod === 'stripe' && (
                   <>
                     <View style={styles.inputSection}>
-                      <Ionicons name="logo-usd" size={32} color={COLORS.info} />
+                      <Ionicons name="logo-usd" size={32} color={colors.info} />
                       <Text style={styles.inputLabel}>
                         Pay with any international card via Stripe
                       </Text>
                       <View style={styles.stripeCardPreview}>
-                        <Ionicons name="card-outline" size={20} color={COLORS.textTertiary} />
+                        <Ionicons name="card-outline" size={20} color={colors.textTertiary} />
                         <Text style={styles.stripeCardText}>
                           Visa • Mastercard • Amex • Discover
                         </Text>
@@ -452,7 +455,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                 {paymentMethod === 'paystack' && (
                   <>
                     <View style={styles.inputSection}>
-                      <Ionicons name="mail-outline" size={32} color={COLORS.accent} />
+                      <Ionicons name="mail-outline" size={32} color={colors.accent} />
                       <Text style={styles.inputLabel}>
                         Enter your email for the payment receipt
                       </Text>
@@ -460,7 +463,7 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
                         <TextInput
                           style={[styles.textInput, { paddingLeft: 16 }]}
                           placeholder="your@email.com"
-                          placeholderTextColor={COLORS.textTertiary}
+                          placeholderTextColor={colors.textTertiary}
                           keyboardType="email-address"
                           autoCapitalize="none"
                           value={email}
@@ -581,10 +584,11 @@ export const SubscriptionsScreen: React.FC<{ navigation: any }> = ({ navigation 
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   loadingContainer: {
     paddingHorizontal: SPACING.md,
@@ -600,7 +604,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -612,10 +616,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -633,16 +637,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   userTypeTabActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   userTypeLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -669,12 +673,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   commissionTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   commissionDesc: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -704,13 +708,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   freemiumBannerTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 4,
   },
   freemiumBannerText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -720,19 +724,19 @@ const styles = StyleSheet.create({
   },
   comparisonTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.md,
   },
   comparisonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
     paddingVertical: 12,
   },
   comparisonFeature: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   comparisonChecks: {
@@ -760,7 +764,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
     alignItems: 'center',
     gap: SPACING.md,
@@ -773,25 +777,25 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
   },
   paymentTitle: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   paymentSubtitle: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
     marginTop: -4,
   },
   chooseMethodTitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -803,13 +807,13 @@ const styles = StyleSheet.create({
   methodCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     width: '100%',
     gap: 12,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   methodIcon: {
     width: 48,
@@ -822,12 +826,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   methodName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   methodDesc: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -839,7 +843,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   backToMethodsText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   inputSection: {
@@ -848,7 +852,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
@@ -856,14 +860,14 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     width: '100%',
   },
   inputPrefix: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     paddingLeft: 16,
@@ -871,7 +875,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
     paddingRight: 16,
@@ -894,7 +898,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   disclaimer: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     textAlign: 'center',
   },
@@ -902,16 +906,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingHorizontal: 16,
     paddingVertical: 12,
     width: '100%',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   stripeCardText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
 });

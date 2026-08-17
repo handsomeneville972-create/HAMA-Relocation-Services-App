@@ -6,12 +6,13 @@
  * staggered fades for text elements.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PaymentSuccessModalProps {
   visible: boolean;
@@ -25,6 +26,8 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
   message = 'Now you have access to all features',
 }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const titleFade = useRef(new Animated.Value(0)).current;
@@ -71,7 +74,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
             ]}
           >
             <LinearGradient
-              colors={[COLORS.success, '#34D399']}
+              colors={[colors.success, '#34D399']}
               style={styles.checkGradient}
             >
               <Ionicons name="checkmark" size={48} color="#fff" />
@@ -100,7 +103,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
     alignItems: 'center',
     width: '100%',
@@ -131,17 +134,17 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
   },
   button: {
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     alignItems: 'center',

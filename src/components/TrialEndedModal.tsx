@@ -10,7 +10,7 @@
  * Step 4 (Success): Animated confirmation
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,7 +21,8 @@ import { PaymentModal } from './PaymentModal';
 import { recordSubscription } from '../utils/subscriptionStore';
 import { purchaseSubscription } from '../services/subscriptionService';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Step = 'renewal' | 'missout' | 'phone' | 'success';
 
@@ -40,6 +41,8 @@ interface TrialEndedModalProps {
 
 export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClose }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUserId } = useAuth();
   const mpesa = useMpesaPayment();
   const [step, setStep] = useState<Step>('renewal');
@@ -119,7 +122,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                 <>
                   <View style={styles.headerRow}>
                     <View style={styles.iconWrap}>
-                      <Ionicons name="time-outline" size={28} color={COLORS.primary} />
+                      <Ionicons name="time-outline" size={28} color={colors.primary} />
                     </View>
                   </View>
 
@@ -131,7 +134,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                   {/* Plan Card */}
                   <View style={styles.planCard}>
                     <View style={styles.planIconWrap}>
-                      <Ionicons name="diamond" size={22} color={COLORS.primary} />
+                      <Ionicons name="diamond" size={22} color={colors.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.planName}>Premium</Text>
@@ -150,7 +153,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={[COLORS.success, '#34D399']}
+                      colors={[colors.success, '#34D399']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.payGradient}
@@ -176,7 +179,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                 <>
                   <View style={styles.headerRow}>
                     <View style={[styles.iconWrap, { backgroundColor: 'rgba(255,59,48,0.12)' }]}>
-                      <Ionicons name="alert-circle-outline" size={28} color={COLORS.error} />
+                      <Ionicons name="alert-circle-outline" size={28} color={colors.error} />
                     </View>
                   </View>
 
@@ -204,7 +207,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={[COLORS.success, '#34D399']}
+                      colors={[colors.success, '#34D399']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.payGradient}
@@ -219,7 +222,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     onPress={onClose}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="close-circle-outline" size={18} color={COLORS.error} />
+                    <Ionicons name="close-circle-outline" size={18} color={colors.error} />
                     <Text style={styles.amGoodText}>Am good</Text>
                   </TouchableOpacity>
                 </>
@@ -230,7 +233,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                 <>
                   <View style={styles.headerRow}>
                     <View style={styles.iconWrap}>
-                      <Ionicons name="phone-portrait-outline" size={28} color={COLORS.success} />
+                      <Ionicons name="phone-portrait-outline" size={28} color={colors.success} />
                     </View>
                   </View>
 
@@ -242,7 +245,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     <TextInput
                       style={styles.textInput}
                       placeholder="712345678"
-                      placeholderTextColor={COLORS.textTertiary}
+                      placeholderTextColor={colors.textTertiary}
                       keyboardType="phone-pad"
                       maxLength={9}
                       value={phoneNumber}
@@ -257,7 +260,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     activeOpacity={0.85}
                   >
                     <LinearGradient
-                      colors={[COLORS.success, '#34D399']}
+                      colors={[colors.success, '#34D399']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.payGradient}
@@ -271,7 +274,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
                     style={styles.backButton}
                     onPress={() => transitionTo('renewal')}
                   >
-                    <Ionicons name="arrow-back" size={16} color={COLORS.textSecondary} />
+                    <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
                     <Text style={styles.backText}>Back</Text>
                   </TouchableOpacity>
                 </>
@@ -310,7 +313,7 @@ export const TrialEndedModal: React.FC<TrialEndedModalProps> = ({ visible, onClo
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -350,12 +353,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -369,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,107,0,0.06)',
     borderWidth: 1,
-    borderColor: `${COLORS.primary}80`,
+    borderColor: `${colors.primary}80`,
     marginBottom: SPACING.lg,
   },
   planIconWrap: {
@@ -381,12 +384,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   planName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   planDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -394,12 +397,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   planPrice: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 18,
     fontWeight: '800',
   },
   planPeriod: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   payButton: {
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   nahText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   featureList: {
@@ -440,18 +443,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   featureNumber: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
   },
   featureText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     flex: 1,
     lineHeight: 20,
   },
   happyText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -465,7 +468,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   amGoodText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -475,19 +478,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     paddingHorizontal: 14,
     marginBottom: 16,
   },
   inputPrefix: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,
   },
   textInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 14,
   },
@@ -499,7 +502,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   backText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
 });

@@ -12,17 +12,20 @@
  *   </StripeWrapper>
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { getStripePublishableKey } from '../services/stripeService';
-import { COLORS, SPACING } from '../constants/theme';
+import { SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface StripeWrapperProps {
   children: React.ReactNode;
 }
 
 export const StripeWrapper: React.FC<StripeWrapperProps> = ({ children }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [publishableKey, setPublishableKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +61,7 @@ export const StripeWrapper: React.FC<StripeWrapperProps> = ({ children }) => {
   if (!publishableKey) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
         <Text style={styles.loadingText}>Loading payments...</Text>
       </View>
     );
@@ -71,20 +74,20 @@ export const StripeWrapper: React.FC<StripeWrapperProps> = ({ children }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     gap: SPACING.sm,
   },
   loadingText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: SPACING.xl,

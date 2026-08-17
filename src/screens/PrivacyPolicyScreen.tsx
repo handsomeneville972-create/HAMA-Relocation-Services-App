@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Linking, Animated,
@@ -6,7 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING } from '../constants/theme';
+import { RADIUS, SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { FadeInView } from '../components/BlurText';
 
 interface PrivacyPolicyScreenProps {
@@ -210,15 +211,17 @@ We aim to respond to all privacy-related requests within 30 business days.`,
 
 export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Privacy Policy</Text>
@@ -233,7 +236,7 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ naviga
           <View style={styles.heroSection}>
             <View style={styles.shieldWrap}>
               <LinearGradient colors={['rgba(255,107,0,0.2)', 'rgba(255,107,0,0.05)']} style={styles.shieldGrad}>
-                <Ionicons name="shield-checkmark" size={40} color={COLORS.primary} />
+                <Ionicons name="shield-checkmark" size={40} color={colors.primary} />
               </LinearGradient>
             </View>
             <Text style={styles.heroTitle}>Your Privacy Matters</Text>
@@ -244,7 +247,7 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ naviga
         {/* Last Updated */}
         <FadeInView delay={100}>
           <View style={styles.updatedBadge}>
-            <Ionicons name="time-outline" size={14} color={COLORS.textTertiary} />
+            <Ionicons name="time-outline" size={14} color={colors.textTertiary} />
             <Text style={styles.updatedText}>Last updated: August 2, 2026</Text>
           </View>
         </FadeInView>
@@ -262,14 +265,14 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ naviga
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionLeft}>
                     <View style={[styles.sectionIcon, isExpanded && styles.sectionIconActive]}>
-                      <Ionicons name={section.icon} size={18} color={isExpanded ? COLORS.primary : COLORS.textSecondary} />
+                      <Ionicons name={section.icon} size={18} color={isExpanded ? colors.primary : colors.textSecondary} />
                     </View>
                     <Text style={[styles.sectionTitle, isExpanded && styles.sectionTitleActive]}>{section.title}</Text>
                   </View>
                   <Ionicons
                     name={isExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color={isExpanded ? COLORS.primary : COLORS.textTertiary}
+                    color={isExpanded ? colors.primary : colors.textTertiary}
                   />
                 </View>
                 {isExpanded && (
@@ -286,13 +289,13 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ naviga
         {/* Contact CTA */}
         <FadeInView delay={800}>
           <View style={styles.contactCard}>
-            <Ionicons name="mail-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="mail-outline" size={24} color={colors.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.contactTitle}>Questions about your privacy?</Text>
               <Text style={styles.contactDesc}>Contact our privacy team at privacy@hama.app</Text>
             </View>
             <TouchableOpacity style={styles.contactBtn} onPress={() => Linking.openURL('mailto:privacy@hama.app')}>
-              <Ionicons name="open-outline" size={16} color={COLORS.primary} />
+              <Ionicons name="open-outline" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
         </FadeInView>
@@ -303,8 +306,8 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({ naviga
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingBottom: 0 },
   headerRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -319,27 +322,24 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, maxWidth: 1200, width: '100%', alignSelf: 'center' },
 
-  // Hero
   heroSection: { alignItems: 'center', marginBottom: SPACING.lg, paddingHorizontal: SPACING.md },
   shieldWrap: { marginBottom: SPACING.md },
   shieldGrad: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
   heroTitle: { color: '#fff', fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
   heroDesc: { color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 20, textAlign: 'center' },
 
-  // Updated badge
   updatedBadge: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     marginBottom: SPACING.lg,
   },
-  updatedText: { color: COLORS.textTertiary, fontSize: 12 },
+  updatedText: { color: colors.textTertiary, fontSize: 12 },
 
-  // Sections
   sectionCard: {
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.lg,
     borderWidth: 1, borderColor: '#2C2C2E',
     marginBottom: SPACING.sm, overflow: 'hidden',
   },
-  sectionCardActive: { borderColor: COLORS.primary + '40' },
+  sectionCardActive: { borderColor: colors.primary + '40' },
   sectionHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
@@ -351,12 +351,11 @@ const styles = StyleSheet.create({
   },
   sectionIconActive: { backgroundColor: 'rgba(255,107,0,0.15)' },
   sectionTitle: { color: '#fff', fontSize: 14, fontWeight: '600', flex: 1 },
-  sectionTitleActive: { color: COLORS.primary },
+  sectionTitleActive: { color: colors.primary },
   sectionBody: { paddingHorizontal: 16, paddingBottom: 16 },
   divider: { height: 1, backgroundColor: '#2C2C2E', marginBottom: 12 },
   sectionText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 20 },
 
-  // Contact
   contactCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#1C1C1E', borderRadius: RADIUS.lg,

@@ -8,7 +8,7 @@
  * are used until images are uploaded via the imageUri prop.
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,7 +24,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { ThumbnailCard, ThumbnailGrid } from '../components/ThumbnailCard';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 // ============================================================
 // SECTION DATA — Ready for user content injection
@@ -329,14 +330,19 @@ const AnimatedSection: React.FC<{ children: React.ReactNode; index: number }> = 
 // SECTION HEADER
 // ============================================================
 
-const SectionHeader: React.FC<{ title: string; subtitle?: string; center?: boolean }> = ({ title, subtitle, center }) => (
-  <View style={[sectionHeaderStyles.container, center && sectionHeaderStyles.center]}>
-    <Text style={sectionHeaderStyles.title}>{title}</Text>
-    {subtitle && <Text style={sectionHeaderStyles.subtitle}>{subtitle}</Text>}
-  </View>
-);
+const SectionHeader: React.FC<{ title: string; subtitle?: string; center?: boolean }> = ({ title, subtitle, center }) => {
+  const { colors } = useTheme();
+  const sectionHeaderStyles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={[sectionHeaderStyles.container, center && sectionHeaderStyles.center]}>
+      <Text style={sectionHeaderStyles.title}>{title}</Text>
+      {subtitle && <Text style={sectionHeaderStyles.subtitle}>{subtitle}</Text>}
+    </View>
+  );
+};
 
-const sectionHeaderStyles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     marginBottom: SPACING.md,
   },
@@ -345,11 +351,11 @@ const sectionHeaderStyles = StyleSheet.create({
   },
   title: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   subtitle: {
     ...FONTS.bodySmall,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     marginTop: 4,
     lineHeight: 20,
   },
@@ -360,6 +366,8 @@ const sectionHeaderStyles = StyleSheet.create({
 // ============================================================
 
 export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles2(colors), [colors]);
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -384,13 +392,13 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         {/* ===== PARALLAX HERO ===== */}
         <Animated.View style={[styles.heroSection, { opacity: heroOpacity, transform: [{ translateY: heroTranslateY }, { scale: heroScale }] }]}>
-          <LinearGradient colors={['#000000', '#0A0A0A', '#000000']} style={styles.heroGradient}>
+          <LinearGradient colors={colors.gradientNight} style={styles.heroGradient}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
             <View style={[styles.heroContent, { paddingTop: insets.top + SPACING.xl }]}>
               <Animated.View style={{ transform: [{ translateY: brandTranslateY }, { scale: brandScale }] }}>
-                <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.brandIcon}>
+                <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.brandIcon}>
                   <Text style={styles.brandIconText}>H</Text>
                 </LinearGradient>
               </Animated.View>
@@ -496,7 +504,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.whoWeAreContent}>
                 <View style={styles.whoWeAreIconRow}>
                   <View style={[styles.whoWeAreIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
-                    <Ionicons name="information-circle" size={28} color={COLORS.primary} />
+                    <Ionicons name="information-circle" size={28} color={colors.primary} />
                   </View>
                   <Text style={styles.whoWeAreTitle}>Who We Are</Text>
                 </View>
@@ -552,7 +560,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <GlassCard style={styles.missionCard}>
                 <View style={styles.missionContent}>
                   <View style={styles.missionIcon}>
-                    <Ionicons name="flag" size={24} color={COLORS.primary} />
+                    <Ionicons name="flag" size={24} color={colors.primary} />
                   </View>
                   <Text style={styles.missionTitle}>Our Mission</Text>
                   <Text style={styles.missionText}>
@@ -563,7 +571,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <GlassCard style={styles.missionCard}>
                 <View style={styles.missionContent}>
                   <View style={[styles.missionIcon, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                    <Ionicons name="eye" size={24} color={COLORS.secondary} />
+                    <Ionicons name="eye" size={24} color={colors.secondary} />
                   </View>
                   <Text style={styles.missionTitle}>Our Vision</Text>
                   <Text style={styles.missionText}>
@@ -584,7 +592,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <GlassCard key={i}>
                   <View style={styles.valueCardInner}>
                     <View style={styles.valueIconContainer}>
-                      <Ionicons name={value.icon as any} size={22} color={COLORS.primary} />
+                      <Ionicons name={value.icon as any} size={22} color={colors.primary} />
                     </View>
                     <View style={styles.valueTextContainer}>
                       <Text style={styles.valueTitle}>{value.title}</Text>
@@ -615,14 +623,14 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </ThumbnailGrid>
             <GlassCard>
               <View style={styles.communityContent}>
-                <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.communityIcon}>
+                <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.communityIcon}>
                   <Ionicons name="people" size={36} color="#fff" />
                 </LinearGradient>
                 <Text style={styles.communityDesc}>
                   Whether you are searching for your first rental, relocating for work, moving closer to school, or planning your next chapter, HAMA is here to help every step of the way.
                 </Text>
                 <TouchableOpacity style={styles.joinButton}>
-                  <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.joinButtonGradient}>
+                  <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.joinButtonGradient}>
                     <Ionicons name="people" size={20} color="#fff" />
                     <Text style={styles.joinButtonText}>Join the Community</Text>
                   </LinearGradient>
@@ -675,9 +683,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.footerColumn}>
                 <Text style={styles.footerColumnTitle}>Company</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('About')}><Text style={styles.footerLink}>About HAMA</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/careers')}><Text style={styles.footerLink}>Careers</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/press')}><Text style={styles.footerLink}>Press</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Blog')}><Text style={styles.footerLink}>Blog</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => Linking.openURL('mailto:support@hama.com')}><Text style={styles.footerLink}>Contact Us</Text></TouchableOpacity>
               </View>
 
@@ -686,8 +692,7 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Text style={styles.footerColumnTitle}>Support</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Settings')}><Text style={styles.footerLink}>Help & Support</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('Faq')}><Text style={styles.footerLink}>FAQs</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/safety')}><Text style={styles.footerLink}>Safety Tips</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://hama.com/terms')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Legal')}><Text style={styles.footerLink}>Terms of Service</Text></TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy' as never)}><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>
               </View>
 
@@ -742,10 +747,11 @@ export const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 // STYLES
 // ============================================================
 
-const styles = StyleSheet.create({
+const createStyles2 = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   // ---- Hero ----
   heroSection: { overflow: 'hidden' },
@@ -753,7 +759,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute', top: 50, left: SPACING.md,
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center', alignItems: 'center', zIndex: 1,
   },
   heroContent: {
@@ -767,16 +773,16 @@ const styles = StyleSheet.create({
   },
   brandIconText: { color: '#fff', fontSize: 32, fontWeight: '800' },
   heroTitle: {
-    ...FONTS.title, color: COLORS.text, textAlign: 'center', marginBottom: SPACING.sm,
+    ...FONTS.title, color: colors.text, textAlign: 'center', marginBottom: SPACING.sm,
   },
   heroSubtitle: {
-    ...FONTS.h3, color: COLORS.primaryLight, textAlign: 'center', marginBottom: SPACING.lg,
+    ...FONTS.h3, color: colors.primaryLight, textAlign: 'center', marginBottom: SPACING.lg,
   },
   heroDescription: {
-    ...FONTS.body, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 24, marginBottom: SPACING.md,
+    ...FONTS.body, color: colors.textSecondary, textAlign: 'center', lineHeight: 24, marginBottom: SPACING.md,
   },
   heroTagline: {
-    ...FONTS.bodySmall, color: COLORS.textTertiary, textAlign: 'center', fontStyle: 'italic',
+    ...FONTS.bodySmall, color: colors.textTertiary, textAlign: 'center', fontStyle: 'italic',
   },
   // ---- Sections ----
   section: {
@@ -795,31 +801,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   whoWeAreTitle: {
-    ...FONTS.h2, color: COLORS.text,
+    ...FONTS.h2, color: colors.text,
   },
   whoWeAreText: {
-    ...FONTS.body, color: COLORS.textSecondary, lineHeight: 22,
+    ...FONTS.body, color: colors.textSecondary, lineHeight: 22,
   },
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.glassBorder,
+    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: colors.glassBorder,
     paddingVertical: SPACING.md, marginVertical: SPACING.sm,
   },
   statItem: {
     flex: 1, alignItems: 'center', gap: 2,
   },
   statValue: {
-    ...FONTS.h2, color: COLORS.text,
+    ...FONTS.h2, color: colors.text,
   },
   statLabel: {
-    color: COLORS.textTertiary, fontSize: 11,
+    color: colors.textTertiary, fontSize: 11,
   },
   statDivider: {
-    width: 1, height: 30, backgroundColor: COLORS.glassBorder,
+    width: 1, height: 30, backgroundColor: colors.glassBorder,
   },
   whoWeAreCta: {
-    ...FONTS.bodySmall, color: COLORS.primaryLight, textAlign: 'center', fontStyle: 'italic',
+    ...FONTS.bodySmall, color: colors.primaryLight, textAlign: 'center', fontStyle: 'italic',
   },
   // ---- Mission & Vision ----
   missionRow: {
@@ -837,10 +843,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm,
   },
   missionTitle: {
-    ...FONTS.h3, color: COLORS.text, marginBottom: SPACING.xs,
+    ...FONTS.h3, color: colors.text, marginBottom: SPACING.xs,
   },
   missionText: {
-    ...FONTS.bodySmall, color: COLORS.textSecondary, lineHeight: 20,
+    ...FONTS.bodySmall, color: colors.textSecondary, lineHeight: 20,
   },
   // ---- Values ----
   valuesGrid: {
@@ -858,10 +864,10 @@ const styles = StyleSheet.create({
     flex: 1, gap: 4,
   },
   valueTitle: {
-    ...FONTS.h3, color: COLORS.text,
+    ...FONTS.h3, color: colors.text,
   },
   valueDesc: {
-    ...FONTS.bodySmall, color: COLORS.textSecondary, lineHeight: 20,
+    ...FONTS.bodySmall, color: colors.textSecondary, lineHeight: 20,
   },
   // ---- Community ----
   communityContent: {
@@ -872,7 +878,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', ...SHADOWS.glow,
   },
   communityDesc: {
-    ...FONTS.body, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22,
+    ...FONTS.body, color: colors.textSecondary, textAlign: 'center', lineHeight: 22,
   },
   joinButton: {
     width: '100%', borderRadius: RADIUS.md, overflow: 'hidden', marginTop: SPACING.sm,
@@ -990,14 +996,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   footerEmailBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -1,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   footerBottomBar: {
     borderTopWidth: 1,

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,8 @@ import { PropertyCard } from '../components/PropertyCard';
 import { StaggerItem } from '../components/StaggerItem';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getFeaturedProperties, searchProperties } from '../services/propertyService';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Property } from '../constants/types';
 
 // ============================================================
@@ -84,7 +85,11 @@ const SORT_OPTIONS = [
 // MOVING SERVICES BANNER
 // ============================================================
 
-const MovingServicesBanner: React.FC = () => (
+const MovingServicesBanner: React.FC = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  return (
   <View style={styles.bannerContainer}>
     <LinearGradient
       colors={['rgba(255,107,0,0.08)', 'rgba(255,107,0,0.02)']}
@@ -94,7 +99,7 @@ const MovingServicesBanner: React.FC = () => (
     >
       <View style={styles.bannerContent}>
         <View style={styles.bannerIconContainer}>
-          <Ionicons name="car-outline" size={28} color={COLORS.primary} />
+          <Ionicons name="car-outline" size={28} color={colors.primary} />
         </View>
         <View style={styles.bannerTextContainer}>
           <Text style={styles.bannerTitle}>Need help moving?</Text>
@@ -104,7 +109,7 @@ const MovingServicesBanner: React.FC = () => (
         </View>
         <TouchableOpacity style={styles.bannerButton} activeOpacity={0.8}>
           <LinearGradient
-            colors={COLORS.gradientPrimary}
+            colors={colors.gradientPrimary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.bannerButtonGradient}
@@ -116,7 +121,8 @@ const MovingServicesBanner: React.FC = () => (
       </View>
     </LinearGradient>
   </View>
-);
+  );
+};
 
 // ============================================================
 // FILTER BOTTOM SHEET
@@ -135,6 +141,8 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
   onApply,
   activeFilters,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [filters, setFilters] = useState(activeFilters);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -183,7 +191,7 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>Filters</Text>
               <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -261,7 +269,7 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
                 }}
               >
                 <LinearGradient
-                  colors={COLORS.gradientPrimary}
+                  colors={colors.gradientPrimary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.applyButtonGradient}
@@ -282,6 +290,8 @@ const FilterBottomSheet: React.FC<FilterSheetProps> = ({
 // ============================================================
 
 export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -410,7 +420,7 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
     if (!loadingMore) return null;
     return (
       <View style={styles.loadingMoreContainer}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
         <Text style={styles.loadingMoreText}>Loading more...</Text>
       </View>
     );
@@ -422,7 +432,7 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconContainer}>
-          <Ionicons name="home-outline" size={48} color={COLORS.textTertiary} />
+          <Ionicons name="home-outline" size={48} color={colors.textTertiary} />
         </View>
         <Text style={styles.emptyTitle}>No featured properties found</Text>
         <Text style={styles.emptySubtitle}>Try changing your filters or search terms</Text>
@@ -436,7 +446,7 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
           }}
         >
           <LinearGradient
-            colors={COLORS.gradientPrimary}
+            colors={colors.gradientPrimary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.emptyButtonGradient}
@@ -466,10 +476,10 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerIcon} onPress={() => navigation.navigate('Notifications')}>
-              <Ionicons name="notifications-outline" size={22} color={COLORS.text} />
+              <Ionicons name="notifications-outline" size={22} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="person-circle-outline" size={26} color={COLORS.text} />
+              <Ionicons name="person-circle-outline" size={26} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -478,18 +488,18 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
       {/* Search Bar */}
       <View style={[styles.searchContainer, { paddingTop: insets.top + 70 }]}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={COLORS.textTertiary} />
+          <Ionicons name="search" size={20} color={colors.textTertiary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by location, property or keyword..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
           />
           <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
-            <Ionicons name="options-outline" size={20} color={COLORS.text} />
+            <Ionicons name="options-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -514,7 +524,7 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
                 <Ionicons
                   name={cat.icon as any}
                   size={16}
-                  color={activeCategory === cat.key ? '#fff' : COLORS.textSecondary}
+                  color={activeCategory === cat.key ? '#fff' : colors.textSecondary}
                 />
                 <Text
                   style={[
@@ -558,8 +568,8 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={COLORS.primary}
-              colors={[COLORS.primary]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
           onScroll={Animated.event(
@@ -588,10 +598,11 @@ export const FeaturedPropertiesScreen: React.FC<{ navigation: any }> = ({ naviga
 // STYLES
 // ============================================================
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   // Header
   header: {
@@ -600,7 +611,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.sm,
   },
@@ -620,11 +631,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
   },
   headerRight: {
@@ -664,7 +675,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     paddingVertical: 0,
   },
   filterButton: {
@@ -698,12 +709,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   categoryChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   categoryChipText: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   categoryChipTextActive: {
@@ -731,7 +742,7 @@ const styles = StyleSheet.create({
   },
   loadingMoreText: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   // Empty state
   emptyContainer: {
@@ -752,12 +763,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   emptySubtitle: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   emptyButton: {
@@ -805,12 +816,12 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   bannerSubtitle: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   bannerButton: {
@@ -862,7 +873,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   sheetContent: {
     paddingHorizontal: SPACING.md,
@@ -873,7 +884,7 @@ const styles = StyleSheet.create({
   },
   filterSectionTitle: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     fontWeight: '600',
     marginBottom: SPACING.sm,
   },
@@ -892,14 +903,14 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: 'rgba(255,107,0,0.15)',
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   filterChipText: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   filterChipTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   sheetFooter: {
@@ -921,7 +932,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     ...FONTS.button,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   applyButton: {
     flex: 2,

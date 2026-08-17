@@ -7,11 +7,12 @@
  * search existing reviews and submit a new one with a star rating.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS, ANIMATION, EASING } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, ANIMATION, EASING } from '../constants/theme';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useTheme } from '../contexts/ThemeContext';
 
 export interface ReviewItem {
   id: string;
@@ -65,18 +66,18 @@ const AnimatedCollapsible: React.FC<{ expanded: boolean; children: React.ReactNo
   );
 };
 
-const StarSelector: React.FC<{ value: number; onChange: (n: number) => void }> = ({ value, onChange }) => (
+const StarSelector: React.FC<{ value: number; onChange: (n: number) => void; colors: ThemeColors; styles: ReturnType<typeof createStyles> }> = ({ value, onChange, colors, styles }) => (
   <View style={styles.starRow}>
     {[1, 2, 3, 4, 5].map((s) => (
       <TouchableOpacity key={s} onPress={() => onChange(s)} hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}>
-        <Ionicons name={s <= value ? 'star' : 'star-outline'} size={28} color={COLORS.warning} />
+        <Ionicons name={s <= value ? 'star' : 'star-outline'} size={28} color={colors.warning} />
       </TouchableOpacity>
     ))}
   </View>
 );
 
 /** Default review card when no custom renderItem is provided. */
-const DefaultReviewCard: React.FC<{ review: ReviewItem }> = ({ review }) => (
+const DefaultReviewCard: React.FC<{ review: ReviewItem; styles: ReturnType<typeof createStyles> }> = ({ review, styles }) => (
   <View style={styles.reviewCard}>
     <View style={styles.reviewTop}>
       <View style={styles.avatarCircle}>
@@ -90,7 +91,7 @@ const DefaultReviewCard: React.FC<{ review: ReviewItem }> = ({ review }) => (
               key={i}
               name={i < Math.floor(review.rating) ? 'star' : 'star-outline'}
               size={12}
-              color={COLORS.warning}
+              color="#FF8A33"
             />
           ))}
         </View>
@@ -131,6 +132,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
   const [filter, setFilter] = useState('');
   const [rating, setRating] = useState(5);
   const [text, setText] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const filtered = filter.trim()
     ? reviews.filter(
@@ -142,7 +145,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
   const visible = expanded || filter.trim() ? filtered : filtered.slice(0, initialCount);
   const hasMore = filtered.length > initialCount;
-  const renderReview = renderItem || ((r: ReviewItem) => <DefaultReviewCard review={r} />);
+  const renderReview = renderItem || ((r: ReviewItem) => <DefaultReviewCard review={r} styles={styles} />);
 
   const handleSubmit = () => {
     if (!text.trim()) {
@@ -170,7 +173,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
       {hasMore && (
         <TouchableOpacity style={styles.seeAllButton} onPress={() => setExpanded((v) => !v)}>
           <Text style={styles.seeAllText}>{expanded ? 'Show less' : seeAllLabel}</Text>
-          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.primary} />
+          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} />
         </TouchableOpacity>
       )}
 
@@ -178,7 +181,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
         <>
           {!composerOpen ? (
             <TouchableOpacity style={styles.giveReviewButton} onPress={() => setComposerOpen(true)}>
-              <Ionicons name="star-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="star-outline" size={18} color={colors.primary} />
               <Text style={styles.giveReviewText}>Give a Review</Text>
             </TouchableOpacity>
           ) : (
@@ -186,28 +189,28 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
               <View style={styles.composer}>
                 {/* Search bar — appears when "Give a Review" is clicked */}
                 <View style={styles.searchBar}>
-                  <Ionicons name="search" size={18} color={COLORS.textTertiary} />
+                  <Ionicons name="search" size={18} color={colors.textTertiary} />
                   <TextInput
                     style={styles.searchInput}
                     placeholder="Search reviews…"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     value={filter}
                     onChangeText={setFilter}
                   />
                   {filter.length > 0 && (
                     <TouchableOpacity onPress={() => setFilter('')}>
-                      <Ionicons name="close-circle" size={18} color={COLORS.textTertiary} />
+                      <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
                     </TouchableOpacity>
                   )}
                 </View>
 
                 <Text style={styles.composerLabel}>Rate your experience</Text>
-                <StarSelector value={rating} onChange={setRating} />
+                <StarSelector value={rating} onChange={setRating} colors={colors} styles={styles} />
 
                 <TextInput
                   style={styles.composerInput}
                   placeholder="Write your review…"
-                  placeholderTextColor={COLORS.textTertiary}
+                  placeholderTextColor={colors.textTertiary}
                   multiline
                   maxLength={500}
                   value={text}
@@ -248,6 +251,8 @@ export const GiveReviewComposer: React.FC<GiveReviewComposerProps> = ({ onSearch
   const [search, setSearch] = useState('');
   const [rating, setRating] = useState(5);
   const [text, setText] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleSubmit = () => {
     if (!text.trim()) {
@@ -265,7 +270,7 @@ export const GiveReviewComposer: React.FC<GiveReviewComposerProps> = ({ onSearch
   if (!open) {
     return (
       <TouchableOpacity style={styles.giveReviewButton} onPress={() => setOpen(true)}>
-        <Ionicons name="star-outline" size={18} color={COLORS.primary} />
+        <Ionicons name="star-outline" size={18} color={colors.primary} />
         <Text style={styles.giveReviewText}>Give a Review</Text>
       </TouchableOpacity>
     );
@@ -275,11 +280,11 @@ export const GiveReviewComposer: React.FC<GiveReviewComposerProps> = ({ onSearch
     <View style={styles.composer}>
       {/* Search bar — appears when "Give a Review" is clicked */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color={COLORS.textTertiary} />
+        <Ionicons name="search" size={18} color={colors.textTertiary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search reviews…"
-          placeholderTextColor={COLORS.textTertiary}
+          placeholderTextColor={colors.textTertiary}
           value={search}
           onChangeText={(q) => {
             setSearch(q);
@@ -288,18 +293,18 @@ export const GiveReviewComposer: React.FC<GiveReviewComposerProps> = ({ onSearch
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => { setSearch(''); onSearchChange?.(''); }}>
-            <Ionicons name="close-circle" size={18} color={COLORS.textTertiary} />
+            <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
           </TouchableOpacity>
         )}
       </View>
 
       <Text style={styles.composerLabel}>Rate your experience</Text>
-      <StarSelector value={rating} onChange={setRating} />
+      <StarSelector value={rating} onChange={setRating} colors={colors} styles={styles} />
 
       <TextInput
         style={styles.composerInput}
         placeholder="Write your review…"
-        placeholderTextColor={COLORS.textTertiary}
+        placeholderTextColor={colors.textTertiary}
         multiline
         maxLength={500}
         value={text}
@@ -323,7 +328,7 @@ export const GiveReviewComposer: React.FC<GiveReviewComposerProps> = ({ onSearch
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   reviewCard: {
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
@@ -344,7 +349,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -352,7 +357,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reviewName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -362,16 +367,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reviewDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   reviewContent: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 19,
   },
   emptyText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 19,
     paddingVertical: SPACING.sm,
@@ -384,7 +389,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
   },
   seeAllText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -397,11 +402,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: `${COLORS.primary}55`,
+    borderColor: `${colors.primary}55`,
     backgroundColor: 'rgba(255,107,0,0.06)',
   },
   giveReviewText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -411,7 +416,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     gap: SPACING.sm,
   },
   searchBar: {
@@ -421,17 +426,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     paddingHorizontal: 14,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     paddingVertical: 10,
   },
   composerLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
     marginTop: 4,
@@ -441,7 +446,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   composerInput: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     minHeight: 80,
     maxHeight: 140,
@@ -449,7 +454,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: 12,
   },
   composerActions: {
@@ -466,7 +471,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   submitButtonDisabled: {
     opacity: 0.4,
@@ -481,7 +486,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   cancelText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
   },
 });

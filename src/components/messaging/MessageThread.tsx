@@ -6,12 +6,13 @@
  * (full screen) and by InboxScreen's desktop master-detail pane.
  */
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated, KeyboardAvoidingView, Platform, ImageBackground, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getConversationById, sendMessage, editMessage, deleteMessage, markConversationAsRead, uploadAttachment } from '../../services/conversationService';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { SkeletonLoader } from '../SkeletonLoader';
 import { ChatHeader } from './ChatHeader';
 import { MessageBubble } from './MessageBubble';
@@ -60,6 +61,9 @@ interface MessageThreadProps {
 }
 
 export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, onBack }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -367,7 +371,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   bgImage: {
     flex: 1,
     backgroundColor: '#1a1a2e',
@@ -399,10 +404,10 @@ const styles = StyleSheet.create({
   dateLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   dateText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '600',
     marginHorizontal: 12,

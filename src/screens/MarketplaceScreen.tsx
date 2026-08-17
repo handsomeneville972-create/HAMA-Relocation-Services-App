@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,14 +13,17 @@ import { PRODUCT_CATEGORIES } from '../constants/data';
 import { getProducts, getSellers } from '../services/productService';
 import { softSanitize } from '../utils/sanitize';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { Product, Seller } from '../constants/types';
+import { useTheme } from '../contexts/ThemeContext';
 
 const PAGE_SIZE = 20;
 
 export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { isPhone, isTablet } = useResponsive();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -74,7 +77,7 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('Cart')}>
-            <Ionicons name="cart-outline" size={22} color={COLORS.text} />
+            <Ionicons name="cart-outline" size={22} color={colors.text} />
             {totalQuantity > 0 && (
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{totalQuantity > 99 ? '99+' : totalQuantity}</Text>
@@ -87,17 +90,17 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
       {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={COLORS.textTertiary} />
+          <Ionicons name="search" size={18} color={colors.textTertiary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search products..."
-            placeholderTextColor={COLORS.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={(text) => setSearchQuery(softSanitize(text))}
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color={COLORS.textTertiary} />
+              <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -132,11 +135,11 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
                 style={styles.sellerCard}
                 onPress={() => navigation.navigate('Storefront', { sellerId: seller.id })}
               >
-                <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sellerGradient}>
+                <LinearGradient colors={colors.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sellerGradient}>
                   <View style={styles.sellerInfo}>
                     <Text style={styles.sellerName} numberOfLines={1}>{seller.name}</Text>
                     <View style={styles.sellerRating}>
-                      <Ionicons name="star" size={12} color={COLORS.warning} />
+                      <Ionicons name="star" size={12} color={colors.warning} />
                       <Text style={styles.sellerRatingText}>{seller.rating}</Text>
                     </View>
                   </View>
@@ -177,7 +180,7 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
                 </ResponsiveGrid>
                 {filteredBySearch.length === 0 && (
                   <View style={styles.emptyState}>
-                    <Ionicons name="search-outline" size={48} color={COLORS.textTertiary} />
+                    <Ionicons name="search-outline" size={48} color={colors.textTertiary} />
                     <Text style={styles.emptyText}>No products found</Text>
                   </View>
                 )}
@@ -189,7 +192,7 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
                     activeOpacity={0.8}
                   >
                     {loadingMore ? (
-                      <ActivityIndicator size="small" color={COLORS.primary} />
+                      <ActivityIndicator size="small" color={colors.primary} />
                     ) : (
                       <Text style={styles.loadMoreText}>Load more</Text>
                     )}
@@ -206,10 +209,10 @@ export const MarketplaceScreen: React.FC<{ navigation: any }> = ({ navigation })
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -221,10 +224,10 @@ const styles = StyleSheet.create({
   headerContent: {},
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -266,16 +269,16 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     gap: 8,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     paddingVertical: 10,
   },
@@ -294,10 +297,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   productCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   sellersScroll: {
@@ -309,7 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     width: 160,
   },
   sellerGradient: {
@@ -321,7 +324,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sellerName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
@@ -332,12 +335,12 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   sellerRatingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 12,
     fontWeight: '600',
   },
   sellerProducts: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     marginTop: 4,
   },
@@ -347,7 +350,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 16,
   },
   loadMoreBtn: {
@@ -355,13 +358,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     marginTop: SPACING.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   loadMoreText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

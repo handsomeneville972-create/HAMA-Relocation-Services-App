@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 /** Union of M-Pesa, Paystack, and Stripe payment steps */
 export type PaymentStep =
@@ -56,6 +57,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const isMpesa = method === 'mpesa';
   const isStripe = method === 'stripe';
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -68,7 +71,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {step === 'sending' && (
             <View style={styles.content}>
               <View style={styles.iconContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
               <Text style={styles.title}>
                 {isMpesa ? 'Initiating M-Pesa...' : isStripe ? 'Setting up Stripe...' : 'Initiating Paystack...'}
@@ -87,7 +90,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {step === 'waiting_pin' && (
             <View style={styles.content}>
               <View style={styles.iconContainer}>
-                <Ionicons name="phone-portrait-outline" size={48} color={COLORS.primary} />
+                <Ionicons name="phone-portrait-outline" size={48} color={colors.primary} />
               </View>
               <Text style={styles.title}>Check Your Phone</Text>
               <Text style={styles.subtitle}>
@@ -100,7 +103,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               )}
               <ActivityIndicator
                 size="small"
-                color={COLORS.primary}
+                color={colors.primary}
                 style={{ marginTop: SPACING.md }}
               />
               <Text style={styles.waitingText}>
@@ -113,7 +116,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {step === 'verifying' && (
             <View style={styles.content}>
               <View style={styles.iconContainer}>
-                <ActivityIndicator size="large" color={COLORS.accent} />
+                <ActivityIndicator size="large" color={colors.accent} />
               </View>
               <Text style={styles.title}>Verifying Payment</Text>
               <Text style={styles.subtitle}>
@@ -131,7 +134,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {step === 'success' && (
             <View style={styles.content}>
               <View style={[styles.iconContainer, styles.successIcon]}>
-                <Ionicons name="checkmark-circle" size={64} color={COLORS.accent} />
+                <Ionicons name="checkmark-circle" size={64} color={colors.accent} />
               </View>
               <Text style={styles.title}>Payment Successful!</Text>
               <Text style={styles.subtitle}>
@@ -156,7 +159,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               )}
               <TouchableOpacity style={styles.button} onPress={onClose}>
                 <LinearGradient
-                  colors={[COLORS.primary, COLORS.secondary]}
+                  colors={[colors.primary, colors.secondary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
@@ -188,7 +191,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 )}
                 <TouchableOpacity style={styles.button} onPress={onClose}>
                   <LinearGradient
-                    colors={[COLORS.primary, COLORS.secondary]}
+                    colors={[colors.primary, colors.secondary]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.buttonGradient}
@@ -205,7 +208,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'center',
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.xl,
   },
   content: {
@@ -241,22 +244,22 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   subtitle: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   txnId: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     fontFamily: 'monospace',
   },
   waitingText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 4,
   },
@@ -269,11 +272,11 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
   },
   receiptLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   receiptNumber: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'monospace',
@@ -300,15 +303,15 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     flex: 1,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     alignItems: 'center',
   },
   retryButtonText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },

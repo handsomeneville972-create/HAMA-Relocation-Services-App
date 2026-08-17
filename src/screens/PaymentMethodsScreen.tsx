@@ -13,7 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { MOCK_PAYMENT_METHODS, MOCK_BILLING_HISTORY } from '../constants/data';
 import { formatPrice } from '../utils/currency';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { SavedPaymentMethod, BillingEntry } from '../constants/types';
 
 type Tab = 'cards' | 'history';
@@ -25,16 +26,16 @@ const CARD_BRAND_COLORS: Record<string, string> = {
   discover: '#FF6000',
 };
 
-function getStatusColor(status: BillingEntry['status']): string {
+function getStatusColor(status: BillingEntry['status'], colors: ThemeColors): string {
   switch (status) {
     case 'paid':
-      return COLORS.success;
+      return colors.success;
     case 'pending':
-      return COLORS.warning;
+      return colors.warning;
     case 'failed':
-      return COLORS.error;
+      return colors.error;
     case 'refunded':
-      return COLORS.info;
+      return colors.info;
   }
 }
 
@@ -60,6 +61,8 @@ function formatDate(isoString: string): string {
 
 export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [activeTab, setActiveTab] = useState<Tab>('cards');
   const [paymentMethods, setPaymentMethods] = useState<SavedPaymentMethod[]>(MOCK_PAYMENT_METHODS);
   const [billingHistory] = useState<BillingEntry[]>(MOCK_BILLING_HISTORY);
@@ -101,12 +104,12 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#000000', '#0A0A0A']}
+        colors={colors.gradientNight}
         style={[styles.header, { paddingTop: insets.top }]}
       >
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleRow}>
             <Text style={styles.headerTitle}>Payment Methods</Text>
@@ -124,7 +127,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
           <Ionicons
             name="card-outline"
             size={18}
-            color={activeTab === 'cards' ? COLORS.primary : COLORS.textTertiary}
+            color={activeTab === 'cards' ? colors.primary : colors.textTertiary}
           />
           <Text style={[styles.tabLabel, activeTab === 'cards' && styles.tabLabelActive]}>
             Saved Cards
@@ -143,7 +146,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
           <Ionicons
             name="receipt-outline"
             size={18}
-            color={activeTab === 'history' ? COLORS.primary : COLORS.textTertiary}
+            color={activeTab === 'history' ? colors.primary : colors.textTertiary}
           />
           <Text style={[styles.tabLabel, activeTab === 'history' && styles.tabLabelActive]}>
             Billing History
@@ -162,7 +165,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
           <>
             {paymentMethods.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="card-outline" size={56} color={COLORS.textTertiary} />
+                <Ionicons name="card-outline" size={56} color={colors.textTertiary} />
                 <Text style={styles.emptyTitle}>No Saved Cards</Text>
                 <Text style={styles.emptyDesc}>
                   Add a card to pay faster with Paystack
@@ -173,7 +176,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                 <Text style={styles.sectionTitle}>Your Cards</Text>
                 <GlassCard noPadding>
                   {paymentMethods.map((method, index) => {
-                    const brandColor = CARD_BRAND_COLORS[method.brand] ?? CARD_BRAND_COLORS.visa;
+                    const brandColor = CARD_BRAND_COLORS[method.brand] ?? CARD_BRAND_colors.visa;
                     return (
                       <View
                         key={method.id}
@@ -217,14 +220,14 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                               style={styles.cardActionBtn}
                               onPress={() => handleSetDefault(method)}
                             >
-                              <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
+                              <Ionicons name="checkmark-circle-outline" size={20} color={colors.primary} />
                             </TouchableOpacity>
                           )}
                           <TouchableOpacity
                             style={styles.cardActionBtn}
                             onPress={() => handleRemoveMethod(method)}
                           >
-                            <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+                            <Ionicons name="trash-outline" size={20} color={colors.error} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -242,7 +245,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                     );
                   }}
                 >
-                  <Ionicons name="add-circle-outline" size={22} color={COLORS.primary} />
+                  <Ionicons name="add-circle-outline" size={22} color={colors.primary} />
                   <Text style={styles.addCardText}>Add New Card</Text>
                 </TouchableOpacity>
               </View>
@@ -253,24 +256,24 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
               <GlassCard noPadding>
                 <View style={styles.methodSummaryItem}>
                   <View style={[styles.methodSummaryIcon, { backgroundColor: 'rgba(255,107,0,0.15)' }]}>
-                    <Ionicons name="phone-portrait-outline" size={22} color={COLORS.primary} />
+                    <Ionicons name="phone-portrait-outline" size={22} color={colors.primary} />
                   </View>
                   <View style={styles.methodSummaryInfo}>
                     <Text style={styles.methodSummaryLabel}>M-Pesa</Text>
                     <Text style={styles.methodSummaryDesc}>Pay via STK Push on your phone</Text>
                   </View>
-                  <Ionicons name="checkmark-circle" size={22} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={22} color={colors.success} />
                 </View>
 
                 <View style={[styles.methodSummaryItem, styles.cardItemBorder]}>
                   <View style={[styles.methodSummaryIcon, { backgroundColor: 'rgba(0,212,170,0.15)' }]}>
-                    <Ionicons name="card-outline" size={22} color={COLORS.accent} />
+                    <Ionicons name="card-outline" size={22} color={colors.accent} />
                   </View>
                   <View style={styles.methodSummaryInfo}>
                     <Text style={styles.methodSummaryLabel}>Paystack (Card)</Text>
                     <Text style={styles.methodSummaryDesc}>Pay with debit/credit card</Text>
                   </View>
-                  <Ionicons name="checkmark-circle" size={22} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={22} color={colors.success} />
                 </View>
               </GlassCard>
             </View>
@@ -282,7 +285,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
           <>
             {sortedBilling.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="receipt-outline" size={56} color={COLORS.textTertiary} />
+                <Ionicons name="receipt-outline" size={56} color={colors.textTertiary} />
                 <Text style={styles.emptyTitle}>No Billing History</Text>
                 <Text style={styles.emptyDesc}>
                   Your payment receipts will appear here
@@ -293,7 +296,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                 <Text style={styles.sectionTitle}>Payment History</Text>
                 <GlassCard noPadding>
                   {sortedBilling.map((entry, index) => {
-                    const statusColor = getStatusColor(entry.status);
+                    const statusColor = getStatusColor(entry.status, colors);
                     return (
                       <View
                         key={entry.id}
@@ -351,10 +354,10 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: SPACING.md,
@@ -370,7 +373,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -381,7 +384,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -400,39 +403,39 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   tabActive: {
     backgroundColor: 'rgba(255,107,0,0.1)',
-    borderColor: COLORS.primary + '40',
+    borderColor: colors.primary + '40',
   },
   tabLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   tabBadge: {
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 8,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   tabBadgeActive: {
-    backgroundColor: COLORS.primary + '30',
+    backgroundColor: colors.primary + '30',
   },
   tabBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   tabBadgeTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   scrollContent: {
     paddingTop: SPACING.sm,
@@ -442,7 +445,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -465,7 +468,7 @@ const styles = StyleSheet.create({
   },
   freemiumPaymentText: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -477,10 +480,10 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   emptyDesc: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     maxWidth: 240,
@@ -494,7 +497,7 @@ const styles = StyleSheet.create({
   },
   cardItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   cardBrandIcon: {
     width: 44,
@@ -512,29 +515,29 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardBrand: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   defaultBadge: {
-    backgroundColor: COLORS.accent + '20',
+    backgroundColor: colors.accent + '20',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   defaultBadgeText: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 10,
     fontWeight: '700',
   },
   cardNumber: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     fontFamily: 'monospace',
     marginTop: 2,
   },
   cardExpiry: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 1,
   },
@@ -546,7 +549,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -559,11 +562,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.primary + '30',
+    borderColor: colors.primary + '30',
     borderStyle: 'dashed',
   },
   addCardText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -585,12 +588,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   methodSummaryLabel: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   methodSummaryDesc: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -617,17 +620,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   billingDesc: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '500',
   },
   billingDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
   billingReceipt: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     fontFamily: 'monospace',
     marginTop: 1,
@@ -637,7 +640,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   billingAmount: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '700',
   },

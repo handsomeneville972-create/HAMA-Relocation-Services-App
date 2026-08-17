@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useResponsive, CONTENT_MAX_WIDTH } from '../utils/responsive';
-import { COLORS, RADIUS, SHADOWS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SHADOWS, type ThemeColors } from '../constants/theme';
 
 /**
  * Breakpoint-aware tab bar.
@@ -17,6 +18,8 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
   descriptors,
   navigation,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { isDesktop } = useResponsive();
 
@@ -37,7 +40,7 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
     const label = typeof labelRaw === 'string' ? labelRaw : route.name;
     const isFocused = state.index === index;
     const color = isFocused
-      ? options.tabBarActiveTintColor ?? COLORS.primary
+      ? options.tabBarActiveTintColor ?? colors.primary
       : options.tabBarInactiveTintColor ?? 'rgba(255, 255, 255, 0.65)';
     const badge = options.tabBarBadge;
 
@@ -125,7 +128,7 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
         <View style={styles.topBarInner}>
           <View style={styles.brand}>
             <View style={styles.brandIcon}>
-              <Ionicons name="home" size={16} color={COLORS.primary} />
+              <Ionicons name="home" size={16} color={colors.primary} />
             </View>
             <Text style={styles.brandText}>HAMA</Text>
           </View>
@@ -144,7 +147,8 @@ export const ResponsiveTabBar: React.FC<BottomTabBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -185,7 +189,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: '22%',
-    backgroundColor: COLORS.secondary,
+    backgroundColor: colors.secondary,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   topBadge: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: colors.secondary,
     minWidth: 18,
     height: 18,
     borderRadius: 9,

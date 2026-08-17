@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SPACING, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, SHADOWS } from '../constants/theme';
 import { useResponsive } from '../utils/responsive';
+import { useTheme } from '../contexts/ThemeContext';
 
 const TIPS = [
   "Hey, I'm Homie. Let's find something perfect for your budget.",
@@ -19,6 +20,8 @@ interface HomieAssistantProps {
 
 export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
   const { width } = useResponsive();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const floatAnim = useRef(new Animated.Value(0)).current;
   const breatheAnim = useRef(new Animated.Value(1)).current;
   const [tipIndex, setTipIndex] = useState(0);
@@ -95,7 +98,7 @@ export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
           ]}
         >
           <LinearGradient
-            colors={[COLORS.primary, COLORS.secondary]}
+            colors={[colors.primary, colors.secondary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradient}
@@ -108,7 +111,7 @@ export const HomieAssistant: React.FC<HomieAssistantProps> = ({ onPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 100,
@@ -129,16 +132,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tipBubble: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.sm,
     marginBottom: 8,
     ...SHADOWS.md,
   },
   tipText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     lineHeight: 18,
   },

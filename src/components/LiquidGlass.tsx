@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS } from '../constants/theme';
+import { RADIUS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LiquidGlassProps {
   children: React.ReactNode;
@@ -18,6 +19,9 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
   noPadding = false,
   noBorder = false,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const variantConfig = {
     default: {
       bg: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] as const,
@@ -75,6 +79,9 @@ export const LiquidInput: React.FC<{
   style?: ViewStyle;
   focused?: boolean;
 }> = ({ children, style, focused }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View
       style={[
@@ -94,6 +101,9 @@ export const LiquidCard: React.FC<{
   style?: ViewStyle;
   onPress?: () => void;
 }> = ({ children, style, onPress }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <LiquidGlass variant="default" style={[styles.card, style]}>
       {onPress ? (
@@ -107,7 +117,7 @@ export const LiquidCard: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
@@ -140,7 +150,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   inputFocused: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     backgroundColor: 'rgba(255,107,0,0.05)',
   },
   card: {

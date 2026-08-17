@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SubscriptionPlan } from '../constants/types';
 import { formatPrice } from '../utils/currency';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
 
 interface PricingCardTrialState {
   active: boolean;
@@ -32,6 +33,8 @@ export const PricingCard: React.FC<PricingCardProps> = ({
   badgeLabel,
   trial,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isHighlighted = plan.highlighted;
 
   // Entrance: fade + rise, staggered by index
@@ -128,7 +131,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
         {badgeText && (
           <Animated.View style={[styles.badgeWrap, isHighlighted && { transform: [{ scale: pulseScale }] }]}>
             <LinearGradient
-              colors={isHighlighted ? [COLORS.primary, COLORS.secondary] : ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.06)']}
+              colors={isHighlighted ? [colors.primary, colors.secondary] : ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.06)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.badge}
@@ -154,7 +157,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
 
         {trial && (
           <View style={styles.trialChip}>
-            <Ionicons name="time-outline" size={12} color={COLORS.primary} />
+            <Ionicons name="time-outline" size={12} color={colors.primary} />
             <Text style={styles.trialChipText}>
               {trial.active ? 'Full Premium access unlocked' : 'Everything in Premium · no card required'}
             </Text>
@@ -169,7 +172,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
               <Ionicons
                 name="checkmark-circle"
                 size={18}
-                color={isHighlighted ? COLORS.primary : COLORS.accent}
+                color={isHighlighted ? colors.primary : colors.accent}
               />
               <Text style={[styles.featureText, isHighlighted && styles.highlightedFeatureText]}>
                 {feature}
@@ -180,7 +183,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
 
         <View style={[styles.ctaButton, isHighlighted && styles.highlightedCta]}>
           <LinearGradient
-            colors={isHighlighted ? [COLORS.primary, COLORS.secondary] : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+            colors={isHighlighted ? [colors.primary, colors.secondary] : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.ctaGradient}
@@ -195,7 +198,8 @@ export const PricingCard: React.FC<PricingCardProps> = ({
   }
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   wrapper: {
     width: 280,
     marginRight: SPACING.md,
@@ -204,8 +208,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    backgroundColor: COLORS.bgCard,
+    borderColor: colors.glassBorder,
+    backgroundColor: colors.bgCard,
     ...SHADOWS.md,
   },
   gradientBorder: {
@@ -239,10 +243,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   badgeTextPlain: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   tierName: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -250,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   highlightedText: {
-    color: COLORS.text,
+    color: colors.text,
   },
   priceRow: {
     flexDirection: 'row',
@@ -258,16 +262,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   price: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 36,
     fontWeight: '800',
   },
   perMonth: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
   },
   freeText: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 14,
     fontWeight: '600',
     marginTop: 4,
@@ -284,13 +288,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,107,0,0.12)',
   },
   trialChipText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     marginVertical: SPACING.md,
   },
   features: {
@@ -303,12 +307,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   featureText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     flex: 1,
   },
   highlightedFeatureText: {
-    color: COLORS.text,
+    color: colors.text,
   },
   ctaButton: {
     borderRadius: RADIUS.md,
@@ -323,7 +327,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },

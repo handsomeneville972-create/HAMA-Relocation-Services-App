@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +7,8 @@ import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { getCommunityPosts } from '../services/communityService';
 import type { CommunityPost } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const TYPE_LABELS: Record<string, string> = {
   photo: 'Photo',
@@ -32,6 +33,8 @@ const formatCount = (count: number): string => {
 
 export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ navigation, userId }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,10 +62,10 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleWrap}>
             <Text style={styles.headerTitle}>My Posts</Text>
@@ -79,7 +82,7 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
       ) : posts.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="newspaper-outline" size={48} color={COLORS.textTertiary} />
+            <Ionicons name="newspaper-outline" size={48} color={colors.textTertiary} />
           </View>
           <Text style={styles.emptyTitle}>No posts yet</Text>
           <Text style={styles.emptySubtitle}>Posts you share in the community will show up here with their views and interactions.</Text>
@@ -89,7 +92,7 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={COLORS.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
           }
         >
           {posts.map(post => (
@@ -108,7 +111,7 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
                     />
                   ) : (
                     <View style={styles.thumbPlaceholder}>
-                      <Ionicons name={post.video ? 'videocam' : 'document-text'} size={24} color={COLORS.textTertiary} />
+                      <Ionicons name={post.video ? 'videocam' : 'document-text'} size={24} color={colors.textTertiary} />
                     </View>
                   )}
 
@@ -125,23 +128,23 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
 
                 <View style={styles.statsRow}>
                   <View style={styles.stat}>
-                    <Ionicons name="eye-outline" size={15} color={COLORS.textSecondary} />
+                    <Ionicons name="eye-outline" size={15} color={colors.textSecondary} />
                     <Text style={styles.statText}>{formatCount(post.views)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Ionicons name="heart-outline" size={15} color={COLORS.secondary} />
+                    <Ionicons name="heart-outline" size={15} color={colors.secondary} />
                     <Text style={styles.statText}>{formatCount(post.likes)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Ionicons name="chatbubble-outline" size={14} color={COLORS.textSecondary} />
+                    <Ionicons name="chatbubble-outline" size={14} color={colors.textSecondary} />
                     <Text style={styles.statText}>{formatCount(post.comments)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Ionicons name="arrow-redo-outline" size={15} color={COLORS.textSecondary} />
+                    <Ionicons name="arrow-redo-outline" size={15} color={colors.textSecondary} />
                     <Text style={styles.statText}>{formatCount(post.shares)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Ionicons name="bookmark-outline" size={15} color={COLORS.primary} />
+                    <Ionicons name="bookmark-outline" size={15} color={colors.primary} />
                     <Text style={styles.statText}>{formatCount(post.bookmarks)}</Text>
                   </View>
                 </View>
@@ -155,10 +158,10 @@ export const MyPostsScreen: React.FC<{ navigation: any; userId?: string }> = ({ 
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: SPACING.md,
@@ -173,7 +176,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -183,10 +186,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -198,12 +201,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-scrollContent: {
-      padding: SPACING.md,
-      maxWidth: 1200,
-      width: '100%',
-      alignSelf: 'center',
-    },
+  scrollContent: {
+    padding: SPACING.md,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
+  },
   cardWrap: {
     marginBottom: SPACING.sm,
   },
@@ -222,7 +225,7 @@ scrollContent: {
     width: 72,
     height: 72,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -242,17 +245,17 @@ scrollContent: {
     borderRadius: RADIUS.full,
   },
   typeBadgeText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
   postDate: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   postContent: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -260,7 +263,7 @@ scrollContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
     paddingTop: SPACING.sm,
   },
   stat: {
@@ -269,7 +272,7 @@ scrollContent: {
     gap: 4,
   },
   statText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   emptyState: {
@@ -283,17 +286,17 @@ scrollContent: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   emptySubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,

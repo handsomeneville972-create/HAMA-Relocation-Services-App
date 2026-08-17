@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, Image,
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
@@ -11,14 +11,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar } from '../services/uploadService';
 import { UserAvatar, isDefaultAvatar } from '../components/UserAvatar';
 import { supabase } from '../utils/supabaseClient';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { FadeInView } from '../components/BlurText';
+import { useTheme } from '../contexts/ThemeContext';
 
 const USERNAME_REGEX = /^[a-zA-Z0-9._]{3,30}$/;
 
 export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId, updateProfile } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [username, setUsername] = useState('');
@@ -135,11 +138,11 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
   const showDefault = !avatarUri && isDefaultAvatar(currentUser.avatar);
 
   const getUsernameHint = () => {
-    if (isChecking) return { text: 'Checking availability...', color: COLORS.textTertiary };
+    if (isChecking) return { text: 'Checking availability...', color: colors.textTertiary };
     if (!username) return null;
-    if (!usernameValid) return { text: '3-30 characters, letters, numbers, dots or underscores.', color: COLORS.textTertiary };
-    if (usernameTaken) return { text: 'That username is already taken.', color: COLORS.error };
-    if (checkedFor === username.trim()) return { text: 'Username available!', color: COLORS.success };
+    if (!usernameValid) return { text: '3-30 characters, letters, numbers, dots or underscores.', color: colors.textTertiary };
+    if (usernameTaken) return { text: 'That username is already taken.', color: colors.error };
+    if (checkedFor === username.trim()) return { text: 'Username available!', color: colors.success };
     return null;
   };
   const usernameHint = getUsernameHint();
@@ -164,14 +167,14 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
             {/* Avatar */}
             <View style={styles.photoSection}>
               <TouchableOpacity onPress={handleAvatarPress} style={styles.photoWrapper} activeOpacity={0.8}>
-                <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
+                <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
                   {picSource ? (
                     <Image source={picSource} style={styles.photo} />
                   ) : showDefault ? (
                     <UserAvatar uri={currentUser.avatar} size={112} />
                   ) : (
                     <View style={[styles.photo, styles.photoPlaceholder]}>
-                      <Ionicons name="person" size={44} color={COLORS.textTertiary} />
+                      <Ionicons name="person" size={44} color={colors.textTertiary} />
                     </View>
                   )}
                 </LinearGradient>
@@ -193,15 +196,15 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
                     value={username}
                     onChangeText={setUsername}
                     placeholder="username"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
                     autoCorrect={false}
                     maxLength={30}
                   />
                   {isChecking ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
+                    <ActivityIndicator size="small" color={colors.primary} />
                   ) : usernameValid && !usernameTaken && checkedFor === username.trim() ? (
-                    <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
+                    <Ionicons name="checkmark-circle" size={20} color={colors.success} />
                   ) : null}
                 </View>
                 {usernameHint && (
@@ -211,7 +214,7 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
 
               {errorMsg && (
                 <View style={styles.errorBox}>
-                  <Ionicons name="alert-circle-outline" size={18} color={COLORS.error} />
+                  <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
                   <Text style={styles.errorText}>{errorMsg}</Text>
                 </View>
               )}
@@ -223,7 +226,7 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={canContinue ? COLORS.gradientPrimary : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
+                  colors={canContinue ? colors.gradientPrimary : ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.continueGradient}
@@ -233,7 +236,7 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
                   ) : (
                     <>
                       <Text style={[styles.continueText, !canContinue && styles.continueTextDisabled]}>Continue</Text>
-                      <Ionicons name="arrow-forward" size={18} color={canContinue ? '#fff' : COLORS.textTertiary} />
+                      <Ionicons name="arrow-forward" size={18} color={canContinue ? '#fff' : colors.textTertiary} />
                     </>
                   )}
                 </LinearGradient>
@@ -246,10 +249,10 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   flex: {
     flex: 1,
@@ -279,12 +282,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   headerSubtitle: {
     ...FONTS.body,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -316,7 +319,7 @@ scrollContent: {
     borderRadius: 56,
   },
   photoPlaceholder: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -327,30 +330,30 @@ scrollContent: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: COLORS.bg,
+    borderColor: colors.bg,
   },
   photoHint: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   form: {
     gap: SPACING.md,
   },
   fieldCard: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     padding: SPACING.md,
     gap: 6,
   },
   fieldLabel: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -361,13 +364,13 @@ scrollContent: {
   },
   atSign: {
     ...FONTS.body,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   input: {
     flex: 1,
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     paddingVertical: 8,
   },
   hint: {
@@ -387,7 +390,7 @@ scrollContent: {
   errorText: {
     flex: 1,
     ...FONTS.caption,
-    color: COLORS.error,
+    color: colors.error,
     lineHeight: 18,
   },
   continueBtn: {
@@ -408,6 +411,6 @@ scrollContent: {
     fontSize: 16,
   },
   continueTextDisabled: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
 });

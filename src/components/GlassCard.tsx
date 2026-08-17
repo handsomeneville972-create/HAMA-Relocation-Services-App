@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, RADIUS, SHADOWS, SPACING } from '../constants/theme';
+import { RADIUS, SHADOWS, SPACING, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -16,10 +17,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   children,
   style,
   onPress,
-  gradient = COLORS.gradientCard,
+  gradient,
   elevated = false,
   noPadding = false,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -43,7 +46,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   const cardContent = (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
       <View style={[styles.card, elevated && styles.elevated, style]}>
-        <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
+        <LinearGradient colors={gradient ?? colors.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
           <View style={styles.topHighlight} />
           <View style={[styles.content, noPadding ? undefined : styles.padded]}>
             {children}
@@ -69,7 +72,8 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   return cardContent;
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',

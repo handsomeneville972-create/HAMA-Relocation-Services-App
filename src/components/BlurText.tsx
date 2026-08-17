@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -7,7 +7,8 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { COLORS } from '../constants/theme';
+import { type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface BlurTextProps extends TextProps {
   text: string;
@@ -33,10 +34,13 @@ export const BlurText: React.FC<BlurTextProps> = ({
   duration = 800,
   blurAmount = 12,
   variant = 'body',
-  color = COLORS.text,
+  color,
   style,
   ...props
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const resolvedColor = color ?? colors.text;
   const opacity = useSharedValue(0);
   const translateX = useSharedValue(-15);
   const blur = useSharedValue(blurAmount);
@@ -74,7 +78,7 @@ export const BlurText: React.FC<BlurTextProps> = ({
             delay={wordDelay}
             duration={duration * 0.6}
             blurAmount={blurAmount}
-            style={[VARIANT_STYLES[variant], { color }, style]}
+            style={[VARIANT_STYLES[variant], { color: resolvedColor }, style]}
           />
         );
       })}
@@ -154,7 +158,8 @@ export const FadeInView: React.FC<{
   return <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>;
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',

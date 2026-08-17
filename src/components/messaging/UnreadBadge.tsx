@@ -4,9 +4,10 @@
  * Displays unread message count in a styled badge.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../constants/theme';
+import { FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface UnreadBadgeProps {
   count: number;
@@ -17,6 +18,8 @@ export const UnreadBadge: React.FC<UnreadBadgeProps> = ({
   count,
   size = 'medium',
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   if (count <= 0) return null;
 
   const displayCount = count > 99 ? '99+' : String(count);
@@ -30,10 +33,10 @@ export const UnreadBadge: React.FC<UnreadBadgeProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   badge: {
     borderRadius: 999,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,

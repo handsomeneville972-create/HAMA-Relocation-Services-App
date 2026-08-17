@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { useCurrency } from '../hooks/useCurrency';
 import { formatPrice } from '../utils/currency';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { type ThemeColors, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import type { CurrencyCode } from '../constants/types';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * All currencies available in the app.
@@ -26,6 +27,8 @@ const ALL_CURRENCIES: { code: CurrencyCode; symbol: string; name: string; active
 export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { currency, setCurrency } = useCurrency();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const activeCurrency = ALL_CURRENCIES.find(c => c.code === currency)!;
 
   const handleSelect = (entry: typeof ALL_CURRENCIES[number]) => {
@@ -41,7 +44,7 @@ export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation
       <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Currency</Text>
           <View style={styles.headerSpacer} />
@@ -53,7 +56,7 @@ export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation
         <View style={styles.currentSection}>
           <LinearGradient colors={['rgba(255,184,77,0.12)', 'rgba(255,184,77,0.03)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.currentCard}>
             <View style={styles.currentIcon}>
-              <Ionicons name="cash-outline" size={28} color={COLORS.warning} />
+              <Ionicons name="cash-outline" size={28} color={colors.warning} />
             </View>
             <View style={styles.currentInfo}>
               <Text style={styles.currentLabel}>Current Currency</Text>
@@ -112,7 +115,7 @@ export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation
                     {entry.active ? (
                       isSelected ? (
                         <View style={styles.checkCircle}>
-                          <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
+                          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
                         </View>
                       ) : (
                         <Text style={styles.previewPrice}>{formatPrice(5000, entry.code)}</Text>
@@ -133,7 +136,7 @@ export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation
         <View style={styles.section}>
           <GlassCard>
             <View style={styles.infoRow}>
-              <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
+              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
               <Text style={styles.infoText}>
                 All listings and prices are stored in Kenyan Shillings (KSh). 
                 When you switch to another currency, prices are converted using 
@@ -149,10 +152,10 @@ export const CurrencyPickerScreen: React.FC<{ navigation: any }> = ({ navigation
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: SPACING.md,
@@ -168,13 +171,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -211,14 +214,14 @@ scrollContent: {
     flex: 1,
   },
   currentLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   currentValue: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
     marginTop: 2,
@@ -230,7 +233,7 @@ scrollContent: {
     borderRadius: RADIUS.full,
   },
   currentBadgeText: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -241,11 +244,11 @@ scrollContent: {
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
   },
   sectionSubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: SPACING.md,
@@ -259,7 +262,7 @@ scrollContent: {
   },
   currencyBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   currencyItemSelected: {
     backgroundColor: 'rgba(255,107,0,0.06)',
@@ -272,11 +275,11 @@ scrollContent: {
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   symbolCircleSelected: {
     backgroundColor: 'rgba(255,107,0,0.15)',
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   symbolCircleInactive: {
     opacity: 0.5,
@@ -284,27 +287,27 @@ scrollContent: {
   symbolText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
   },
   symbolTextSelected: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   symbolTextInactive: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   currencyInfo: {
     flex: 1,
   },
   currencyName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   currencyNameSelected: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   currencyCode: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
@@ -320,7 +323,7 @@ scrollContent: {
     alignItems: 'center',
   },
   previewPrice: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   v2Badge: {
@@ -330,7 +333,7 @@ scrollContent: {
     borderRadius: RADIUS.sm,
   },
   v2BadgeText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -343,7 +346,7 @@ scrollContent: {
   },
   infoText: {
     flex: 1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
   },
