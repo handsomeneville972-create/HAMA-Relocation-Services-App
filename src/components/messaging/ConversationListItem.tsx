@@ -6,10 +6,12 @@
  * media-type icon for non-text messages, timestamp, and unread badge.
  */
 
-import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { UserAvatar } from '../UserAvatar';
 import type { Conversation, User } from '../../constants/types';
 
 const ROLE_CHIPS: Record<string, { label: string; color: string; icon: string }> = {
@@ -43,6 +45,9 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   index = 0,
   isOnline = false,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   };
 
   const previewPrefix = typeIcon ? (
-    <Ionicons name={typeIcon as any} size={14} color={COLORS.textTertiary} style={styles.previewIcon} />
+    <Ionicons name={typeIcon as any} size={14} color={colors.textTertiary} style={styles.previewIcon} />
   ) : null;
 
   return (
@@ -92,10 +97,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
       <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
         {/* Avatar with online ring */}
         <View style={[styles.avatarWrap, isOnline && styles.avatarWrapOnline]}>
-          <Image
-            source={{ uri: otherUser?.avatar || 'https://i.pravatar.cc/150?u=default' }}
-            style={styles.avatar}
-          />
+          <UserAvatar uri={otherUser?.avatar} size={52} style={styles.avatar} />
           {isOnline && <View style={styles.onlineDot} />}
         </View>
 
@@ -108,7 +110,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
               {otherUser?.name || 'Unknown User'}
             </Text>
             {otherUser?.verified && (
-              <Ionicons name="checkmark-circle" size={15} color={COLORS.primary} />
+              <Ionicons name="checkmark-circle" size={15} color={colors.primary} />
             )}
             <View style={styles.timeBox}>
               <Text style={styles.time}>{formatTime(lastMessageTime)}</Text>
@@ -144,7 +146,8 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -160,16 +163,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   avatarWrapOnline: {
-    borderColor: COLORS.success,
+    borderColor: colors.success,
   },
   avatar: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   onlineDot: {
     position: 'absolute',
@@ -178,9 +181,9 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderWidth: 2.5,
-    borderColor: COLORS.bg,
+    borderColor: colors.bg,
   },
   content: {
     flex: 1,
@@ -193,7 +196,7 @@ const styles = StyleSheet.create({
   },
   name: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     flex: 1,
   },
   nameBold: {
@@ -204,7 +207,7 @@ const styles = StyleSheet.create({
   },
   time: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   midRow: {
     flexDirection: 'row',
@@ -232,18 +235,18 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     ...FONTS.bodySmall,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     flex: 1,
   },
   lastMessageBold: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   unreadBadge: {
     minWidth: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,

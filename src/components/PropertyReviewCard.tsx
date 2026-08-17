@@ -1,25 +1,31 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PropertyReview } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
 
 interface PropertyReviewCardProps {
   review: PropertyReview;
 }
 
-const RatingBar: React.FC<{ label: string; value: number }> = ({ label, value }) => (
-  <View style={ratingStyles.row}>
-    <Text style={ratingStyles.label}>{label}</Text>
-    <View style={ratingStyles.barBg}>
-      <View style={[ratingStyles.barFill, { width: `${(value / 5) * 100}%` }]} />
+const RatingBar: React.FC<{ label: string; value: number }> = ({ label, value }) => {
+  const { colors } = useTheme();
+  const ratingStyles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={ratingStyles.row}>
+      <Text style={ratingStyles.label}>{label}</Text>
+      <View style={ratingStyles.barBg}>
+        <View style={[ratingStyles.barFill, { width: `${(value / 5) * 100}%` }]} />
+      </View>
+      <Text style={ratingStyles.value}>{value}</Text>
     </View>
-    <Text style={ratingStyles.value}>{value}</Text>
-  </View>
-);
+  );
+};
 
-const ratingStyles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -27,24 +33,24 @@ const ratingStyles = StyleSheet.create({
     marginBottom: 4,
   },
   label: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
     width: 80,
   },
   barBg: {
     flex: 1,
     height: 4,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: 2,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    backgroundColor: COLORS.warning,
+    backgroundColor: colors.warning,
     borderRadius: 2,
   },
   value: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
     width: 20,
@@ -53,18 +59,20 @@ const ratingStyles = StyleSheet.create({
 });
 
 export const PropertyReviewCard: React.FC<PropertyReviewCardProps> = ({ review }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles2(colors), [colors]);
   return (
     <View style={styles.card}>
-      <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
+      <LinearGradient colors={colors.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
         {/* Header */}
         <View style={styles.header}>
-          <Image source={{ uri: review.user.avatar }} style={styles.avatar} />
+          <UserAvatar uri={review.user.avatar} size={36} style={styles.avatar} />
           <View style={styles.headerInfo}>
             <Text style={styles.username}>{review.user.name}</Text>
             <Text style={styles.date}>{review.createdAt}</Text>
           </View>
           <View style={styles.overallRating}>
-            <Ionicons name="star" size={16} color={COLORS.warning} />
+            <Ionicons name="star" size={16} color={colors.warning} />
             <Text style={styles.overallRatingText}>{review.rating}</Text>
           </View>
         </View>
@@ -83,7 +91,7 @@ export const PropertyReviewCard: React.FC<PropertyReviewCardProps> = ({ review }
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Ionicons name="thumbs-up-outline" size={16} color={COLORS.textTertiary} />
+          <Ionicons name="thumbs-up-outline" size={16} color={colors.textTertiary} />
           <Text style={styles.helpfulText}>{review.helpful} found helpful</Text>
         </View>
       </LinearGradient>
@@ -91,12 +99,13 @@ export const PropertyReviewCard: React.FC<PropertyReviewCardProps> = ({ review }
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles2 = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     marginBottom: SPACING.md,
   },
   gradient: {
@@ -117,12 +126,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   date: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -136,12 +145,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   overallRatingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 14,
     fontWeight: '700',
   },
   content: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: SPACING.md,
@@ -158,7 +167,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   helpfulText: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
 });

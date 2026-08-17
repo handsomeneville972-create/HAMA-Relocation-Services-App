@@ -14,7 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { ResponsiveGrid } from '../components/ResponsiveGrid';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useProvider } from '../contexts/ProviderContext';
 import { completionScore } from '../services/providerOnboardingService';
 import { useResponsive } from '../utils/responsive';
@@ -47,6 +48,8 @@ function CountUp({ value, duration = 900, prefix = '', suffix = '', format }: {
   suffix?: string;
   format?: 'number' | 'currency' | 'percent' | 'rating';
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(0);
   useEffect(() => {
@@ -71,6 +74,8 @@ function CountUp({ value, duration = 900, prefix = '', suffix = '', format }: {
 }
 
 export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { isPhone } = useResponsive();
   const { provider, isProvider, getDashboardData, logoutProvider } = useProvider();
@@ -119,17 +124,17 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   // ---------- Upsell state (not a provider) ----------
   if (!isProvider || !provider || !data) {    return (
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+        <LinearGradient colors={colors.gradientNight} style={styles.bg} />
         <View style={styles.upsellHeader}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.roundBtn}>
-            <Ionicons name="chevron-back" size={20} color={COLORS.text} />
+            <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.upsellTitle}>Seller Dashboard</Text>
         </View>
         <ScrollView contentContainerStyle={styles.upsellContent} showsVerticalScrollIndicator={false}>
           <View style={styles.upsellHero}>
             <LinearGradient colors={['rgba(255,107,0,0.25)', 'rgba(255,107,0,0.05)']} style={styles.upsellIconWrap}>
-              <Ionicons name="storefront" size={40} color={COLORS.primary} />
+              <Ionicons name="storefront" size={40} color={colors.primary} />
             </LinearGradient>
             <Text style={styles.upsellHeading}>Grow your business on HAMA</Text>
             <Text style={styles.upsellBody}>
@@ -138,7 +143,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.upsellPoints}>
               {['Free to join — profile goes live immediately', 'No approval queue', 'Search ranking & public profile', 'Plans unlock leads, booking & analytics'].map((p) => (
                 <View key={p} style={styles.upsellPoint}>
-                  <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                   <Text style={styles.upsellPointText}>{p}</Text>
                 </View>
               ))}
@@ -173,9 +178,9 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   ] as const;
 
   const kanbanColumns: { status: JobItem['status']; label: string; color: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { status: 'new', label: 'New', color: COLORS.info, icon: 'time-outline' },
-    { status: 'in_progress', label: 'In progress', color: COLORS.warning, icon: 'construct-outline' },
-    { status: 'completed', label: 'Completed', color: COLORS.success, icon: 'checkmark-done-outline' },
+    { status: 'new', label: 'New', color: colors.info, icon: 'time-outline' },
+    { status: 'in_progress', label: 'In progress', color: colors.warning, icon: 'construct-outline' },
+    { status: 'completed', label: 'Completed', color: colors.success, icon: 'checkmark-done-outline' },
   ];
 
   const quickActions = [
@@ -198,11 +203,11 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.greetingName}>{provider.businessName}</Text>
         </View>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.navigate(`ServiceProviderProfile?providerId=${provider.id}`)}>
-          <Ionicons name="eye-outline" size={16} color={COLORS.primary} />
+          <Ionicons name="eye-outline" size={16} color={colors.primary} />
           <Text style={styles.headerBtnText}>View profile</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerIconBtn} onPress={logoutProvider}>
-          <Ionicons name="log-out-outline" size={16} color={COLORS.textTertiary} />
+          <Ionicons name="log-out-outline" size={16} color={colors.textTertiary} />
         </TouchableOpacity>
       </View>
 
@@ -212,12 +217,12 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
           <LinearGradient key={k.key} colors={['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.02)']} style={styles.kpiCard}>
             <View style={styles.kpiHeader}>
               <View style={styles.kpiIcon}>
-                <Ionicons name={k.icon} size={16} color={COLORS.primary} />
+                <Ionicons name={k.icon} size={16} color={colors.primary} />
               </View>
               {k.change !== 0 && (
                 <View style={[styles.kpiChange, k.change < 0 && { backgroundColor: 'rgba(255,77,106,0.12)' }]}>
-                  <Ionicons name={k.change > 0 ? 'arrow-up' : 'arrow-down'} size={10} color={k.change > 0 ? COLORS.success : COLORS.error} />
-                  <Text style={[styles.kpiChangeText, k.change > 0 ? { color: COLORS.success } : { color: COLORS.error }]}>{Math.abs(k.change)}%</Text>
+                  <Ionicons name={k.change > 0 ? 'arrow-up' : 'arrow-down'} size={10} color={k.change > 0 ? colors.success : colors.error} />
+                  <Text style={[styles.kpiChangeText, k.change > 0 ? { color: colors.success } : { color: colors.error }]}>{Math.abs(k.change)}%</Text>
                 </View>
               )}
             </View>
@@ -267,7 +272,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             { label: 'WhatsApp', value: data.engagement.reduce((a, e) => a + e.whatsapp, 0), icon: 'logo-whatsapp' },
           ].map((e) => (
             <View key={e.label} style={styles.engagementItem}>
-              <Ionicons name={e.icon as keyof typeof Ionicons.glyphMap} size={15} color={COLORS.primary} />
+              <Ionicons name={e.icon as keyof typeof Ionicons.glyphMap} size={15} color={colors.primary} />
               <Text style={styles.engagementValue}>{e.value}</Text>
               <Text style={styles.engagementLabel}>{e.label}</Text>
             </View>
@@ -301,7 +306,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.rowPrice}>{formatPrice(q.budget)}</Text>
           </View>
           <View style={[styles.statusPill, q.status === 'new' && { backgroundColor: 'rgba(90,200,250,0.12)' }, q.status === 'quoted' && { backgroundColor: 'rgba(255,184,77,0.12)' }, q.status === 'accepted' && { backgroundColor: 'rgba(0,212,170,0.12)' }]}>
-            <Text style={[styles.statusText, q.status === 'new' && { color: COLORS.info }, q.status === 'quoted' && { color: COLORS.warning }, q.status === 'accepted' && { color: COLORS.success }]}>
+            <Text style={[styles.statusText, q.status === 'new' && { color: colors.info }, q.status === 'quoted' && { color: colors.warning }, q.status === 'accepted' && { color: colors.success }]}>
               {q.status}
             </Text>
           </View>
@@ -352,7 +357,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.rowTitle}>{r.customerName}</Text>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={10} color={COLORS.primary} />
+                  <Ionicons key={s} name={s <= r.rating ? 'star' : 'star-outline'} size={10} color={colors.primary} />
                 ))}
               </View>
             </View>
@@ -387,7 +392,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.jobCustomerRow}>
                   <Image source={{ uri: j.avatar }} style={styles.jobAvatar} />
                   <Text style={styles.jobCustomer}>{j.customerName}</Text>
-                  <Ionicons name="location-outline" size={12} color={COLORS.textTertiary} />
+                  <Ionicons name="location-outline" size={12} color={colors.textTertiary} />
                   <Text style={styles.jobLocation}>{j.location}</Text>
                 </View>
                 <View style={styles.jobActions}>
@@ -406,7 +411,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             ))}
             {jobs.filter((j) => j.status === col.status).length === 0 && (
               <View style={styles.emptyCol}>
-                <Ionicons name="sparkles-outline" size={18} color={COLORS.textTertiary} />
+                <Ionicons name="sparkles-outline" size={18} color={colors.textTertiary} />
                 <Text style={styles.emptyColText}>No {col.label.toLowerCase()} jobs</Text>
               </View>
             )}
@@ -445,14 +450,14 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.quoteDeclineText}>Decline</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quoteReply}>
-                  <Ionicons name="send-outline" size={14} color={COLORS.primary} />
+                  <Ionicons name="send-outline" size={14} color={colors.primary} />
                   <Text style={styles.quoteReplyText}>Send quote</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
           <View style={[styles.statusPill, q.status === 'new' && { backgroundColor: 'rgba(90,200,250,0.12)' }, q.status === 'quoted' && { backgroundColor: 'rgba(255,184,77,0.12)' }, q.status === 'accepted' && { backgroundColor: 'rgba(0,212,170,0.12)' }, q.status === 'declined' && { backgroundColor: 'rgba(255,77,106,0.12)' }]}>
-            <Text style={[styles.statusText, q.status === 'new' && { color: COLORS.info }, q.status === 'quoted' && { color: COLORS.warning }, q.status === 'accepted' && { color: COLORS.success }, q.status === 'declined' && { color: COLORS.error }]}>
+            <Text style={[styles.statusText, q.status === 'new' && { color: colors.info }, q.status === 'quoted' && { color: colors.warning }, q.status === 'accepted' && { color: colors.success }, q.status === 'declined' && { color: colors.error }]}>
               {q.status}
             </Text>
           </View>
@@ -524,11 +529,11 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         </LinearGradient>
         <View style={styles.payoutMetaRow}>
           <View style={styles.payoutMeta}>
-            <Ionicons name="calendar-outline" size={14} color={COLORS.primary} />
+            <Ionicons name="calendar-outline" size={14} color={colors.primary} />
             <Text style={styles.payoutMetaText}>Payouts every Friday</Text>
           </View>
           <View style={styles.payoutMeta}>
-            <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.success} />
+            <Ionicons name="shield-checkmark-outline" size={14} color={colors.success} />
             <Text style={styles.payoutMetaText}>First payout after 1st job</Text>
           </View>
         </View>
@@ -536,13 +541,13 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         {data.transactions.map((t: WalletTransaction) => (
           <GlassCard key={t.id} style={styles.rowCard}>
             <View style={[styles.txIcon, t.amount < 0 && { backgroundColor: 'rgba(255,77,106,0.1)' }]}>
-              <Ionicons name={t.type === 'payout' ? 'arrow-up-circle-outline' : t.type === 'fee' ? 'receipt-outline' : 'arrow-down-circle-outline'} size={18} color={t.amount < 0 ? COLORS.error : COLORS.success} />
+              <Ionicons name={t.type === 'payout' ? 'arrow-up-circle-outline' : t.type === 'fee' ? 'receipt-outline' : 'arrow-down-circle-outline'} size={18} color={t.amount < 0 ? colors.error : colors.success} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>{t.description}</Text>
               <Text style={styles.rowMeta}>{t.date}</Text>
             </View>
-            <Text style={[styles.txAmount, t.amount < 0 && { color: COLORS.error }]}>
+            <Text style={[styles.txAmount, t.amount < 0 && { color: colors.error }]}>
               {t.amount < 0 ? '-' : '+'}{formatPrice(Math.abs(t.amount))}
             </Text>
           </GlassCard>
@@ -550,7 +555,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={[styles.sectionTitle, { marginTop: SPACING.md, marginBottom: SPACING.md }]}>Subscription</Text>
         <GlassCard style={styles.rowCard}>
           <View style={styles.txIcon}>
-            <Ionicons name={provider.plan === 'Premium' ? 'diamond' : 'sparkles'} size={18} color={COLORS.primary} />
+            <Ionicons name={provider.plan === 'Premium' ? 'diamond' : 'sparkles'} size={18} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle}>{provider.plan} plan</Text>
@@ -578,24 +583,24 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={COLORS.gradientNight} style={styles.bg} />
+      <LinearGradient colors={colors.gradientNight} style={styles.bg} />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.roundBtn}>
-          <Ionicons name="chevron-back" size={20} color={COLORS.text} />
+          <Ionicons name="chevron-back" size={20} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.brandRow}>
-          <Image source={{ uri: provider.logo || 'https://i.pravatar.cc/80?u=hama' }} style={styles.brandLogo} />
+          <Image source={provider.logo ? { uri: provider.logo } : require('../../assets/hama-logo.png')} style={styles.brandLogo} />
           <View>
             <View style={styles.brandNameRow}>
               <Text style={styles.brandName}>Seller Dashboard</Text>
-              <Ionicons name="shield-checkmark" size={13} color={COLORS.success} />
+              <Ionicons name="shield-checkmark" size={13} color={colors.success} />
             </View>
             <Text style={styles.brandSub}>{provider.businessName} · {provider.plan}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.roundBtn} onPress={() => navigation.navigate('Inbox')}>
-          <Ionicons name="notifications-outline" size={18} color={COLORS.text} />
+          <Ionicons name="notifications-outline" size={18} color={colors.text} />
           <View style={styles.notifDot} />
         </TouchableOpacity>
       </View>
@@ -604,7 +609,7 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.tabsRow}>
         {TABS.map((t) => (
           <TouchableOpacity key={t.key} onPress={() => setTab(t.key)} style={[styles.tab, tab === t.key && styles.tabActive]}>
-            <Ionicons name={t.icon} size={15} color={tab === t.key ? '#000' : COLORS.textTertiary} />
+            <Ionicons name={t.icon} size={15} color={tab === t.key ? '#000' : colors.textTertiary} />
             <Text style={[styles.tabText, tab === t.key && { color: '#000', fontWeight: '700' }]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
@@ -636,133 +641,134 @@ export const SellerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   bg: { ...StyleSheet.absoluteFillObject },
-  roundBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center' },
+  roundBtn: { width: 40, height: 40, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   brandRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   brandLogo: { width: 40, height: 40, borderRadius: RADIUS.md },
   brandNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   brandName: { ...FONTS.h3, fontSize: 16, lineHeight: 20 },
-  brandSub: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
-  notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.primary },
+  brandSub: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary },
+  notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: RADIUS.full, backgroundColor: colors.primary },
   tabsRow: { flexDirection: 'row', gap: SPACING.sm, paddingHorizontal: SPACING.md, paddingBottom: SPACING.md, maxWidth: 1200, width: '100%', alignSelf: 'center' },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  tabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  tabText: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  tabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  tabText: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary },
   greetingRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingHorizontal: SPACING.md, marginBottom: SPACING.md },
-  greetingTitle: { ...FONTS.caption, color: COLORS.textTertiary },
+  greetingTitle: { ...FONTS.caption, color: colors.textTertiary },
   greetingName: { ...FONTS.h2, fontSize: 18, lineHeight: 24 },
   headerBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,107,0,0.3)' },
-  headerBtnText: { ...FONTS.caption, fontSize: 11, color: COLORS.primary, fontWeight: '700' },
-  headerIconBtn: { width: 36, height: 36, borderRadius: RADIUS.full, backgroundColor: COLORS.bgCard, alignItems: 'center', justifyContent: 'center' },
-  kpiCard: { width: 158, padding: SPACING.md, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: COLORS.border, gap: 6 },
+  headerBtnText: { ...FONTS.caption, fontSize: 11, color: colors.primary, fontWeight: '700' },
+  headerIconBtn: { width: 36, height: 36, borderRadius: RADIUS.full, backgroundColor: colors.bgCard, alignItems: 'center', justifyContent: 'center' },
+  kpiCard: { width: 158, padding: SPACING.md, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: colors.border, gap: 6 },
   kpiHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   kpiIcon: { width: 30, height: 30, borderRadius: RADIUS.sm, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   kpiChange: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.full, backgroundColor: 'rgba(0,212,170,0.12)' },
   kpiChangeText: { ...FONTS.caption, fontSize: 10, fontWeight: '700' },
   kpiValue: { ...FONTS.h3, fontSize: 21, lineHeight: 26, fontVariant: ['tabular-nums'] },
-  kpiLabel: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary },
+  kpiLabel: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary },
   chartCard: { marginHorizontal: SPACING.md, marginTop: SPACING.md, padding: SPACING.md },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: SPACING.md },
   cardTitle: { ...FONTS.bodyLarge, fontSize: 15, lineHeight: 20 },
-  cardSub: { ...FONTS.caption, color: COLORS.textTertiary },
+  cardSub: { ...FONTS.caption, color: colors.textTertiary },
   chartTotal: { alignItems: 'flex-end' },
-  chartTotalValue: { ...FONTS.price, fontSize: 17, lineHeight: 22, color: COLORS.primary },
-  chartTotalLabel: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary },
+  chartTotalValue: { ...FONTS.price, fontSize: 17, lineHeight: 22, color: colors.primary },
+  chartTotalLabel: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary },
   barChart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120 },
   barColumn: { flex: 1, alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' },
-  barTrack: { width: 16, height: 90, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, justifyContent: 'flex-end', overflow: 'hidden' },
-  barFill: { width: '100%', borderRadius: RADIUS.sm, backgroundColor: COLORS.primary },
-  barLabel: { ...FONTS.caption, fontSize: 9, color: COLORS.textTertiary },
+  barTrack: { width: 16, height: 90, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, justifyContent: 'flex-end', overflow: 'hidden' },
+  barFill: { width: '100%', borderRadius: RADIUS.sm, backgroundColor: colors.primary },
+  barLabel: { ...FONTS.caption, fontSize: 9, color: colors.textTertiary },
   engagementGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   engagementItem: { width: '33.3%', alignItems: 'center', gap: 3, paddingVertical: 10 },
   engagementValue: { ...FONTS.bodyLarge, fontSize: 15, fontVariant: ['tabular-nums'] },
-  engagementLabel: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary },
+  engagementLabel: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary },
   miniBars: { flexDirection: 'row', alignItems: 'flex-end', height: 64, marginTop: SPACING.sm, gap: 6 },
-  miniBarTrack: { flex: 1, height: 44, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, justifyContent: 'flex-end', overflow: 'hidden' },
+  miniBarTrack: { flex: 1, height: 44, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, justifyContent: 'flex-end', overflow: 'hidden' },
   miniBarFill: { width: '100%', borderRadius: RADIUS.sm, backgroundColor: 'rgba(255,107,0,0.55)' },
-  miniBarLabel: { ...FONTS.caption, fontSize: 8, color: COLORS.textTertiary },
+  miniBarLabel: { ...FONTS.caption, fontSize: 8, color: colors.textTertiary },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACING.lg, marginBottom: SPACING.md, paddingHorizontal: SPACING.md },
   sectionTitle: { ...FONTS.h3, fontSize: 17, lineHeight: 22, paddingHorizontal: SPACING.md },
-  seeAll: { ...FONTS.caption, color: COLORS.primary, fontWeight: '700' },
+  seeAll: { ...FONTS.caption, color: colors.primary, fontWeight: '700' },
   rowCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginHorizontal: SPACING.md, marginBottom: SPACING.sm, padding: SPACING.md },
-  rowAvatar: { width: 42, height: 42, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated },
+  rowAvatar: { width: 42, height: 42, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated },
   rowTitle: { ...FONTS.bodySmall, fontWeight: '600' },
-  rowSub: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary, marginTop: 2 },
-  rowPrice: { ...FONTS.bodySmall, fontWeight: '700', color: COLORS.primary, marginTop: 2 },
-  rowMeta: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary, marginTop: 2 },
+  rowSub: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary, marginTop: 2 },
+  rowPrice: { ...FONTS.bodySmall, fontWeight: '700', color: colors.primary, marginTop: 2 },
+  rowMeta: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary, marginTop: 2 },
   statusPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full },
   statusText: { ...FONTS.caption, fontSize: 10, fontWeight: '700', textTransform: 'capitalize' },
   kanbanPreview: { flexDirection: 'row', gap: SPACING.md, paddingHorizontal: SPACING.md },
-  kanbanColPreview: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
+  kanbanColPreview: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
   kanbanColTitle: { ...FONTS.caption, fontSize: 11, fontWeight: '700' },
   kanbanColCount: { ...FONTS.h3, fontSize: 22, fontVariant: ['tabular-nums'] },
   quickAction: { width: '100%', alignItems: 'center', gap: 6 },
   quickIcon: { width: 44, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary },
+  quickLabel: { ...FONTS.caption, fontSize: 10, color: colors.textSecondary },
   reviewNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   starsRow: { flexDirection: 'row', alignItems: 'center', gap: 1 },
   kanban: { flexDirection: 'row', gap: SPACING.md, paddingHorizontal: SPACING.md },
   kanbanCol: { flex: 1, gap: SPACING.sm },
   kanbanColHeader: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  kanbanCountPill: { marginLeft: 'auto', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.full, backgroundColor: COLORS.bgElevated },
+  kanbanCountPill: { marginLeft: 'auto', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.full, backgroundColor: colors.bgElevated },
   kanbanCountText: { ...FONTS.caption, fontSize: 10, fontWeight: '700' },
   jobCard: { padding: SPACING.sm + 2, gap: 4 },
   jobCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  jobAmount: { ...FONTS.bodySmall, fontWeight: '700', color: COLORS.primary, fontSize: 13 },
-  jobDate: { ...FONTS.caption, fontSize: 9, color: COLORS.textTertiary },
+  jobAmount: { ...FONTS.bodySmall, fontWeight: '700', color: colors.primary, fontSize: 13 },
+  jobDate: { ...FONTS.caption, fontSize: 9, color: colors.textTertiary },
   jobService: { ...FONTS.bodySmall, fontSize: 12, fontWeight: '600' },
   jobCustomerRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   jobAvatar: { width: 18, height: 18, borderRadius: RADIUS.full },
-  jobCustomer: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary, flex: 1 },
-  jobLocation: { ...FONTS.caption, fontSize: 9, color: COLORS.textTertiary },
+  jobCustomer: { ...FONTS.caption, fontSize: 10, color: colors.textSecondary, flex: 1 },
+  jobLocation: { ...FONTS.caption, fontSize: 9, color: colors.textTertiary },
   jobActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
-  jobActionPrimary: { flex: 1, paddingVertical: 8, borderRadius: RADIUS.sm, backgroundColor: COLORS.primary, alignItems: 'center' },
+  jobActionPrimary: { flex: 1, paddingVertical: 8, borderRadius: RADIUS.sm, backgroundColor: colors.primary, alignItems: 'center' },
   jobActionPrimaryText: { ...FONTS.caption, fontSize: 10, color: '#000', fontWeight: '700' },
-  jobActionSecondary: { flex: 1, paddingVertical: 8, borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated, alignItems: 'center' },
-  jobActionSecondaryText: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary },
-  emptyCol: { alignItems: 'center', gap: 6, padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: COLORS.border },
-  emptyColText: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary, textAlign: 'center' },
+  jobActionSecondary: { flex: 1, paddingVertical: 8, borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated, alignItems: 'center' },
+  jobActionSecondaryText: { ...FONTS.caption, fontSize: 10, color: colors.textSecondary },
+  emptyCol: { alignItems: 'center', gap: 6, padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border },
+  emptyColText: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary, textAlign: 'center' },
   quotesSummary: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: RADIUS.full, backgroundColor: 'rgba(90,200,250,0.12)' },
-  quotesSummaryText: { ...FONTS.caption, fontSize: 11, color: COLORS.info, fontWeight: '700' },
+  quotesSummaryText: { ...FONTS.caption, fontSize: 11, color: colors.info, fontWeight: '700' },
   quoteMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  quoteNotes: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary, fontStyle: 'italic', marginTop: 4 },
+  quoteNotes: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary, fontStyle: 'italic', marginTop: 4 },
   quoteActions: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm },
-  quoteAccept: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: COLORS.primary },
+  quoteAccept: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: colors.primary },
   quoteAcceptText: { ...FONTS.caption, fontSize: 11, color: '#000', fontWeight: '700' },
   quoteDecline: { flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: 'rgba(255,77,106,0.12)', alignItems: 'center' },
-  quoteDeclineText: { ...FONTS.caption, fontSize: 11, color: COLORS.error, fontWeight: '700' },
-  quoteReply: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: COLORS.bgElevated },
-  quoteReplyText: { ...FONTS.caption, fontSize: 11, color: COLORS.primary, fontWeight: '700' },
+  quoteDeclineText: { ...FONTS.caption, fontSize: 11, color: colors.error, fontWeight: '700' },
+  quoteReply: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: colors.bgElevated },
+  quoteReplyText: { ...FONTS.caption, fontSize: 11, color: colors.primary, fontWeight: '700' },
   crmSummary: { flexDirection: 'row', alignItems: 'center', marginHorizontal: SPACING.md, marginBottom: SPACING.md, padding: SPACING.md },
   crmStat: { flex: 1, alignItems: 'center', gap: 4 },
   crmValue: { ...FONTS.h3, fontSize: 18, fontVariant: ['tabular-nums'] },
-  crmLabel: { ...FONTS.caption, fontSize: 9, color: COLORS.textTertiary, textAlign: 'center' },
-  crmDivider: { width: 1, height: 36, backgroundColor: COLORS.border },
+  crmLabel: { ...FONTS.caption, fontSize: 9, color: colors.textTertiary, textAlign: 'center' },
+  crmDivider: { width: 1, height: 36, backgroundColor: colors.border },
   customerMetaRow: { flexDirection: 'row', gap: 4, marginTop: 4 },
-  customerMetaText: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary },
-  customerBookings: { ...FONTS.caption, fontSize: 10, color: COLORS.textTertiary },
+  customerMetaText: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary },
+  customerBookings: { ...FONTS.caption, fontSize: 10, color: colors.textTertiary },
   walletCard: { marginHorizontal: SPACING.md, padding: SPACING.lg, borderRadius: RADIUS.xl, gap: SPACING.md, borderWidth: 1, borderColor: 'rgba(255,107,0,0.3)' },
   walletTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  walletLabel: { ...FONTS.caption, color: COLORS.textTertiary },
-  walletBalance: { ...FONTS.title, fontSize: 34, lineHeight: 42, color: COLORS.primary, fontVariant: ['tabular-nums'] },
-  walletPending: { ...FONTS.caption, fontSize: 11, color: COLORS.textTertiary, marginTop: 4 },
-  walletMpesa: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: COLORS.success },
+  walletLabel: { ...FONTS.caption, color: colors.textTertiary },
+  walletBalance: { ...FONTS.title, fontSize: 34, lineHeight: 42, color: colors.primary, fontVariant: ['tabular-nums'] },
+  walletPending: { ...FONTS.caption, fontSize: 11, color: colors.textTertiary, marginTop: 4 },
+  walletMpesa: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: colors.success },
   walletMpesaText: { ...FONTS.caption, fontSize: 10, color: '#000', fontWeight: '700' },
-  withdrawBtn: { paddingVertical: 15, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, alignItems: 'center', ...SHADOWS.md },
+  withdrawBtn: { paddingVertical: 15, borderRadius: RADIUS.lg, backgroundColor: colors.primary, alignItems: 'center', ...SHADOWS.md },
   withdrawBtnText: { ...FONTS.button, fontSize: 15, color: '#000' },
   payoutMetaRow: { flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.md, paddingHorizontal: SPACING.md },
-  payoutMeta: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border },
-  payoutMetaText: { ...FONTS.caption, fontSize: 10, color: COLORS.textSecondary, flex: 1 },
+  payoutMeta: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
+  payoutMetaText: { ...FONTS.caption, fontSize: 10, color: colors.textSecondary, flex: 1 },
   txIcon: { width: 38, height: 38, borderRadius: RADIUS.sm, backgroundColor: 'rgba(0,212,170,0.1)', alignItems: 'center', justifyContent: 'center' },
-  txAmount: { ...FONTS.bodySmall, fontWeight: '700', color: COLORS.success, fontVariant: ['tabular-nums'] },
+  txAmount: { ...FONTS.bodySmall, fontWeight: '700', color: colors.success, fontVariant: ['tabular-nums'] },
   manageBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,107,0,0.12)' },
-  manageBtnText: { ...FONTS.caption, fontSize: 11, color: COLORS.primary, fontWeight: '700' },
+  manageBtnText: { ...FONTS.caption, fontSize: 11, color: colors.primary, fontWeight: '700' },
   skeletonWrap: { padding: SPACING.md, gap: SPACING.md },
-  skeletonRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: COLORS.bgCard },
-  skeletonBlock: { borderRadius: RADIUS.sm, backgroundColor: COLORS.bgElevated },
+  skeletonRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: colors.bgCard },
+  skeletonBlock: { borderRadius: RADIUS.sm, backgroundColor: colors.bgElevated },
   // Upsell
   upsellHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md },
   upsellTitle: { ...FONTS.h3, fontSize: 17 },
@@ -770,20 +776,20 @@ const styles = StyleSheet.create({
   upsellHero: { alignItems: 'center', paddingVertical: SPACING.xl, gap: 8 },
   upsellIconWrap: { width: 88, height: 88, borderRadius: RADIUS.xxl, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.md },
   upsellHeading: { ...FONTS.h1, fontSize: 24, lineHeight: 32, textAlign: 'center' },
-  upsellBody: { ...FONTS.bodySmall, color: COLORS.textTertiary, textAlign: 'center', lineHeight: 21 },
+  upsellBody: { ...FONTS.bodySmall, color: colors.textTertiary, textAlign: 'center', lineHeight: 21 },
   upsellPoints: { gap: 8, marginTop: SPACING.md, alignSelf: 'stretch', paddingHorizontal: SPACING.md },
   upsellPoint: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  upsellPointText: { ...FONTS.bodySmall, color: COLORS.textSecondary },
-  planCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.md, backgroundColor: COLORS.bgCard },
-  planCardActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  upsellPointText: { ...FONTS.bodySmall, color: colors.textSecondary },
+  planCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.xl, borderWidth: 1, borderColor: colors.border, marginBottom: SPACING.md, backgroundColor: colors.bgCard },
+  planCardActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   planNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   planName: { ...FONTS.bodyLarge, fontSize: 15 },
   planPrice: { ...FONTS.price, fontSize: 18, marginTop: 4 },
-  planPeriod: { ...FONTS.caption, color: COLORS.textTertiary },
+  planPeriod: { ...FONTS.caption, color: colors.textTertiary },
   planFeatureRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 },
-  planFeature: { ...FONTS.caption, fontSize: 11, color: COLORS.textSecondary },
-  upsellCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 17, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, ...SHADOWS.md },
+  planFeature: { ...FONTS.caption, fontSize: 11, color: colors.textSecondary },
+  upsellCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 17, borderRadius: RADIUS.lg, backgroundColor: colors.primary, ...SHADOWS.md },
   upsellCtaText: { ...FONTS.button, fontSize: 15, color: '#000' },
   upsellSecondary: { alignItems: 'center', paddingVertical: SPACING.md },
-  upsellSecondaryText: { ...FONTS.bodySmall, color: COLORS.textTertiary },
+  upsellSecondaryText: { ...FONTS.bodySmall, color: colors.textTertiary },
 });

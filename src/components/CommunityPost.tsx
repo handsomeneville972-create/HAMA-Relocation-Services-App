@@ -1,10 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommunityPost as CommunityPostType } from '../constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { UserAvatar } from './UserAvatar';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { likePost, unlikePost, bookmarkPost, unbookmarkPost, incrementPostShares } from '../services/communityService';
 
 interface CommunityPostCardProps {
@@ -13,6 +15,8 @@ interface CommunityPostCardProps {
 }
 
 export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPress }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUserId } = useAuth();
   const [liked, setLiked] = useState(post.isLiked);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
@@ -89,16 +93,16 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
   return (
     <TouchableOpacity activeOpacity={0.95} onPress={onPress}>
       <View style={styles.card}>
-        <LinearGradient colors={COLORS.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
+        <LinearGradient colors={colors.gradientCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradient}>
           {/* Header */}
           <View style={styles.header}>
-            <Image source={{ uri: post.user.avatar }} style={styles.avatar} />
+            <UserAvatar uri={post.user.avatar} size={40} style={styles.avatar} />
             <View style={styles.headerInfo}>
               <Text style={styles.username}>{post.user.name}</Text>
               <Text style={styles.time}>{post.createdAt}</Text>
             </View>
             <TouchableOpacity>
-              <Ionicons name="ellipsis-horizontal" size={18} color={COLORS.textSecondary} />
+              <Ionicons name="ellipsis-horizontal" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -134,7 +138,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
           <View style={styles.actionBar}>
             <View style={styles.actionRow}>
               <View style={styles.actionButton}>
-                <Ionicons name="eye-outline" size={20} color={COLORS.textTertiary} />
+                <Ionicons name="eye-outline" size={20} color={colors.textTertiary} />
                 <Text style={styles.actionText}>{post.views}</Text>
               </View>
               <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
@@ -142,17 +146,17 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
                   <Ionicons
                     name={liked ? 'heart' : 'heart-outline'}
                     size={22}
-                    color={liked ? COLORS.secondary : COLORS.textSecondary}
+                    color={liked ? colors.secondary : colors.textSecondary}
                   />
                 </Animated.View>
                 <Text style={[styles.actionText, liked && styles.likedText]}>{likeCount}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="chatbubble-outline" size={21} color={COLORS.textSecondary} />
+                <Ionicons name="chatbubble-outline" size={21} color={colors.textSecondary} />
                 <Text style={styles.actionText}>{post.comments}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
-                <Ionicons name="arrow-redo-outline" size={21} color={COLORS.textSecondary} />
+                <Ionicons name="arrow-redo-outline" size={21} color={colors.textSecondary} />
                 <Text style={styles.actionText}>{shareCount}</Text>
               </TouchableOpacity>
             </View>
@@ -161,7 +165,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
                 <Ionicons
                   name={bookmarked ? 'bookmark' : 'bookmark-outline'}
                   size={21}
-                  color={bookmarked ? COLORS.primary : COLORS.textSecondary}
+                  color={bookmarked ? colors.primary : colors.textSecondary}
                 />
               </Animated.View>
               <Text style={[styles.actionText, bookmarked && styles.bookmarkedText]}>{bookmarkCount}</Text>
@@ -173,12 +177,13 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     marginBottom: SPACING.md,
     ...SHADOWS.sm,
   },
@@ -200,17 +205,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   time: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
     marginTop: 2,
   },
   content: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: SPACING.sm,
@@ -228,7 +233,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   tagText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 11,
     fontWeight: '500',
   },
@@ -265,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
     paddingTop: SPACING.sm,
   },
   actionRow: {
@@ -278,13 +283,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   actionText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   likedText: {
-    color: COLORS.secondary,
+    color: colors.secondary,
   },
   bookmarkedText: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
 });

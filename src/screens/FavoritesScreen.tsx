@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,9 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { ResponsiveGrid } from '../components/ResponsiveGrid';
+import { UserAvatar } from '../components/UserAvatar';
 import { useUserFavorites } from '../hooks/useUserData';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type TabType = 'properties' | 'products' | 'posts';
 
@@ -20,7 +22,9 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
 
 export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { width, isPhone } = useResponsive();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width, isPhone, isTablet } = useResponsive();
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   const tabIndicator = useRef(new Animated.Value(0)).current;
   const [loading, setLoading] = useState(true);
@@ -46,10 +50,10 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Favorites</Text>
           <View style={styles.headerSpacer} />
@@ -66,7 +70,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
               <Ionicons
                 name={tab.icon as any}
                 size={16}
-                color={activeTab === tab.key ? COLORS.primary : COLORS.textTertiary}
+                color={activeTab === tab.key ? colors.primary : colors.textTertiary}
               />
               <Text style={[styles.tabLabel, activeTab === tab.key && styles.activeTabLabel]}>
                 {tab.label}
@@ -117,7 +121,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                         </View>
                       </View>
                       <TouchableOpacity style={styles.removeButton}>
-                        <Ionicons name="heart" size={20} color={COLORS.secondary} />
+                        <Ionicons name="heart" size={20} color={colors.secondary} />
                       </TouchableOpacity>
                     </View>
                   </GlassCard>
@@ -133,7 +137,7 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             {savedProducts.length === 0 ? (
               <EmptyState icon="cart-outline" title="No saved products" subtitle="Tap the heart icon on any product to save it" />
             ) : (
-              <ResponsiveGrid columns={isPhone ? 2 : 3}>
+              <ResponsiveGrid columns={isPhone ? 2 : isTablet ? 3 : 4}>
                 {savedProducts.map(product => (
                   <TouchableOpacity key={product.id} activeOpacity={0.9} style={styles.productCard} onPress={() => navigation.navigate('ProductDetail', { productId: product.id })}>
                     <GlassCard noPadding>
@@ -142,12 +146,12 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                         <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
                         <Text style={styles.productPrice}>KSh {product.price.toLocaleString()}</Text>
                         <View style={styles.productRating}>
-                          <Ionicons name="star" size={12} color={COLORS.warning} />
+                          <Ionicons name="star" size={12} color={colors.warning} />
                           <Text style={styles.productRatingText}>{product.rating}</Text>
                         </View>
                       </View>
                       <TouchableOpacity style={styles.productHeart}>
-                        <Ionicons name="heart" size={18} color={COLORS.secondary} />
+                        <Ionicons name="heart" size={18} color={colors.secondary} />
                       </TouchableOpacity>
                     </GlassCard>
                   </TouchableOpacity>
@@ -168,13 +172,13 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                   <GlassCard>
                     <View style={styles.postItem}>
                       <View style={styles.postHeader}>
-                        <Image source={{ uri: post.user.avatar }} style={styles.postAvatar} />
+                        <UserAvatar uri={post.user.avatar} size={40} style={styles.postAvatar} />
                         <View style={styles.postUserInfo}>
                           <Text style={styles.postUsername}>{post.user.name}</Text>
                           <Text style={styles.postTime}>{post.createdAt}</Text>
                         </View>
                         <TouchableOpacity>
-                          <Ionicons name="bookmark" size={20} color={COLORS.primary} />
+                          <Ionicons name="bookmark" size={20} color={colors.primary} />
                         </TouchableOpacity>
                       </View>
                       <Text style={styles.postContent} numberOfLines={3}>{post.content}</Text>
@@ -197,20 +201,24 @@ export const FavoritesScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   );
 };
 
-const EmptyState: React.FC<{ icon: string; title: string; subtitle: string }> = ({ icon, title, subtitle }) => (
-  <View style={styles.emptyState}>
-    <View style={styles.emptyIcon}>
-      <Ionicons name={icon as any} size={48} color={COLORS.textTertiary} />
+const EmptyState: React.FC<{ icon: string; title: string; subtitle: string }> = ({ icon, title, subtitle }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <View style={styles.emptyState}>
+      <View style={styles.emptyIcon}>
+        <Ionicons name={icon as any} size={48} color={colors.textTertiary} />
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptySubtitle}>{subtitle}</Text>
     </View>
-    <Text style={styles.emptyTitle}>{title}</Text>
-    <Text style={styles.emptySubtitle}>{subtitle}</Text>
-  </View>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: 0,
@@ -226,13 +234,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -251,22 +259,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   tabLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '500',
   },
   activeTabLabel: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   indicatorContainer: {
     height: 2,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   indicator: {
     width: '33.33%',
     height: '100%',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   scrollContent: {
     padding: SPACING.md,
@@ -274,7 +282,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  // Saved Items
   savedItem: {
     marginBottom: SPACING.sm,
   },
@@ -292,13 +299,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   savedTitle: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   savedPrice: {
-    color: COLORS.accent,
+    color: colors.accent,
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 4,
@@ -308,11 +315,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   savedMetaText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
   },
   savedLocation: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   removeButton: {
@@ -323,7 +330,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Products Grid
   productCard: {
     width: '100%',
     marginBottom: SPACING.md,
@@ -339,13 +345,13 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
   },
   productName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
   },
   productPrice: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 4,
@@ -356,7 +362,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   productRatingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -371,7 +377,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Posts
   postItem: {},
   postHeader: {
     flexDirection: 'row',
@@ -388,16 +393,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   postUsername: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   postTime: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   postContent: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: SPACING.sm,
@@ -407,7 +412,6 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: RADIUS.md,
   },
-  // Empty State
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -417,17 +421,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   emptySubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: 'center',
     paddingHorizontal: 40,

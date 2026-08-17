@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,12 +8,15 @@ import { findOrCreateConversation } from '../services/conversationService';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useResponsive } from '../utils/responsive';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Product } from '../constants/types';
 
 export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { productId } = route.params;
   const { isDesktop } = useResponsive();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -53,7 +56,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const hero = (
     <Animated.View style={[styles.imageContainer, isDesktop && styles.imageContainerDesktop, { opacity: imageOpacity }]}>
       <Image source={{ uri: product.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
-      <LinearGradient colors={['transparent', COLORS.bg]} style={styles.imageGradient} />
+      <LinearGradient colors={['transparent', colors.bg]} style={styles.imageGradient} />
       {/* Back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -89,16 +92,16 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
 
       {/* Seller Info */}
       <TouchableOpacity style={styles.sellerSection}>
-        <Image source={{ uri: product.seller?.logo ?? 'https://i.pravatar.cc/100?u=seller' }} style={styles.sellerLogo} />
+        <Image source={product.seller?.logo ? { uri: product.seller.logo } : require('../../assets/hama-logo.png')} style={styles.sellerLogo} />
         <View style={styles.sellerInfo}>
           <Text style={styles.sellerName}>{product.seller.name}</Text>
           <View style={styles.sellerRating}>
-            <Ionicons name="star" size={14} color={COLORS.warning} />
+            <Ionicons name="star" size={14} color={colors.warning} />
             <Text style={styles.sellerRatingText}>{product.seller.rating}</Text>
             <Text style={styles.sellerReviewCount}>({product.seller.reviewCount} reviews)</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
       </TouchableOpacity>
 
       {/* Description */}
@@ -107,12 +110,12 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
         <Text style={styles.descriptionText}>{product.description}</Text>
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Ionicons name="pricetag-outline" size={16} color={COLORS.textSecondary} />
+            <Ionicons name="pricetag-outline" size={16} color={colors.textSecondary} />
             <Text style={styles.metaLabel}>Condition: </Text>
             <Text style={styles.metaValue}>{product.condition}</Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
+            <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
             <Text style={styles.metaLabel}>Location: </Text>
             <Text style={styles.metaValue}>{product.location}</Text>
           </View>
@@ -151,7 +154,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
               <Text style={styles.reviewCount}>{product.reviewCount} reviews</Text>
             </View>
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={20} color={COLORS.warning} />
+              <Ionicons name="star" size={20} color={colors.warning} />
               <Text style={styles.ratingValue}>{product.rating}</Text>
               <Text style={styles.ratingMax}>/ 5.0</Text>
             </View>
@@ -163,7 +166,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
 
       {/* Bottom CTA */}
       <View style={styles.bottomCta}>
-        <LinearGradient colors={[COLORS.bgBlur, COLORS.bg]} style={styles.ctaGradient}>
+        <LinearGradient colors={[colors.bgBlur, colors.bg]} style={styles.ctaGradient}>
           <TouchableOpacity
             style={styles.contactButton}
             onPress={async () => {
@@ -183,7 +186,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
               }
             }}
           >
-            <Ionicons name="chatbubble-outline" size={20} color={COLORS.text} />
+            <Ionicons name="chatbubble-outline" size={20} color={colors.text} />
             <Text style={styles.contactButtonText}>Contact Seller</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -193,7 +196,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
               navigation.navigate('Cart');
             }}
           >
-            <LinearGradient colors={[COLORS.primary, COLORS.primaryLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyGradient}>
+            <LinearGradient colors={[colors.primary, colors.primaryLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyGradient}>
               <Text style={styles.buyText}>{inCart(product.id) ? `In Cart · ${cartQuantity(product.id)}` : 'Add to Cart'}</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -203,10 +206,11 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   imageContainer: {
     height: 350,
@@ -280,7 +284,7 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     width: 24,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   content: {
     padding: SPACING.md,
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
   },
   priceRow: {
@@ -305,15 +309,15 @@ const styles = StyleSheet.create({
   },
   price: {
     ...FONTS.price,
-    color: COLORS.primary,
+    color: colors.primary,
   },
   originalPrice: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 16,
     textDecorationLine: 'line-through',
   },
   discountBadge: {
-    backgroundColor: COLORS.error,
+    backgroundColor: colors.error,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.sm,
@@ -326,11 +330,11 @@ const styles = StyleSheet.create({
   sellerSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     gap: 12,
   },
   sellerLogo: {
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sellerName: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -353,21 +357,21 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sellerRatingText: {
-    color: COLORS.warning,
+    color: colors.warning,
     fontSize: 13,
     fontWeight: '600',
   },
   sellerReviewCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   sectionTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
   },
   descriptionText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: SPACING.md,
@@ -376,7 +380,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.glassBorder,
+    borderTopColor: colors.glassBorder,
   },
   metaItem: {
     flexDirection: 'row',
@@ -384,11 +388,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   metaLabel: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 13,
   },
   metaValue: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   reviewCount: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
   },
   ratingRow: {
@@ -408,10 +412,10 @@ const styles = StyleSheet.create({
   },
   ratingValue: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   ratingMax: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 16,
   },
   bottomCta: {
@@ -435,14 +439,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   contactButtonText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },

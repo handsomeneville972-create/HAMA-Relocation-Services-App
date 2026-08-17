@@ -1,6 +1,7 @@
 import { supabase, SUPABASE_URL } from '../utils/supabaseClient';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 const AVATARS_BUCKET = 'avatars';
 export const COMMUNITY_BUCKET = 'community-posts';
@@ -9,7 +10,26 @@ const isWeb = Platform.OS === 'web';
 export type UploadResult = { url: string; fileName: string } | { error: string };
 
 const KNOWN_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'];
-const VIDEO_EXTS = ['mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'];
+
+// Canonical MIME map — never derive image MIME as `image/${ext}`
+// (e.g. .jpg would become `image/jpg`, which Supabase allowlists reject).
+const EXT_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  pdf: 'application/pdf',
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  m4v: 'video/x-m4v',
+  webm: 'video/webm',
+  avi: 'video/x-msvideo',
+  mkv: 'video/x-matroska',
+};
+
+const AVATAR_MAX_DIMENSION = 512;
+const AVATAR_QUALITY = 0.72;
 
 const getPublicUrl = (bucket: string, filePath: string): string => {
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
@@ -30,16 +50,17 @@ export const uploadFile = async (
   bucket: string,
   folder: string,
   uri: string,
+  options?: { ext?: string; type?: string },
 ): Promise<UploadResult> => {
   try {
     const urlPath = uri.split('?')[0];
     const urlExt = urlPath.split('.').pop()?.toLowerCase() ?? '';
-    const ext = KNOWN_EXTS.includes(urlExt) ? urlExt : 'jpg';
+    const ext = options?.ext && KNOWN_EXTS.includes(options.ext)
+      ? options.ext
+      : KNOWN_EXTS.includes(urlExt) ? urlExt : 'jpg';
     const fileName = `${Date.now()}.${ext}`;
     const filePath = `${folder}/${fileName}`;
-    const isPdf = ext === 'pdf';
-    const isVideo = VIDEO_EXTS.includes(ext);
-    const type = isPdf ? 'application/pdf' : isVideo ? `video/${ext}` : `image/${ext}`;
+    const type = options?.type ?? (EXT_MIME[ext] ?? 'application/octet-stream');
 
     if (isWeb) {
       const response = await fetch(uri);
@@ -99,13 +120,38 @@ export const uploadFile = async (
 };
 
 /**
+ * Compress and downscale a profile avatar before upload.
+ * Falls back to the original URI if manipulation fails.
+ */
+const prepareAvatar = async (uri: string): Promise<{ uri: string; ext: string; mime: string }> => {
+  try {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: AVATAR_MAX_DIMENSION, height: AVATAR_MAX_DIMENSION } }],
+      { compress: AVATAR_QUALITY, format: ImageManipulator.SaveFormat.JPEG },
+    );
+    return { uri: result.uri, ext: 'jpg', mime: 'image/jpeg' };
+  } catch {
+    // Keep original — upload will use its own detected type
+    return { uri, ext: '', mime: '' };
+  }
+};
+
+/**
  * Upload a profile avatar image to Supabase Storage.
+ * Images are downscaled to 512px and compressed (JPEG ~72%) first.
  * Stores at: avatars/{userId}/{timestamp}.{ext}
  */
 export const uploadAvatar = async (
   userId: string,
   uri: string,
-): Promise<UploadResult> => uploadFile(AVATARS_BUCKET, userId, uri);
+): Promise<UploadResult> => {
+  const prepared = await prepareAvatar(uri);
+  return uploadFile(AVATARS_BUCKET, userId, prepared.uri, {
+    ext: prepared.ext || undefined,
+    type: prepared.mime || undefined,
+  });
+};
 
 /**
  * Delete a user's previous avatar file(s) from storage.

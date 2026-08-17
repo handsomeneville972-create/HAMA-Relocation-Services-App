@@ -17,8 +17,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUserConversations, useUserUnreadCount } from '../hooks/useUserData';
 import { useInboxPresence } from '../hooks/useInboxPresence';
 import { ConversationListItem } from '../components/messaging/ConversationListItem';
+import { UserAvatar } from '../components/UserAvatar';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { COLORS, RADIUS, SPACING, FONTS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Conversation, User } from '../constants/types';
 
 type InboxTab = 'all' | 'unread' | 'landlords' | 'sellers' | 'providers';
@@ -49,6 +51,8 @@ const getTabForConversation = (conv: Conversation, currentUserId: string): Inbox
 };
 
 export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
   const conversations = useUserConversations();
@@ -131,7 +135,7 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       !loading ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="chatbubbles-outline" size={34} color={COLORS.textTertiary} />
+            <Ionicons name="chatbubbles-outline" size={34} color={colors.textTertiary} />
           </View>
           <Text style={styles.emptyTitle}>
             {activeTab === 'unread' ? 'No unread messages' : 'No conversations yet'}
@@ -154,10 +158,10 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={styles.headerTitle}>Messages</Text>
@@ -166,7 +170,7 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </Text>
           </View>
           <TouchableOpacity style={styles.searchButton}>
-            <Ionicons name="search-outline" size={22} color={COLORS.primary} />
+            <Ionicons name="search-outline" size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -186,7 +190,7 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               activeOpacity={0.7}
             >
               <View style={styles.activeAvatarWrap}>
-                <Image source={{ uri: user.avatar }} style={styles.activeAvatar} />
+                <UserAvatar uri={user.avatar} size={56} style={styles.activeAvatar} />
                 <View style={styles.activeDot} />
               </View>
               <Text style={styles.activeName} numberOfLines={1}>{user.name.split(' ')[0]}</Text>
@@ -234,8 +238,8 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={ListEmptyComponent}
@@ -246,10 +250,11 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingBottom: SPACING.md,
@@ -265,7 +270,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -274,10 +279,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...FONTS.h1,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSubtitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -308,8 +313,8 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: COLORS.success,
-    backgroundColor: COLORS.bgCard,
+    borderColor: colors.success,
+    backgroundColor: colors.bgCard,
   },
   activeDot: {
     position: 'absolute',
@@ -318,19 +323,19 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
     borderWidth: 2,
-    borderColor: COLORS.bg,
+    borderColor: colors.bg,
   },
   activeName: {
     ...FONTS.caption,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
     maxWidth: 64,
   },
   tabsWrap: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   tabsContent: {
     paddingHorizontal: SPACING.md,
@@ -344,17 +349,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   tabActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tabText: {
     ...FONTS.bodySmall,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   tabTextActive: {
@@ -380,7 +385,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
     marginLeft: 84,
   },
   emptyContainer: {
@@ -395,20 +400,20 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginTop: SPACING.sm,
   },
   emptySubtitle: {
     ...FONTS.body,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textAlign: 'center',
   },
 });

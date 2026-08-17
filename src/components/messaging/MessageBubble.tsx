@@ -6,14 +6,16 @@
  * Includes read receipts, edited indicator, deleted state, and context menu.
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS, SPACING, FONTS, ANIMATION, EASING } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, ANIMATION, EASING, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { PropertyMessageCard } from './PropertyMessageCard';
 import { ProductMessageCard } from './ProductMessageCard';
 import { ServiceProviderMessageCard } from './ServiceProviderMessageCard';
+import { UserAvatar } from '../UserAvatar';
 import type { Message } from '../../constants/types';
 
 interface MessageBubbleProps {
@@ -31,6 +33,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onLongPress,
   onPress,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const reducedMotion = useReducedMotion();
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -81,7 +86,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       case 'file':
         return (
           <View style={styles.fileContainer}>
-            <Ionicons name="document-outline" size={24} color={COLORS.primary} />
+            <Ionicons name="document-outline" size={24} color={colors.primary} />
             <View style={styles.fileInfo}>
               <Text style={[styles.messageText, isOwn && styles.ownMessageText]} numberOfLines={1}>
                 {msg.text || 'File attachment'}
@@ -120,7 +125,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       case 'location':
         return (
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={18} color={COLORS.primary} />
+            <Ionicons name="location-outline" size={18} color={colors.primary} />
             <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
               {msg.text || 'Shared location'}
             </Text>
@@ -149,7 +154,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         },
       ]}
     >
-      {!isOwn && avatar && <Image source={{ uri: avatar }} style={styles.messageAvatar} />}
+      {!isOwn && avatar && <UserAvatar uri={avatar} size={30} style={styles.messageAvatar} />}
 
       <TouchableOpacity
         activeOpacity={0.8}
@@ -172,7 +177,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <Ionicons
               name={msg.read ? 'checkmark-done' : 'checkmark'}
               size={14}
-              color={msg.read ? COLORS.primary : COLORS.textTertiary}
+              color={msg.read ? colors.primary : colors.textTertiary}
               style={styles.readIcon}
             />
           )}
@@ -182,7 +187,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   ownBubble: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderBottomRightRadius: 4,
   },
   otherBubble: {
@@ -216,7 +222,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     lineHeight: 20,
   },
   ownMessageText: {
@@ -231,14 +237,14 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   ownMessageTime: {
     color: 'rgba(255,255,255,0.7)',
   },
   editedLabel: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontStyle: 'italic',
   },
   ownEditedLabel: {
@@ -253,7 +259,7 @@ const styles = StyleSheet.create({
   },
   systemText: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontStyle: 'italic',
   },
   messageImage: {

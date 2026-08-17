@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar } from '../services/uploadService';
+import { UserAvatar, isDefaultAvatar } from '../components/UserAvatar';
 import { supabase } from '../utils/supabaseClient';
 import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
 import { FadeInView } from '../components/BlurText';
@@ -91,24 +92,15 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
     setErrorMsg('');
 
     try {
-      let avatarUrl = currentUser.avatar;
-
-      if (avatarUri) {
-        const result = await uploadAvatar(currentUserId, avatarUri);
-        if ('error' in result) {
-          setErrorMsg(`Photo upload failed: ${result.error}`);
-          setIsSaving(false);
-          return;
-        }
-        avatarUrl = result.url;
-      }
-
-      const err = await updateProfile({
+      // 1. Save profile fields first (username + onboarding flag).
+      // Avatar is intentionally not included here — it's uploaded in step 2.
+      const updates: Parameters<typeof updateProfile>[0] = {
         name: currentUser.name,
-        avatar: avatarUrl,
         username: username.trim(),
         onboardingCompleted: true,
-      });
+      };
+
+      const err = await updateProfile(updates);
 
       if (err) {
         if (err.toLowerCase().includes('unique') || err.toLowerCase().includes('duplicate')) {
@@ -121,6 +113,17 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
         return;
       }
 
+      // 2. Upload the photo separately so a photo failure never blocks
+      //    the username/onboarding save.
+      if (avatarUri) {
+        const result = await uploadAvatar(currentUserId, avatarUri);
+        if ('error' in result) {
+          setErrorMsg(`Your profile was created, but the photo upload failed: ${result.error}`);
+        } else {
+          await updateProfile({ avatar: result.url });
+        }
+      }
+
       navigation.replace('(tabs)');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -128,7 +131,8 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
     }
   };
 
-  const picSource = avatarUri ? { uri: avatarUri } : currentUser.avatar ? { uri: currentUser.avatar } : null;
+  const picSource = avatarUri ? { uri: avatarUri } : null;
+  const showDefault = !avatarUri && isDefaultAvatar(currentUser.avatar);
 
   const getUsernameHint = () => {
     if (isChecking) return { text: 'Checking availability...', color: COLORS.textTertiary };
@@ -142,7 +146,7 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
         <View style={styles.logoCircle}>
           <Image source={require('../../assets/hama-logo.png')} style={styles.logoImage} resizeMode="contain" />
         </View>
@@ -163,6 +167,8 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
                 <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
                   {picSource ? (
                     <Image source={picSource} style={styles.photo} />
+                  ) : showDefault ? (
+                    <UserAvatar uri={currentUser.avatar} size={112} />
                   ) : (
                     <View style={[styles.photo, styles.photoPlaceholder]}>
                       <Ionicons name="person" size={44} color={COLORS.textTertiary} />

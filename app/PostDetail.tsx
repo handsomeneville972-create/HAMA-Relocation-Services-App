@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CommunityPostCard } from '../src/components/CommunityPost';
+import { UserAvatar, isDefaultAvatar } from '../src/components/UserAvatar';
 import { getPostById, incrementPostViews, getComments, addComment, deleteComment } from '../src/services/communityService';
 import { useAuth } from '../src/contexts/AuthContext';
 import type { CommunityPost, PostComment } from '../src/constants/types';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../src/constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../src/constants/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const formatRelativeTime = (iso: string): string => {
   const date = new Date(iso);
@@ -24,6 +26,8 @@ const formatRelativeTime = (iso: string): string => {
 };
 
 export default function PostDetail() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { postId } = useLocalSearchParams();
   const { currentUserId, currentUser } = useAuth();
   const [post, setPost] = useState<CommunityPost | null>(null);
@@ -108,7 +112,7 @@ export default function PostDetail() {
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator color={COLORS.primary} size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -116,7 +120,7 @@ export default function PostDetail() {
   if (!post) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: COLORS.textSecondary }}>Post not found</Text>
+        <Text style={{ color: colors.textSecondary }}>Post not found</Text>
       </View>
     );
   }
@@ -127,9 +131,9 @@ export default function PostDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
     >
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={styles.header}>
+      <LinearGradient colors={colors.gradientNight} style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Post</Text>
         <View style={styles.headerSpacer} />
@@ -144,19 +148,17 @@ export default function PostDetail() {
           <Text style={styles.commentsTitle}>Comments ({commentCount})</Text>
           {comments.length === 0 ? (
             <View style={styles.emptyComments}>
-              <Ionicons name="chatbubble-ellipses-outline" size={28} color={COLORS.textTertiary} />
+              <Ionicons name="chatbubble-ellipses-outline" size={28} color={colors.textTertiary} />
               <Text style={styles.emptyText}>No comments yet. Be the first to share your thoughts!</Text>
             </View>
           ) : (
             comments.map((comment) => (
               <View key={comment.id} style={styles.commentCard}>
                 <View style={styles.commentHeader}>
-                  {comment.user?.avatar ? (
+                  {comment.user?.avatar && !isDefaultAvatar(comment.user.avatar) ? (
                     <Image source={{ uri: comment.user.avatar }} style={styles.commentAvatarImg} />
                   ) : (
-                    <View style={styles.commentAvatar}>
-                      <Ionicons name="person" size={14} color={COLORS.textTertiary} />
-                    </View>
+                    <UserAvatar uri={comment.user?.avatar} size={32} style={styles.commentAvatar} />
                   )}
                   <View style={styles.commentInfo}>
                     <Text style={styles.commentUsername}>{comment.user?.name ?? 'User'}</Text>
@@ -164,7 +166,7 @@ export default function PostDetail() {
                   </View>
                   {comment.userId === currentUserId && (
                     <TouchableOpacity onPress={() => handleDeleteComment(comment)} style={styles.deleteButton}>
-                      <Ionicons name="trash-outline" size={16} color={COLORS.textTertiary} />
+                      <Ionicons name="trash-outline" size={16} color={colors.textTertiary} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -177,14 +179,14 @@ export default function PostDetail() {
 
       {/* Comment Input */}
       <View style={styles.commentInputBar}>
-        <LinearGradient colors={[COLORS.bgBlur, COLORS.bg]} style={styles.commentInputGradient}>
+        <LinearGradient colors={[colors.bgBlur, colors.bg]} style={styles.commentInputGradient}>
           <View style={styles.commentInput}>
             <TextInput
               style={styles.commentTextInput}
               value={commentText}
               onChangeText={setCommentText}
               placeholder="Write a comment..."
-              placeholderTextColor={COLORS.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               multiline
               maxLength={500}
             />
@@ -194,9 +196,9 @@ export default function PostDetail() {
               disabled={!commentText.trim() || isSending}
             >
               {isSending ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Ionicons name="send" size={18} color={commentText.trim() ? COLORS.primary : COLORS.textTertiary} />
+                <Ionicons name="send" size={18} color={commentText.trim() ? colors.primary : colors.textTertiary} />
               )}
             </TouchableOpacity>
           </View>
@@ -206,10 +208,11 @@ export default function PostDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     flexDirection: 'row',
@@ -223,13 +226,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   headerSpacer: {
     width: 40,
@@ -239,16 +242,16 @@ const styles = StyleSheet.create({
   },
   commentsTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.md,
   },
   commentCard: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   commentHeader: {
     flexDirection: 'row',
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.bgElevated,
+    backgroundColor: colors.bgElevated,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -273,16 +276,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   commentUsername: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   commentTime: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 11,
   },
   commentText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -296,7 +299,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textAlign: 'center',
     maxWidth: 240,
     lineHeight: 18,
@@ -314,15 +317,15 @@ const styles = StyleSheet.create({
   commentInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.full,
     paddingLeft: 16,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   commentTextInput: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 14,
     paddingVertical: 12,
     maxHeight: 100,

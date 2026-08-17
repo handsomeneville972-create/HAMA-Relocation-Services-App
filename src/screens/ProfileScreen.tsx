@@ -1,51 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassCard } from '../components/GlassCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { UserAvatar } from '../components/UserAvatar';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfileBadges } from '../hooks/useUserData';
 import { getCommunityPosts } from '../services/communityService';
 import { ROLE_LABELS, VERIFICATION_LABELS } from '../constants/labels';
 import { navigateToRoute } from '../utils/navigation';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
-const MENU_SECTIONS = [
+const getMenuSections = (colors: ThemeColors) => [
   {
     title: 'Account',
     items: [
-      { icon: 'person-outline', label: 'Edit Profile', color: COLORS.primary, route: 'EditProfile' },
-      { icon: 'bookmark-outline', label: 'Saved', color: COLORS.accent, route: 'Favorites' },
+      { icon: 'person-outline', label: 'Edit Profile', color: colors.primary, route: 'EditProfile' },
+      { icon: 'bookmark-outline', label: 'Saved', color: colors.accent, route: 'Favorites' },
     ],
   },
   {
     title: 'Discover',
     items: [
-      { icon: 'compass-outline', label: 'Discover', color: COLORS.primary, route: 'Blog' },
+      { icon: 'compass-outline', label: 'Discover', color: colors.primary, route: 'Blog' },
     ],
   },
   {
     title: 'Activity',
     items: [
-      { icon: 'notifications-outline', label: 'Notifications', color: COLORS.warning, route: 'Notifications' },
-      { icon: 'chatbubble-outline', label: 'Messages', color: COLORS.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
-      { icon: 'chatbubble-outline', label: 'My Reviews', color: COLORS.warning, badgeKey: 'myReviews' },
-      { icon: 'newspaper-outline', label: 'My Posts', color: COLORS.secondary, route: 'MyPosts' },
-      { icon: 'time-outline', label: 'Booking History', color: COLORS.primary },
-      { icon: 'cart-outline', label: 'Orders', color: COLORS.accent },
+      { icon: 'notifications-outline', label: 'Notifications', color: colors.warning, route: 'Notifications' },
+      { icon: 'chatbubble-outline', label: 'Messages', color: colors.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
+      { icon: 'chatbubble-outline', label: 'My Reviews', color: colors.warning, badgeKey: 'myReviews' },
+      { icon: 'newspaper-outline', label: 'My Posts', color: colors.secondary, route: 'MyPosts' },
+      { icon: 'time-outline', label: 'Booking History', color: colors.primary },
+      { icon: 'cart-outline', label: 'Orders', color: colors.accent },
     ],
   },
   {
     title: 'Settings',
     items: [
-      { icon: 'settings-outline', label: 'Settings', color: COLORS.secondary, route: 'Settings' },
+      { icon: 'settings-outline', label: 'Settings', color: colors.secondary, route: 'Settings' },
     ],
   },
 ];
 
 export const ProfileScreen: React.FC = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUser, currentUserId, isAuthenticated, isEmailVerified } = useAuth();
   const { dynamicBadges, savedPropertiesCount, reviewCount, bookmarkCount } = useProfileBadges();
@@ -70,7 +74,7 @@ export const ProfileScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+        <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
           <SkeletonLoader type="profile-header" />
         </LinearGradient>
         <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md, gap: SPACING.sm }}>
@@ -84,13 +88,10 @@ export const ProfileScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
-        <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+        <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
           <View style={styles.profileInfo}>
-            <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarBorder}>
-              <Image
-                source={{ uri: currentUser.avatar }}
-                style={styles.avatar}
-              />
+            <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatarBorder}>
+              <UserAvatar uri={currentUser.avatar} size={82} style={styles.avatar} />
             </LinearGradient>
             <View style={styles.profileText}>
               <Text style={styles.profileName}>{currentUser.name}</Text>
@@ -146,7 +147,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Menu Sections */}
         <View style={styles.menuContainer}>
-          {MENU_SECTIONS.map((section, sectionIndex) => (
+          {getMenuSections(colors).map((section, sectionIndex) => (
             <View key={sectionIndex} style={styles.menuSection}>
               <Text style={styles.menuSectionTitle}>{section.title}</Text>
               <GlassCard noPadding>
@@ -177,7 +178,7 @@ export const ProfileScreen: React.FC = () => {
                           <Text style={[styles.menuBadgeText, { color: item.color }]}>{badgeText}</Text>
                         </View>
                       )}
-                      <Ionicons name="chevron-forward" size={13} color={COLORS.textTertiary} />
+                      <Ionicons name="chevron-forward" size={13} color={colors.textTertiary} />
                     </TouchableOpacity>
                   );
                 })}
@@ -202,10 +203,11 @@ export const ProfileScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: SPACING.md,
@@ -235,16 +237,16 @@ const styles = StyleSheet.create({
   },
   profileName: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'center',
   },
   profileUsername: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: 15,
     marginTop: 2,
   },
   atSign: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   badgesRow: {
@@ -260,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   roleText: {
-    color: COLORS.primaryLight,
+    color: colors.primaryLight,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -280,11 +282,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     borderRadius: RADIUS.lg,
     paddingVertical: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderColor: colors.glassBorder,
   },
   statItem: {
     flex: 1,
@@ -292,17 +294,17 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...FONTS.h2,
-    color: COLORS.text,
+    color: colors.text,
   },
   statLabel: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: COLORS.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   settingIcon: {
     width: 25,
@@ -315,11 +317,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingLabel: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 11,
   },
   settingDetail: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 8,
     marginTop: 1,
   },
@@ -334,7 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   menuSectionTitle: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 9,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
   },
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   menuIconContainer: {
     width: 25,
@@ -361,7 +363,7 @@ const styles = StyleSheet.create({
   },
   menuItemLabel: {
     flex: 1,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 11,
   },
   menuBadge: {
@@ -380,15 +382,15 @@ const styles = StyleSheet.create({
   },
   footerBrand: {
     ...FONTS.h3,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '800',
   },
   footerVersion: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   footerTagline: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     fontSize: 12,
   },
   footerLink: {
@@ -399,7 +401,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 107, 0, 0.12)',
   },
   footerLinkText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
   },

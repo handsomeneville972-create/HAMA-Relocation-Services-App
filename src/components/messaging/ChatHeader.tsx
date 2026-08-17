@@ -5,12 +5,14 @@
  * Shows back button, avatar, name, online status, and more menu.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SPACING, FONTS } from '../../constants/theme';
+import { RADIUS, SPACING, FONTS, type ThemeColors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { OnlineIndicator } from './OnlineIndicator';
+import { UserAvatar } from '../UserAvatar';
 import type { User } from '../../constants/types';
 
 interface ChatHeaderProps {
@@ -28,39 +30,40 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBack,
   onMore,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.header, { paddingTop: insets.top }]}>
       <View style={styles.content}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
-        <Image
-          source={{ uri: user.avatar || 'https://i.pravatar.cc/150?u=default' }}
-          style={styles.avatar}
-        />
+        <UserAvatar uri={user.avatar} size={40} style={styles.avatar} />
 
         <View style={styles.info}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>{user.name}</Text>
             {user.verified && (
-              <Ionicons name="checkmark-circle" size={16} color={COLORS.primary} />
+              <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
             )}
           </View>
           <OnlineIndicator isOnline={isOnline} lastSeen={lastSeen} />
         </View>
 
         <TouchableOpacity style={styles.moreButton} onPress={onMore}>
-          <Ionicons name="ellipsis-vertical" size={20} color={COLORS.text} />
+          <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   header: {
     backgroundColor: 'rgba(10, 10, 15, 0.55)',
     paddingBottom: SPACING.sm,
@@ -77,7 +80,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   info: {
     flex: 1,
@@ -98,13 +101,13 @@ const styles = StyleSheet.create({
   name: {
     ...FONTS.body,
     fontWeight: '600',
-    color: COLORS.text,
+    color: colors.text,
   },
   moreButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },

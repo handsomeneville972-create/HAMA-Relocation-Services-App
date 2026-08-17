@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
   Image, Animated, ActivityIndicator, Alert, Platform,
@@ -8,14 +8,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { LiquidGlass, LiquidInput } from '../components/LiquidGlass';
+import { LiquidGlass } from '../components/LiquidGlass';
 import { GlassCard } from '../components/GlassCard';
+import { UserAvatar, isDefaultAvatar } from '../components/UserAvatar';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar, deleteUserAvatars } from '../services/uploadService';
-import { COLORS, RADIUS, SPACING, FONTS, SHADOWS } from '../constants/theme';
+import { supabase } from '../utils/supabaseClient';
+import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+
+const USERNAME_REGEX = /^[a-zA-Z0-9._]{3,30}$/;
 
 export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { currentUser, currentUserId, updateProfile, refreshProfile } = useAuth();
 
   const [displayName, setDisplayName] = useState(currentUser.name);
@@ -24,8 +31,12 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [website, setWebsite] = useState(currentUser.website ?? '');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [usernameTaken, setUsernameTaken] = useState(false);
+  const [checkedFor, setCheckedFor] = useState('');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -45,6 +56,36 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
       refreshProfile();
     }, [refreshProfile]),
   );
+
+  // Debounced username availability check (mirrors Create Profile)
+  const usernameValid = USERNAME_REGEX.test(username.trim());
+  useEffect(() => {
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+    if (!username.trim() || username.trim() === currentUser.username) {
+      setUsernameTaken(false);
+      setCheckedFor('');
+      return;
+    }
+    setIsChecking(true);
+    checkTimer.current = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.rpc('is_username_taken', {
+          p_username: username.trim(),
+        });
+        if (!error) {
+          setUsernameTaken(!!data);
+          setCheckedFor(username.trim());
+        }
+      } catch {
+        // Leave state as-is on failure
+      } finally {
+        setIsChecking(false);
+      }
+    }, 450);
+    return () => {
+      if (checkTimer.current) clearTimeout(checkTimer.current);
+    };
+  }, [username, currentUser.username]);
 
   const pickImage = async (useCamera: boolean) => {
     const permission = useCamera
@@ -80,57 +121,83 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
 
   const handleSave = async () => {
     if (!currentUserId || !hasChanges()) return;
+
+    // Block save if the entered username is invalid or already taken
+    if (username.trim() && !usernameValid) {
+      Alert.alert('Invalid Username', 'Use 3-30 characters: letters, numbers, dots, or underscores.');
+      return;
+    }
+    if (username.trim() && usernameTaken) {
+      Alert.alert('Username Unavailable', 'That username is already taken. Try another one.');
+      return;
+    }
+
     setIsSaving(true);
+    let photoError: string | null = null;
 
     try {
-      let avatarUrl = currentUser.avatar;
-      let newAvatarFileName: string | undefined;
-
-      if (avatarUri) {
-        const result = await uploadAvatar(currentUserId, avatarUri);
-        if ('error' in result) {
-          Alert.alert('Upload Failed', result.error);
-          setIsSaving(false);
-          return;
-        }
-        avatarUrl = result.url;
-        newAvatarFileName = result.fileName;
-      }
-
-      const err = await updateProfile({
+      // 1. Save text fields first — never pass avatar unless a new photo was picked
+      const textErr = await updateProfile({
         name: displayName.trim() || currentUser.name,
-        avatar: avatarUrl,
         username: username.trim() || undefined,
         bio: bio.trim() || undefined,
         website: website.trim() || undefined,
       });
 
-      if (err) {
-        Alert.alert('Save Failed', err);
+      if (textErr) {
+        Alert.alert('Save Failed', textErr);
         return;
       }
 
-      // Remove old avatar files (never the one just uploaded)
-      if (newAvatarFileName) {
-        await deleteUserAvatars(currentUserId, newAvatarFileName);
+      // 2. Upload photo separately so a photo failure never blocks the text save
+      if (avatarUri) {
+        const result = await uploadAvatar(currentUserId, avatarUri);
+        if ('error' in result) {
+          photoError = result.error;
+        } else {
+          const avatarErr = await updateProfile({ avatar: result.url });
+          if (avatarErr) {
+            photoError = `Photo uploaded but profile update failed: ${avatarErr}`;
+          } else {
+            await deleteUserAvatars(currentUserId, result.fileName);
+          }
+        }
       }
 
       await refreshProfile();
-      navigation.goBack();
+
+      if (photoError) {
+        Alert.alert(
+          'Saved',
+          `Your details were saved, but the profile photo could not be updated: ${photoError}`,
+          [{ text: 'OK', onPress: () => navigation.goBack() }],
+        );
+      } else {
+        Alert.alert('Saved', 'Your profile has been updated.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
-  const canSave = hasChanges() && !isSaving;
-  const picSource = avatarUri ? { uri: avatarUri } : currentUser.avatar ? { uri: currentUser.avatar } : null;
+  const canSave = hasChanges() && !isSaving && !isChecking;
+  const usernameHint = (() => {
+    if (!username.trim()) return null;
+    if (isChecking) return { text: 'Checking availability...', color: colors.textTertiary, icon: null };
+    if (!usernameValid) return { text: '3-30 characters, letters, numbers, dots or underscores.', color: colors.textTertiary, icon: null };
+    if (usernameTaken) return { text: 'That username is already taken.', color: colors.error, icon: 'close-circle' as const };
+    if (checkedFor === username.trim()) return { text: 'Username available!', color: colors.success, icon: 'checkmark-circle' as const };
+    return null;
+  })();
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#000000', '#0A0A0A']} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
+      <LinearGradient colors={colors.gradientNight} style={[styles.header, { paddingTop: insets.top + SPACING.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
         <TouchableOpacity
@@ -151,38 +218,40 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
           {/* Photo */}
           <View style={styles.photoSection}>
             <TouchableOpacity onPress={handleAvatarPress} style={styles.photoWrapper}>
-              <LinearGradient colors={COLORS.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
-                {picSource ? (
-                  <Image source={picSource} style={styles.photo} />
+              <LinearGradient colors={colors.gradientPremium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.photoBorder}>
+                {avatarUri || !isDefaultAvatar(currentUser.avatar) ? (
+                  <Image
+                    source={{ uri: avatarUri ?? currentUser.avatar ?? '' }}
+                    style={styles.photo}
+                  />
                 ) : (
-                  <View style={[styles.photo, styles.photoPlaceholder]}>
-                    <Ionicons name="person" size={44} color={COLORS.textTertiary} />
-                  </View>
+                  <UserAvatar uri={currentUser.avatar} size={112} />
                 )}
               </LinearGradient>
               <View style={styles.editBadge}>
                 <Ionicons name="camera" size={16} color="#fff" />
               </View>
             </TouchableOpacity>
+            <Text style={styles.photoHint}>Tap to change your profile photo</Text>
           </View>
 
           {/* Fields */}
           <View style={styles.form}>
             <LiquidGlass variant="elevated">
-              {/* Account Name */}
+              {/* Display Name */}
               <View style={styles.fieldRow}>
-                <Text style={styles.fieldLabel}>Account Name</Text>
+                <Text style={styles.fieldLabel}>Name</Text>
                 <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
                   <TextInput
                     style={styles.input}
                     value={displayName}
                     onChangeText={setDisplayName}
-                    placeholder="Your account name"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholder="Your display name"
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="words"
                     maxLength={50}
                   />
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
                 </TouchableOpacity>
               </View>
 
@@ -198,13 +267,22 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                     value={username}
                     onChangeText={setUsername}
                     placeholder="username"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
                     autoCorrect={false}
                     maxLength={30}
                   />
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                  {isChecking ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : usernameHint?.icon ? (
+                    <Ionicons name={usernameHint.icon} size={20} color={usernameHint.color} />
+                  ) : (
+                    <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                  )}
                 </TouchableOpacity>
+                {usernameHint && (
+                  <Text style={[styles.hint, { color: usernameHint.color }]}>{usernameHint.text}</Text>
+                )}
               </View>
 
               <View style={styles.divider} />
@@ -218,7 +296,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                     value={bio}
                     onChangeText={setBio}
                     placeholder="Describe yourself in 80 characters"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     multiline
                     maxLength={80}
                   />
@@ -232,18 +310,18 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
               <View style={styles.fieldRow}>
                 <Text style={styles.fieldLabel}>Website</Text>
                 <TouchableOpacity style={styles.fieldInput} activeOpacity={0.7}>
-                  <Ionicons name="link-outline" size={18} color={COLORS.textTertiary} />
+                  <Ionicons name="link-outline" size={18} color={colors.textTertiary} />
                   <TextInput
                     style={styles.input}
                     value={website}
                     onChangeText={setWebsite}
                     placeholder="Add a link"
-                    placeholderTextColor={COLORS.textTertiary}
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
                     autoCorrect={false}
                     keyboardType="url"
                   />
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+                  <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
                 </TouchableOpacity>
               </View>
             </LiquidGlass>
@@ -251,9 +329,10 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
             {/* Info */}
             <GlassCard style={styles.infoCard}>
               <View style={styles.infoRow}>
-                <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
                 <Text style={styles.infoText}>
-                  Your account name, @username, bio, and photo are visible to other users on the platform. Your email stays private.
+                  Your name, @username, bio, and photo are visible to other users on the platform. Photos are
+                  compressed automatically before upload.
                 </Text>
               </View>
             </GlassCard>
@@ -264,10 +343,10 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: colors.bg,
   },
   header: {
     flexDirection: 'row',
@@ -280,33 +359,34 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...FONTS.h3,
-    color: COLORS.text,
+    color: colors.text,
   },
   saveBtn: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   saveBtnDisabled: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
   },
   saveBtnText: {
     ...FONTS.button,
     color: '#fff',
   },
   saveBtnTextDisabled: {
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
   },
   photoSection: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,
+    gap: SPACING.sm,
   },
   photoWrapper: {
     position: 'relative',
@@ -325,9 +405,13 @@ const styles = StyleSheet.create({
     borderRadius: 56,
   },
   photoPlaceholder: {
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: colors.bgCard,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  photoHint: {
+    ...FONTS.caption,
+    color: colors.textTertiary,
   },
   editBadge: {
     position: 'absolute',
@@ -336,11 +420,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: COLORS.bg,
+    borderColor: colors.bg,
   },
   form: {
     paddingHorizontal: SPACING.md,
@@ -357,7 +441,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -369,13 +453,17 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...FONTS.body,
-    color: COLORS.text,
+    color: colors.text,
     padding: 0,
   },
   atSign: {
     ...FONTS.body,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
+  },
+  hint: {
+    ...FONTS.caption,
+    lineHeight: 16,
   },
   bioArea: {
     gap: 4,
@@ -386,7 +474,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     textAlign: 'right',
   },
   divider: {
@@ -405,7 +493,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     ...FONTS.caption,
-    color: COLORS.textTertiary,
+    color: colors.textTertiary,
     lineHeight: 18,
   },
 });
