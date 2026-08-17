@@ -6,7 +6,11 @@
 -- random pravatar image). This migration:
 --   1. Recreates handle_new_user so new signups get avatar_url = NULL
 --   2. Clears legacy pravatar.cc avatar URLs from existing profiles
---   3. Clears legacy pravatar.cc object URLs from storage.references
+--
+-- NOTE: pravatar URLs are external hosted images stored in
+-- profiles.avatar_url, NOT objects in the avatars bucket, so no
+-- storage.objects cleanup is needed (direct deletes there are
+-- blocked by the storage.protect_delete() trigger anyway).
 --
 -- SAFE TO RE-RUN (fully idempotent).
 -- ============================================================
@@ -47,10 +51,3 @@ set avatar_url = null,
     updated_at = now()
 where avatar_url is not null
   and (avatar_url like 'https://i.pravatar.cc/%' or avatar_url like '%pravatar.cc%');
-
--- ------------------------------------------------------------
--- 3. Clear legacy pravatar URLs from storage references
--- ------------------------------------------------------------
-delete from storage.objects
-where bucket_id = 'avatars'
-  and name like '%pravatar%';
