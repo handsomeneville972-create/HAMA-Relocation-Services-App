@@ -4,7 +4,7 @@ HAMA is a full-stack mobile platform that connects house seekers with verified r
 
 > **📱 Currently in Early Access** — All premium features are available at no cost during our Founding Member Program.
 
-## ✨ Features
+## Features
 
 ### 🏘️ Property Discovery
 - Browse verified rental listings across 30+ Nairobi neighborhoods
