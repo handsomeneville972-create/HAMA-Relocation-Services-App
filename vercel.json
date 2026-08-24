@@ -6,6 +6,34 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap.xml"
+    },
+    {
+      "source": "/blog/sitemap.xml",
+      "destination": "/api/blog/sitemap.xml"
+    },
+    {
+      "source": "/blog/rss.xml",
+      "destination": "/api/blog/rss.xml"
+    },
+    {
+      "source": "/blog/category/:slug",
+      "destination": "/api/blog/category"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/blog/[slug]"
+    },
+    {
+      "source": "/blog",
+      "destination": "/api/blog/index"
+    },
+    {
+      "source": "/blog/",
+      "destination": "/api/blog/index"
+    },
+    {
       "source": "/:path*",
       "destination": "/"
     }

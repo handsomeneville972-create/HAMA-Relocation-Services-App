@@ -176,7 +176,7 @@ export const PaymentMethodsScreen: React.FC<{ navigation: any }> = ({ navigation
                 <Text style={styles.sectionTitle}>Your Cards</Text>
                 <GlassCard noPadding>
                   {paymentMethods.map((method, index) => {
-                    const brandColor = CARD_BRAND_COLORS[method.brand] ?? CARD_BRAND_colors.visa;
+                    const brandColor = CARD_BRAND_COLORS[method.brand] ?? CARD_BRAND_COLORS.visa;
                     return (
                       <View
                         key={method.id}

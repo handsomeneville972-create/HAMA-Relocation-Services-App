@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { PropertyReview } from '../constants/types';
 import { useTheme } from '../contexts/ThemeContext';
 import { RADIUS, SPACING, FONTS, type ThemeColors } from '../constants/theme';
+import { UserAvatar } from './UserAvatar';
 
 interface PropertyReviewCardProps {
   review: PropertyReview;

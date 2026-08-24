@@ -7,6 +7,8 @@ export default function AboutPage() {
     goBack: () => router.back(),
     navigate: (route: string, params?: any) => {
       if (route === 'Faq') router.push('/Faq');
+      else if (route === 'Legal') router.push('/Legal');
+      else if (route === 'Blog') router.push('/Blog');
       else if (route === 'Settings') router.push('/Settings');
       else if (route === 'PrivacyPolicy') router.push('/PrivacyPolicy');
       else if (route === 'Search') router.push('/Search');

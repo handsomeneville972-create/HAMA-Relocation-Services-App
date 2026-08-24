@@ -14,38 +14,52 @@ import { navigateToRoute } from '../utils/navigation';
 import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
-const getMenuSections = (colors: ThemeColors) => [
-  {
-    title: 'Account',
-    items: [
-      { icon: 'person-outline', label: 'Edit Profile', color: colors.primary, route: 'EditProfile' },
-      { icon: 'bookmark-outline', label: 'Saved', color: colors.accent, route: 'Favorites' },
-    ],
-  },
-  {
-    title: 'Discover',
-    items: [
-      { icon: 'compass-outline', label: 'Discover', color: colors.primary, route: 'Blog' },
-    ],
-  },
-  {
-    title: 'Activity',
-    items: [
-      { icon: 'notifications-outline', label: 'Notifications', color: colors.warning, route: 'Notifications' },
-      { icon: 'chatbubble-outline', label: 'Messages', color: colors.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
-      { icon: 'chatbubble-outline', label: 'My Reviews', color: colors.warning, badgeKey: 'myReviews' },
-      { icon: 'newspaper-outline', label: 'My Posts', color: colors.secondary, route: 'MyPosts' },
-      { icon: 'time-outline', label: 'Booking History', color: colors.primary },
-      { icon: 'cart-outline', label: 'Orders', color: colors.accent },
-    ],
-  },
-  {
-    title: 'Settings',
-    items: [
-      { icon: 'settings-outline', label: 'Settings', color: colors.secondary, route: 'Settings' },
-    ],
-  },
-];
+const getMenuSections = (colors: ThemeColors, userRole?: string) => {
+  const sections = [
+    {
+      title: 'Account',
+      items: [
+        { icon: 'person-outline', label: 'Edit Profile', color: colors.primary, route: 'EditProfile' },
+        { icon: 'bookmark-outline', label: 'Saved', color: colors.accent, route: 'Favorites' },
+      ],
+    },
+    {
+      title: 'Discover',
+      items: [
+        { icon: 'compass-outline', label: 'Discover', color: colors.primary, route: 'Blog' },
+        { icon: 'bookmark-outline', label: 'Saved Articles', color: colors.accent, route: 'BlogBookmarks' },
+      ],
+    },
+    {
+      title: 'Activity',
+      items: [
+        { icon: 'notifications-outline', label: 'Notifications', color: colors.warning, route: 'Notifications' },
+        { icon: 'chatbubble-outline', label: 'Messages', color: colors.primary, badgeKey: 'unreadMessages', route: 'Inbox' },
+        { icon: 'chatbubble-outline', label: 'My Reviews', color: colors.warning, badgeKey: 'myReviews' },
+        { icon: 'newspaper-outline', label: 'My Posts', color: colors.secondary, route: 'MyPosts' },
+        { icon: 'time-outline', label: 'Booking History', color: colors.primary },
+        { icon: 'cart-outline', label: 'Orders', color: colors.accent },
+      ],
+    },
+    {
+      title: 'Settings',
+      items: [
+        { icon: 'settings-outline', label: 'Settings', color: colors.secondary, route: 'Settings' },
+      ],
+    },
+  ];
+
+  if (userRole === 'admin' || userRole === 'hamisha_squad') {
+    sections.push({
+      title: 'Admin',
+      items: [
+        { icon: 'newspaper-outline', label: 'Blog Admin', color: colors.warning, route: 'BlogAdmin' },
+      ],
+    });
+  }
+
+  return sections;
+};
 
 export const ProfileScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -147,7 +161,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Menu Sections */}
         <View style={styles.menuContainer}>
-          {getMenuSections(colors).map((section, sectionIndex) => (
+          {getMenuSections(colors, currentUser.role).map((section, sectionIndex) => (
             <View key={sectionIndex} style={styles.menuSection}>
               <Text style={styles.menuSectionTitle}>{section.title}</Text>
               <GlassCard noPadding>

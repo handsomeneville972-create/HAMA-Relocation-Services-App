@@ -17,6 +17,9 @@ export default function HomeTab() {
       else if (route === 'PropertyDetail') router.push({ pathname: '/PropertyDetail', params });
       else if (route === 'FeaturedProperties') router.push('/FeaturedProperties');
       else if (route === 'Faq') router.push('/Faq');
+      else if (route === 'Legal') router.push('/Legal');
+      else if (route === 'Blog') router.push('/Blog');
+      else if (route === 'ExploreNeighborhoods') router.push('/ExploreNeighborhoods');
     },
   };
 

@@ -1,0 +1,31 @@
+{
+  "banner": [
+    { "file": "banner-1-family-moving.jpg", "alt": "Happy family carrying boxes and furniture while moving into their new home", "caption": "Moving made simple" },
+    { "file": "banner-2-family-new-home.jpg", "alt": "Family of four celebrating after moving into their new home, holding plants and boxes", "caption": "Your new home awaits" },
+    { "file": "banner-3-hamisha-squad.jpg", "alt": "HAMA Hamisha Squad moving team in branded orange shirts carrying a mattress", "caption": "We handle the heavy lifting" },
+    { "file": "banner-4-estate-courtyard.jpg", "alt": "Modern apartment complex with landscaped courtyard, benches and playground", "caption": "Find your perfect estate" },
+    { "file": "banner-5-shopping-mall.jpg", "alt": "People shopping in a modern mall with skylight ceiling and greenery", "caption": "Discover more than homes" }
+  ],
+  "featured": [
+    { "file": "featured-1-modern-kitchen.jpg", "alt": "Modern open-plan apartment with white kitchen island, curved sofa and balcony view", "caption": "Your dream apartment" },
+    { "file": "featured-2-dining-living.jpg", "alt": "Bright apartment dining area with pendant lights, plants and open layout", "caption": "Modern living spaces" },
+    { "file": "featured-3-cozy-living.jpg", "alt": "Cozy apartment living room with yellow cushions, open kitchen and warm tones", "caption": "Make it feel like home" }
+  ],
+  "services": [
+    { "file": "service-electrician-1.jpg", "alt": "Professional electrician in orange shirt and green helmet installing a wall socket", "caption": "Verified electricians", "category": "Electricians" },
+    { "file": "service-electrician-2.jpg", "alt": "Electrician in blue overalls wiring a wall socket during home renovation", "caption": "Trusted tradespeople", "category": "Electricians" },
+    { "file": "service-cleaner.jpg", "alt": "Professional cleaner in blue uniform vacuuming a modern apartment living room", "caption": "Expert cleaners", "category": "Cleaning" }
+  ],
+  "neighbourhoods": [
+    { "file": "hood-1-karen-houses.jpg", "alt": "Modern white houses with stone accents on a cobblestone driveway in Karen", "caption": "Karen — upscale living", "area": "Karen" },
+    { "file": "hood-2-nairobi-skyline.jpg", "alt": "Aerial view of Nairobi city centre skyline with tall buildings and green spaces", "caption": "Nairobi CBD — city life", "area": "CBD" },
+    { "file": "hood-3-apartments-aerial.jpg", "alt": "Aerial view of modern apartment blocks with solar panels on rooftops", "caption": "Kiambu Road — modern estates", "area": "Kiambu Road" },
+    { "file": "hood-4-kileleshwa-jacarandas.jpg", "alt": "Beautiful jacaranda trees lining Kileleshwa Gardens street with apartment buildings", "caption": "Kileleshwa — leafy and central", "area": "Kileleshwa" },
+    { "file": "hood-5-leafy-suburb.jpg", "alt": "Tree-lined road with mature green canopy in a leafy Nairobi suburb", "caption": "Lavington — green and quiet", "area": "Lavington" },
+    { "file": "hood-6-modern-highrise.jpg", "alt": "Modern grey apartment towers with balconies and landscaped driveway in Kilimani", "caption": "Kilimani — vibrant and connected", "area": "Kilimani" }
+  ],
+  "guides": [
+    { "file": "guide-moving-checklist-hand.jpg", "alt": "Hand holding a moving checklist clipboard with packed boxes in background", "caption": "Your complete moving checklist" },
+    { "file": "guide-moving-checklist-desk.jpg", "alt": "Moving checklist clipboard on desk with boxes, phone and keys — planning a move", "caption": "Plan your move step by step" }
+  ]
+}

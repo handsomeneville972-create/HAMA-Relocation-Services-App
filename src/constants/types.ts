@@ -1059,4 +1059,113 @@ export type RootStackParamList = {
   ServiceProviderProfile: { providerId?: string };
   SellerDashboard: undefined;
   PrivacyPolicy: undefined;
+  Blog: undefined;
+  BlogPost: { slug: string };
+  BlogCategory: { slug: string; name: string };
+  BlogAuthor: { slug: string; name: string };
 };
+
+// ============ BLOG TYPES ============
+
+/** Blog content block types — single source of truth for both web and app rendering */
+export type BlogBlockType =
+  | 'paragraph'
+  | 'heading'
+  | 'image'
+  | 'quote'
+  | 'list'
+  | 'callout'
+  | 'divider'
+  | 'table'
+  | 'faq'
+  | 'video'
+  | 'checklist';
+
+export interface BlogBlock {
+  type: BlogBlockType;
+  text?: string;
+  level?: number;
+  src?: string;
+  caption?: string;
+  alt?: string;
+  ordered?: boolean;
+  items?: string[];
+  tone?: 'info' | 'tip' | 'warning' | 'success';
+  rows?: string[][];
+  questions?: { q: string; a: string }[];
+  url?: string;
+  label?: string;
+  checked?: boolean;
+}
+
+export interface BlogCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  icon: string;
+  position: number;
+}
+
+export interface BlogAuthor {
+  id: string;
+  userId?: string;
+  name: string;
+  slug: string;
+  avatarUrl?: string;
+  bio?: string;
+  socials?: Record<string, string>;
+}
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  content: BlogBlock[];
+  coverImageUrl?: string;
+  category?: BlogCategory;
+  categoryId?: string;
+  author?: BlogAuthor;
+  authorId?: string;
+  tags: string[];
+  status: 'draft' | 'published' | 'scheduled';
+  publishedAt?: string;
+  updatedAt?: string;
+  featured: boolean;
+  pinned: boolean;
+  views: number;
+  shares: number;
+  readingTime: number;
+  seoTitle?: string;
+  seoDescription?: string;
+  ogImageUrl?: string;
+  isBookmarked?: boolean;
+}
+
+export interface BlogComment {
+  id: string;
+  postId: string;
+  userId: string;
+  parentId?: string;
+  content: string;
+  status: 'pending' | 'approved' | 'rejected' | 'spam';
+  likes: number;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+  authorName?: string;
+  authorAvatar?: string;
+  replies?: BlogComment[];
+}
+
+export type BlogEventType = 'view' | 'read_complete' | 'share' | 'cta_click' | 'search' | 'bookmark';
+
+export interface BlogEvent {
+  id: string;
+  type: BlogEventType;
+  postId?: string;
+  userId?: string;
+  meta?: Record<string, unknown>;
+  createdAt: string;
+}

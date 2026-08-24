@@ -4,11 +4,11 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, AppState, AppStateStatus } from 'react-native';
-import { COLORS } from '../src/constants/theme';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { CartProvider } from '../src/contexts/CartContext';
 import { ProviderProvider } from '../src/contexts/ProviderContext';
 import { SubscriptionProvider, useSubscriptions } from '../src/contexts/SubscriptionContext';
+import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { WebGlobalStyles } from '../src/components/WebGlobalStyles';
 import { TrialEndedModal } from '../src/components/TrialEndedModal';
@@ -114,8 +114,18 @@ export default function RootLayout() {
   }, []);
 
   return (
+    <ThemeProvider>
+      <RootApp />
+    </ThemeProvider>
+  );
+}
+
+function RootApp() {
+  const { colors, mode } = useTheme();
+
+  return (
     <ErrorBoundary>
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.bg }]}>
         <SafeAreaProvider>
           <WebGlobalStyles />
           <AuthProvider>
@@ -124,12 +134,12 @@ export default function RootLayout() {
               <SubscriptionProvider>
               <AuthGuard>
                 <SessionMonitor />
-                <StatusBar style="light" />
+                <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
                 <View style={{ flex: 1 }}>
                   <Stack
                   screenOptions={{
                     headerShown: false,
-                    contentStyle: { backgroundColor: COLORS.bg },
+                    contentStyle: { backgroundColor: colors.bg },
                     animation: 'slide_from_right',
                   }}
                 >
@@ -353,6 +363,13 @@ export default function RootLayout() {
                     }}
                   />
                   <Stack.Screen
+                    name="ExploreNeighborhoods"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
                     name="FounderDashboard"
                     options={{
                       headerShown: false,
@@ -415,6 +432,48 @@ export default function RootLayout() {
                       animation: 'slide_from_right',
                     }}
                   />
+                  <Stack.Screen
+                    name="Blog"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="BlogPost"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="BlogCategory"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                   <Stack.Screen
+                    name="BlogAuthor"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                   <Stack.Screen
+                    name="BlogBookmarks"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                   <Stack.Screen
+                    name="BlogAdmin"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
                 </Stack>
                 </View>
                 <TrialEndedGate />
@@ -432,6 +491,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
 });
