@@ -26,46 +26,47 @@ import {
 } from '../services/blogService';
 import { logBlogEvent } from '../services/blogEventService';
 import { getRecommendedPosts, getContinueReading } from '../services/blogReadingHistoryService';
+import { resolveBlogImage } from '../utils/blogImages';
 import type { BlogPost, BlogCategory } from '../constants/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const getHeroSlides = (colors: ThemeColors) => [
+const getHeroSlides = () => [
   {
-    gradient: colors.gradientPrimary as readonly [string, string],
+    image: 'banner-1-family-moving.jpg',
     caption: 'Find Your Dream Home',
   },
   {
-    gradient: ['#FF8A33', '#FFB84D'] as const,
+    image: 'banner-2-family-new-home.jpg',
     caption: 'Smart Moving Guides',
   },
   {
-    gradient: ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.04)'] as const,
+    image: 'banner-3-hamisha-squad.jpg',
     caption: 'Neighbourhood Insights',
   },
   {
-    gradient: ['#CC5500', '#FF6B00'] as const,
+    image: 'banner-4-estate-courtyard.jpg',
     caption: 'Budget & Finance Tips',
   },
   {
-    gradient: ['#FFB366', '#FF6B00'] as const,
+    image: 'banner-5-shopping-mall.jpg',
     caption: 'Home Services On Demand',
   },
 ];
 
 const NEIGHBOURHOODS = [
-  'Westlands',
-  'Karen',
-  'Kilimani',
-  'Lavington',
-  'Kasarani',
-  'Ruaka',
+  { name: 'Westlands', image: 'hood-2-nairobi-skyline.jpg' },
+  { name: 'Karen', image: 'hood-1-karen-houses.jpg' },
+  { name: 'Kilimani', image: 'hood-6-modern-highrise.jpg' },
+  { name: 'Lavington', image: 'hood-5-leafy-suburb.jpg' },
+  { name: 'Kasarani', image: 'hood-3-apartments-aerial.jpg' },
+  { name: 'Kileleshwa', image: 'hood-4-kileleshwa-jacarandas.jpg' },
 ];
 
 const SERVICES = [
-  { icon: 'flash-outline', label: 'Electricians', slug: 'electricians' },
-  { icon: 'sparkles-outline', label: 'Cleaners', slug: 'cleaners' },
-  { icon: 'grid-outline', label: 'More Services', slug: 'all' },
+  { icon: 'flash-outline', label: 'Electricians', slug: 'electricians', image: 'service-electrician-1.jpg' },
+  { icon: 'sparkles-outline', label: 'Cleaners', slug: 'cleaners', image: 'service-cleaner.jpg' },
+  { icon: 'grid-outline', label: 'More Services', slug: 'all', image: 'service-electrician-2.jpg' },
 ];
 
 const GRADIENT_COVERS = [
@@ -79,7 +80,7 @@ const GRADIENT_COVERS = [
 export const BlogScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const heroSlides = useMemo(() => getHeroSlides(colors), [colors]);
+  const heroSlides = useMemo(() => getHeroSlides(), []);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
@@ -209,18 +210,23 @@ export const BlogScreen: React.FC = () => {
           onTouchEnd={resumeCarousel}
         >
           <Animated.View style={{ opacity: carouselOpacity, flex: 1 }}>
-            <LinearGradient
-              colors={heroSlides[carouselIndex].gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.carouselSlide}
-            >
-              <View style={styles.carouselOverlay}>
+            <View style={styles.carouselSlide}>
+              {resolveBlogImage(heroSlides[carouselIndex].image) && (
+                <Image
+                  source={resolveBlogImage(heroSlides[carouselIndex].image)!}
+                  style={styles.carouselImage}
+                  resizeMode="cover"
+                />
+              )}
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.7)']}
+                style={styles.carouselOverlay}
+              >
                 <Text style={styles.carouselCaption}>
                   {heroSlides[carouselIndex].caption}
                 </Text>
-              </View>
-            </LinearGradient>
+              </LinearGradient>
+            </View>
           </Animated.View>
 
           <View style={styles.dotRow}>
@@ -323,16 +329,23 @@ export const BlogScreen: React.FC = () => {
               >
                 <GlassCard noPadding>
                   <View style={styles.featuredCard}>
-                    <LinearGradient
-                      colors={
-                        GRADIENT_COVERS[0]
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.featuredImage}
-                    >
+                    <View style={styles.featuredImage}>
+                      {resolveBlogImage(featuredPost.coverImageUrl) ? (
+                        <Image
+                          source={resolveBlogImage(featuredPost.coverImageUrl)!}
+                          style={styles.featuredImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <LinearGradient
+                          colors={GRADIENT_COVERS[0]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.featuredImage}
+                        />
+                      )}
                       <View style={styles.featuredImageOverlay} />
-                    </LinearGradient>
+                    </View>
                     <View style={styles.featuredContent}>
                       <View style={styles.featuredBadgeRow}>
                         <View style={styles.categoryBadge}>
@@ -401,14 +414,22 @@ export const BlogScreen: React.FC = () => {
                     }
                   >
                     <GlassCard noPadding>
-                      <LinearGradient
-                        colors={
-                          GRADIENT_COVERS[i % GRADIENT_COVERS.length]
-                        }
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.gridCardImage}
-                      />
+                      <View style={styles.gridCardImage}>
+                        {resolveBlogImage(post.coverImageUrl) ? (
+                          <Image
+                            source={resolveBlogImage(post.coverImageUrl)!}
+                            style={styles.gridCardImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <LinearGradient
+                            colors={GRADIENT_COVERS[i % GRADIENT_COVERS.length]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.gridCardImage}
+                          />
+                        )}
+                      </View>
                       <View style={styles.gridCardContent}>
                         <View style={styles.categoryBadgeSmall}>
                           <Text style={styles.categoryBadgeSmallText}>
@@ -465,33 +486,44 @@ export const BlogScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {NEIGHBOURHOODS.map((name, i) => (
-              <StaggerItem key={name} index={i} style={styles.hoodItem}>
+            {NEIGHBOURHOODS.map((hood, i) => (
+              <StaggerItem key={hood.name} index={i} style={styles.hoodItem}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() =>
                     router.push(
-                      `/BlogCategory?slug=neighbourhoods&name=${encodeURIComponent(name)}`
+                      `/BlogCategory?slug=neighbourhoods&name=${encodeURIComponent(hood.name)}`
                     )
                   }
                 >
-                  <GlassCard
-                    style={styles.hoodCard}
-                    gradient={
-                      GRADIENT_COVERS[i % GRADIENT_COVERS.length]
-                    }
-                  >
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.7)']}
-                      style={styles.hoodOverlay}
-                    />
+                  <GlassCard style={styles.hoodCard}>
+                    <View style={styles.hoodImageWrap}>
+                      {resolveBlogImage(hood.image) ? (
+                        <Image
+                          source={resolveBlogImage(hood.image)!}
+                          style={styles.hoodImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <LinearGradient
+                          colors={GRADIENT_COVERS[i % GRADIENT_COVERS.length]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.hoodImage}
+                        />
+                      )}
+                      <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.7)']}
+                        style={styles.hoodOverlay}
+                      />
+                    </View>
                     <View style={styles.hoodContent}>
                       <Ionicons
                         name="location-outline"
                         size={16}
                         color={colors.primary}
                       />
-                      <Text style={styles.hoodName}>{name}</Text>
+                      <Text style={styles.hoodName}>{hood.name}</Text>
                     </View>
                   </GlassCard>
                 </TouchableOpacity>
@@ -523,12 +555,22 @@ export const BlogScreen: React.FC = () => {
                   onPress={() => router.push('/Services')}
                 >
                   <GlassCard style={styles.serviceCard}>
-                    <View style={styles.serviceIconWrap}>
-                      <Ionicons
-                        name={svc.icon as any}
-                        size={28}
-                        color={colors.primary}
-                      />
+                    <View style={styles.serviceImageWrap}>
+                      {resolveBlogImage(svc.image) ? (
+                        <Image
+                          source={resolveBlogImage(svc.image)!}
+                          style={styles.serviceImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.serviceIconWrap}>
+                          <Ionicons
+                            name={svc.icon as any}
+                            size={28}
+                            color={colors.primary}
+                          />
+                        </View>
+                      )}
                     </View>
                     <Text style={styles.serviceLabel}>{svc.label}</Text>
                   </GlassCard>
@@ -551,16 +593,22 @@ export const BlogScreen: React.FC = () => {
                   router.push('/BlogCategory?slug=moving&name=Moving')
                 }
               >
-                <GlassCard gradient={colors.gradientPrimary}>
-                  <Ionicons
-                    name="car-outline"
-                    size={28}
-                    color="#000000"
-                  />
-                  <Text style={styles.guideCardTitle}>Moving Guides</Text>
-                  <Text style={styles.guideCardSubtitle}>
-                    Tips for a smooth relocation
-                  </Text>
+                <GlassCard noPadding style={styles.guideCard}>
+                  {resolveBlogImage('guide-moving-checklist-hand.jpg') ? (
+                    <Image
+                      source={resolveBlogImage('guide-moving-checklist-hand.jpg')!}
+                      style={styles.guideImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <LinearGradient colors={colors.gradientPrimary} style={styles.guideImage} />
+                  )}
+                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.guideOverlay} />
+                  <View style={styles.guideCardContent}>
+                    <Ionicons name="car-outline" size={24} color="#FFFFFF" />
+                    <Text style={styles.guideCardTitleLight}>Moving Guides</Text>
+                    <Text style={styles.guideCardSubtitleLight}>Tips for a smooth relocation</Text>
+                  </View>
                 </GlassCard>
               </TouchableOpacity>
             </StaggerItem>
@@ -571,16 +619,22 @@ export const BlogScreen: React.FC = () => {
                   router.push('/BlogCategory?slug=finance&name=Finance')
                 }
               >
-                <GlassCard gradient={colors.gradientSecondary}>
-                  <Ionicons
-                    name="wallet-outline"
-                    size={28}
-                    color={colors.primary}
-                  />
-                  <Text style={styles.guideCardTitleDark}>Budget Corner</Text>
-                  <Text style={styles.guideCardSubtitleDark}>
-                    Manage your housing finances
-                  </Text>
+                <GlassCard noPadding style={styles.guideCard}>
+                  {resolveBlogImage('guide-moving-checklist-desk.jpg') ? (
+                    <Image
+                      source={resolveBlogImage('guide-moving-checklist-desk.jpg')!}
+                      style={styles.guideImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <LinearGradient colors={colors.gradientSecondary} style={styles.guideImage} />
+                  )}
+                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.guideOverlay} />
+                  <View style={styles.guideCardContent}>
+                    <Ionicons name="wallet-outline" size={24} color="#FFFFFF" />
+                    <Text style={styles.guideCardTitleLight}>Budget Corner</Text>
+                    <Text style={styles.guideCardSubtitleLight}>Manage your housing finances</Text>
+                  </View>
                 </GlassCard>
               </TouchableOpacity>
             </StaggerItem>
@@ -632,18 +686,24 @@ export const BlogScreen: React.FC = () => {
                 <StaggerItem key={post.id} index={i} style={styles.gridItem}>
                   <TouchableOpacity activeOpacity={0.8} onPress={() => router.push(`/BlogPost?slug=${post.slug}`)}>
                     <GlassCard noPadding style={styles.articleCard}>
-                      <LinearGradient colors={GRADIENT_COVERS[i % GRADIENT_COVERS.length]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.articleCardImage}>
-                        {post.coverImageUrl ? (
-                          <Image source={{ uri: post.coverImageUrl }} style={styles.articleCardImage} resizeMode="cover" />
+                      <View style={styles.articleCardImage}>
+                        {resolveBlogImage(post.coverImageUrl) ? (
+                          <Image
+                            source={resolveBlogImage(post.coverImageUrl)!}
+                            style={styles.articleCardImage}
+                            resizeMode="cover"
+                          />
                         ) : (
-                          <Text style={styles.articleCardPlaceholder}>H</Text>
+                          <LinearGradient colors={GRADIENT_COVERS[i % GRADIENT_COVERS.length]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.articleCardImage}>
+                            <Text style={styles.articleCardPlaceholder}>H</Text>
+                          </LinearGradient>
                         )}
                         {post.category && (
                           <View style={styles.articleCardBadge}>
                             <Text style={styles.articleCardBadgeText}>{post.category.name}</Text>
                           </View>
                         )}
-                      </LinearGradient>
+                      </View>
                       <View style={styles.articleCardBody}>
                         <Text style={styles.articleCardTitle} numberOfLines={2}>{post.title}</Text>
                         <Text style={styles.articleCardExcerpt} numberOfLines={2}>{post.excerpt}</Text>
@@ -803,12 +863,19 @@ const createStyles = (colors: ThemeColors) =>
   carouselSlide: {
     flex: 1,
     borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: RADIUS.lg,
   },
   carouselOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl + 20,
     borderRadius: RADIUS.lg,
   },
   carouselCaption: {
@@ -1071,6 +1138,14 @@ const createStyles = (colors: ThemeColors) =>
     width: 140,
     height: 100,
     justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  hoodImageWrap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  hoodImage: {
+    width: '100%',
+    height: '100%',
   },
   hoodOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -1096,6 +1171,18 @@ const createStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     paddingVertical: SPACING.lg,
     gap: SPACING.sm,
+    overflow: 'hidden',
+  },
+  serviceImageWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    overflow: 'hidden',
+  },
+  serviceImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   serviceIconWrap: {
     width: 52,
@@ -1113,6 +1200,32 @@ const createStyles = (colors: ThemeColors) =>
   },
 
   /* Moving Guides */
+  guideCard: {
+    height: 160,
+    overflow: 'hidden',
+  },
+  guideImage: {
+    width: '100%',
+    height: '100%',
+  },
+  guideOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  guideCardContent: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    padding: SPACING.md,
+  },
+  guideCardTitleLight: {
+    ...FONTS.h3,
+    color: '#FFFFFF',
+    marginTop: 4,
+  },
+  guideCardSubtitleLight: {
+    ...FONTS.bodySmall,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
   guideCardTitle: {
     ...FONTS.h3,
     color: '#000000',

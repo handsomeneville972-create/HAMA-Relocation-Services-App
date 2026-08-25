@@ -35,12 +35,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="discover"
+        name="featured"
         options={{
-          title: 'Discover',
+          title: 'Featured',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[styles.tabIconContainer, focused && styles.tabIconActive]}>
-              <Ionicons name={focused ? 'compass' : 'compass-outline'} size={22} color={color} />
+              <Ionicons name={focused ? 'business' : 'business-outline'} size={22} color={color} />
             </View>
           ),
         }}

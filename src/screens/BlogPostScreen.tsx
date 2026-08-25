@@ -11,6 +11,7 @@ import {
   Linking,
   TextInput,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +32,7 @@ import { toggleBlogBookmark, isBlogBookmarked } from '../services/blogService';
 import { getBlogComments, createBlogComment, deleteBlogComment, likeBlogComment, getBlogCommentCount } from '../services/blogCommentService';
 import { logBlogEvent } from '../services/blogEventService';
 import { BlogCommentCard } from '../components/BlogComment';
+import { resolveBlogImage } from '../utils/blogImages';
 import type { BlogComment as BlogCommentType } from '../constants/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -300,22 +302,30 @@ export const BlogPostScreen: React.FC = () => {
       case 'image':
         return (
           <AnimatedSection key={index} index={index} style={styles.imageContainer}>
-            <LinearGradient
-              colors={
-                GRADIENT_COVERS[index % GRADIENT_COVERS.length]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.imagePlaceholder}
-            >
-              <View style={styles.imageOverlay}>
-                <Ionicons
-                  name="image-outline"
-                  size={32}
-                  color="rgba(255,255,255,0.3)"
+            <View style={styles.imagePlaceholder}>
+              {resolveBlogImage(block.src) ? (
+                <Image
+                  source={resolveBlogImage(block.src)!}
+                  style={styles.imagePlaceholder}
+                  resizeMode="cover"
                 />
-              </View>
-            </LinearGradient>
+              ) : (
+                <LinearGradient
+                  colors={GRADIENT_COVERS[index % GRADIENT_COVERS.length]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.imagePlaceholder}
+                >
+                  <View style={styles.imageOverlay}>
+                    <Ionicons
+                      name="image-outline"
+                      size={32}
+                      color="rgba(255,255,255,0.3)"
+                    />
+                  </View>
+                </LinearGradient>
+              )}
+            </View>
             {block.caption && (
               <Text style={styles.imageCaption}>{block.caption}</Text>
             )}
@@ -508,13 +518,25 @@ export const BlogPostScreen: React.FC = () => {
       >
         {/* Hero Section */}
         <View style={styles.heroContainer}>
-          <LinearGradient
-            colors={colors.gradientNight}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroGradient}
-          >
-            <View style={styles.heroOverlay} />
+          <View style={styles.heroGradient}>
+            {resolveBlogImage(post.coverImageUrl) ? (
+              <Image
+                source={resolveBlogImage(post.coverImageUrl)!}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <LinearGradient
+                colors={colors.gradientNight}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroImage}
+              />
+            )}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)']}
+              style={styles.heroOverlay}
+            />
 
             {/* Back Button */}
             <View style={[styles.heroTopBar, { paddingTop: insets.top + SPACING.sm }]}>
@@ -540,7 +562,7 @@ export const BlogPostScreen: React.FC = () => {
               <Text style={styles.heroTitle}>{post.title}</Text>
               <Text style={styles.heroExcerpt}>{post.excerpt}</Text>
             </View>
-          </LinearGradient>
+          </View>
         </View>
 
         {/* Author Row */}
@@ -1114,10 +1136,15 @@ const createStyles = (colors: ThemeColors) =>
   heroGradient: {
     minHeight: 380,
     position: 'relative',
+    overflow: 'hidden',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    minHeight: 380,
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   heroTopBar: {
     paddingHorizontal: SPACING.md,
