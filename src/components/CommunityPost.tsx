@@ -14,6 +14,57 @@ interface CommunityPostCardProps {
   onPress?: () => void;
 }
 
+const MediaGrid: React.FC<{ images: string[]; videos: string[] }> = ({ images, videos }) => {
+  const items = [
+    ...images.map(uri => ({ uri, type: 'image' as const })),
+    ...videos.map(uri => ({ uri, type: 'video' as const })),
+  ];
+  if (items.length === 0) return null;
+  if (items.length === 1) {
+    const item = items[0];
+    if (item.type === 'video') {
+      return (
+        <View style={mediaStyles.videoContainer}>
+          <Image source={{ uri: item.uri }} style={mediaStyles.singleThumbnail} resizeMode="cover" />
+          <View style={mediaStyles.playOverlayLarge}>
+            <Ionicons name="play" size={32} color="#fff" />
+          </View>
+        </View>
+      );
+    }
+    return (
+      <View style={mediaStyles.imageContainer}>
+        <Image source={{ uri: item.uri }} style={mediaStyles.singleThumbnail} resizeMode="cover" />
+      </View>
+    );
+  }
+  return (
+    <View style={mediaStyles.gridRow}>
+      {items.map((item, idx) => (
+        <View key={`${item.uri}-${idx}`} style={mediaStyles.gridCell}>
+          <Image source={{ uri: item.uri }} style={mediaStyles.gridThumbnail} resizeMode="cover" />
+          {item.type === 'video' && (
+            <View style={mediaStyles.playOverlaySmall}>
+              <Ionicons name="play" size={18} color="#fff" />
+            </View>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+};
+
+const mediaStyles = StyleSheet.create({
+  imageContainer: { borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: SPACING.sm },
+  videoContainer: { position: 'relative', borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: SPACING.sm },
+  singleThumbnail: { width: '100%', height: 200 },
+  playOverlayLarge: { position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -22 }, { translateY: -22 }], width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  gridRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.sm },
+  gridCell: { width: '48%', aspectRatio: 1, borderRadius: RADIUS.md, overflow: 'hidden', position: 'relative' },
+  gridThumbnail: { width: '100%', height: '100%' },
+  playOverlaySmall: { position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -16 }, { translateY: -16 }], width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+});
+
 export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPress }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -119,19 +170,28 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
           </View>
 
           {/* Media */}
-          {post.image && (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: post.image }} style={styles.postImage} resizeMode="cover" />
-            </View>
-          )}
+          {post.media && post.media.length > 0 ? (
+            <MediaGrid
+              images={post.media.filter(m => m.mediaType === 'image').map(m => m.mediaUrl)}
+              videos={post.media.filter(m => m.mediaType === 'video').map(m => m.mediaUrl)}
+            />
+          ) : (
+            <>
+              {post.image && (
+                <View style={styles.imageContainer}>
+                  <Image source={{ uri: post.image }} style={styles.postImage} resizeMode="cover" />
+                </View>
+              )}
 
-          {post.video && (
-            <View style={styles.videoContainer}>
-              <Image source={{ uri: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600' }} style={styles.postImage} resizeMode="cover" />
-              <View style={styles.playButton}>
-                <Ionicons name="play" size={28} color="#fff" />
-              </View>
-            </View>
+              {post.video && (
+                <View style={styles.videoContainer}>
+                  <Image source={{ uri: post.video }} style={styles.postImage} resizeMode="cover" />
+                  <View style={styles.playButton}>
+                    <Ionicons name="play" size={28} color="#fff" />
+                  </View>
+                </View>
+              )}
+            </>
           )}
 
           {/* Action Bar */}

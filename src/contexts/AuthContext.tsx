@@ -241,7 +241,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     fetchProfile();
-  }, [currentUserId, session]);
+    // Fetch only when the authenticated user changes. Deliberately NOT
+    // keyed on `session` — supabase fires token-refresh events that spin
+    // up a new session object; re-fetching then races in-progress saves
+    // and can momentarily display stale values. `session` is read from
+    // the closure for fallback user building, which is sufficient.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId]);
 
   // Re-fetch the profile row (used after edits so fresh values load)
   const refreshProfile = useCallback(async () => {

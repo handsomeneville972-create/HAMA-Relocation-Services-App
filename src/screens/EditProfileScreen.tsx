@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  Image, Animated, ActivityIndicator, Alert, Platform,
+  Image, Animated, ActivityIndicator, Alert, Platform, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,9 +34,23 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [isChecking, setIsChecking] = useState(false);
   const [usernameTaken, setUsernameTaken] = useState(false);
   const [checkedFor, setCheckedFor] = useState('');
+  const [photoSheet, setPhotoSheet] = useState(false);
+  const [fieldsTouched, setFieldsTouched] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Re-sync form fields whenever the authoritative profile arrives or
+  // changes (e.g. after the async fetch at startup, or a refresh). We
+  // skip this once the user has started editing so their typing is
+  // never clobbered by a late network resolution.
+  useEffect(() => {
+    if (fieldsTouched) return;
+    setDisplayName(currentUser.name);
+    setUsername(currentUser.username ?? '');
+    setBio(currentUser.bio ?? '');
+    setWebsite(currentUser.website ?? '');
+  }, [currentUser.name, currentUser.username, currentUser.bio, currentUser.website, fieldsTouched]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -88,6 +102,8 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   }, [username, currentUser.username]);
 
   const pickImage = async (useCamera: boolean) => {
+    // On web, launchImageLibraryAsync / launchCameraAsync already render
+    // an <input type="file"> (or camera capture), so no extra sheet is needed.
     const permission = useCamera
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -103,11 +119,11 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   };
 
   const handleAvatarPress = () => {
-    Alert.alert('Change Profile Photo', '', [
-      { text: 'Take Photo', onPress: () => pickImage(true) },
-      { text: 'Choose from Gallery', onPress: () => pickImage(false) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    if (Platform.OS === 'web') {
+      pickImage(false);
+      return;
+    }
+    setPhotoSheet(true);
   };
 
   const hasChanges = () => {
@@ -245,7 +261,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                   <TextInput
                     style={styles.input}
                     value={displayName}
-                    onChangeText={setDisplayName}
+                    onChangeText={(t) => { setFieldsTouched(true); setDisplayName(t); }}
                     placeholder="Your display name"
                     placeholderTextColor={colors.textTertiary}
                     autoCapitalize="words"
@@ -265,7 +281,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                   <TextInput
                     style={styles.input}
                     value={username}
-                    onChangeText={setUsername}
+                    onChangeText={(t) => { setFieldsTouched(true); setUsername(t); }}
                     placeholder="username"
                     placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
@@ -294,7 +310,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                   <TextInput
                     style={[styles.input, styles.bioInput]}
                     value={bio}
-                    onChangeText={setBio}
+                    onChangeText={(t) => { setFieldsTouched(true); setBio(t); }}
                     placeholder="Describe yourself in 80 characters"
                     placeholderTextColor={colors.textTertiary}
                     multiline
@@ -314,7 +330,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
                   <TextInput
                     style={styles.input}
                     value={website}
-                    onChangeText={setWebsite}
+                    onChangeText={(t) => { setFieldsTouched(true); setWebsite(t); }}
                     placeholder="Add a link"
                     placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
@@ -339,6 +355,44 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
           </View>
         </Animated.View>
       </ScrollView>
+
+      {/* Photo source picker (native) */}
+      <Modal
+        transparent
+        visible={photoSheet}
+        animationType="fade"
+        onRequestClose={() => setPhotoSheet(false)}
+      >
+        <TouchableOpacity
+          style={styles.sheetBackdrop}
+          activeOpacity={1}
+          onPress={() => setPhotoSheet(false)}
+        >
+          <View style={styles.sheet}>
+            <Text style={styles.sheetTitle}>Change Profile Photo</Text>
+            <TouchableOpacity
+              style={styles.sheetOption}
+              onPress={() => { setPhotoSheet(false); pickImage(true); }}
+            >
+              <Ionicons name="camera-outline" size={22} color={colors.text} />
+              <Text style={styles.sheetOptionText}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetOption}
+              onPress={() => { setPhotoSheet(false); pickImage(false); }}
+            >
+              <Ionicons name="images-outline" size={22} color={colors.text} />
+              <Text style={styles.sheetOptionText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetCancel}
+              onPress={() => setPhotoSheet(false)}
+            >
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -495,5 +549,46 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     ...FONTS.caption,
     color: colors.textTertiary,
     lineHeight: 18,
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.bgCard,
+    borderTopLeftRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.lg,
+    padding: SPACING.md,
+    paddingBottom: SPACING.xl,
+    gap: SPACING.xs,
+  },
+  sheetTitle: {
+    ...FONTS.h3,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  sheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+  },
+  sheetOptionText: {
+    ...FONTS.body,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  sheetCancel: {
+    marginTop: SPACING.xs,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  sheetCancelText: {
+    ...FONTS.button,
+    color: colors.textSecondary,
   },
 });

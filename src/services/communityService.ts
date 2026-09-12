@@ -21,7 +21,7 @@ export async function getCommunityPosts(params?: {
     async () => {
       let query = supabase
         .from('community_posts')
-        .select('*, user:user_id(*), tags:community_post_tags(*)')
+        .select('*, user:user_id(*), tags:community_post_tags(*), media:community_post_media(*)')
         .order('created_at', { ascending: false });
 
       if (params?.type) {
@@ -72,7 +72,7 @@ export async function getPostById(
     async () => {
       const { data, error } = await supabase
         .from('community_posts')
-        .select('*, user:user_id(*), tags:community_post_tags(*)')
+        .select('*, user:user_id(*), tags:community_post_tags(*), media:community_post_media(*)')
         .eq('id', id)
         .single();
       return { data: data as unknown as CommunityPost | null, error };
@@ -115,6 +115,7 @@ export async function createPost(post: {
   imageUrl?: string;
   videoUrl?: string;
   tags?: string[];
+  media?: { media_url: string; media_type: 'image' | 'video' }[];
 }): Promise<{ data: any; error: string | null }> {
   return executeQuery(
     async () => {
@@ -129,10 +130,26 @@ export async function createPost(post: {
         })
         .select()
         .single();
-      if (!error && data && post.tags && post.tags.length > 0) {
-        await supabase.from('community_post_tags').insert(
-          post.tags.map(tag => ({ post_id: data.id, tag })),
-        );
+      if (!error && data) {
+        if (post.media && post.media.length > 0) {
+          const mediaRows = post.media.map((m, i) => ({
+            post_id: data.id,
+            media_url: m.media_url,
+            media_type: m.media_type,
+            sort_order: i,
+          }));
+          const { error: mediaErr } = await supabase
+            .from('community_post_media')
+            .insert(mediaRows);
+          if (mediaErr) {
+            console.warn('[Supabase] Failed to insert post media:', mediaErr.message);
+          }
+        }
+        if (post.tags && post.tags.length > 0) {
+          await supabase.from('community_post_tags').insert(
+            post.tags.map(tag => ({ post_id: data.id, tag })),
+          );
+        }
       }
       return { data, error };
     },

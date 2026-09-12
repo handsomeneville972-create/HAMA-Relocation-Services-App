@@ -178,7 +178,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   const activeType = POST_TYPES.find(t => t.key === formData.type)!;
 
   // Media state
-  const [selectedMedia, setSelectedMedia] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [mediaAssets, setMediaAssets] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
 
   // Share sheet state
@@ -215,13 +215,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       mediaTypes: formData.type === 'image' ? ImagePicker.MediaTypeOptions.Images : 
                    formData.type === 'short' ? ImagePicker.MediaTypeOptions.Videos :
                    ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
+      allowsMultipleSelection: formData.type === 'image',
+      allowsEditing: formData.type !== 'image',
       aspect: formData.type === 'short' ? [9, 16] : [16, 9],
       quality: 1,
       videoMaxDuration: formData.type === 'short' ? 90 : 3600,
     });
-    if (!result.canceled && result.assets[0]) {
-      setSelectedMedia(result.assets[0]);
+    if (!result.canceled && result.assets.length > 0) {
+      setMediaAssets(result.assets);
       setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
@@ -244,7 +245,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       videoMaxDuration: formData.type === 'short' ? 90 : 3600,
     });
     if (!result.canceled && result.assets[0]) {
-      setSelectedMedia(result.assets[0]);
+      setMediaAssets(prev => [...prev, result.assets[0]]);
       setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
@@ -263,7 +264,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       quality: 1,
     });
     if (!result.canceled && result.assets[0]) {
-      setSelectedMedia(result.assets[0]);
+      setMediaAssets(prev => [...prev, result.assets[0]]);
       setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
@@ -271,10 +272,19 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   }, [requestMediaLibraryPermission]);
 
   const clearMedia = useCallback(() => {
-    setSelectedMedia(null);
+    setMediaAssets([]);
     setMediaType(null);
     setUploadProgress(0);
   }, []);
+
+  const removeMedia = useCallback((uri: string) => {
+    setMediaAssets(prev => prev.filter(a => a.uri !== uri));
+    setMediaType(prev => {
+      if (prev === null) return null;
+      const remaining = mediaAssets.filter(a => a.uri !== uri);
+      return remaining.length > 0 ? (remaining[0].type === 'image' ? 'image' : 'video') : null;
+    });
+  }, [mediaAssets]);
 
   const simulateUpload = useCallback(() => {
     setUploading(true);
@@ -320,15 +330,21 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       // Upload selected media to Supabase Storage (if any).
       let imageUrl: string | undefined;
       let videoUrl: string | undefined;
-      if (selectedMedia) {
-        const res = await uploadFile(COMMUNITY_BUCKET, currentUserId, selectedMedia.uri);
+      const uploadedMedia: { media_url: string; media_type: 'image' | 'video' }[] = [];
+      for (const asset of mediaAssets) {
+        const res = await uploadFile(COMMUNITY_BUCKET, currentUserId, asset.uri);
         if ('error' in res) {
           Alert.alert('Upload Failed', res.error);
           setPublishing(false);
           return;
         }
-        if (isVideo) videoUrl = res.url;
-        else imageUrl = res.url;
+        const assetIsImage = asset.type === 'image';
+        if (assetIsImage) {
+          imageUrl = imageUrl ?? res.url;
+        } else {
+          videoUrl = videoUrl ?? res.url;
+        }
+        uploadedMedia.push({ media_url: res.url, media_type: assetIsImage ? 'image' : 'video' });
       }
 
       const content = [formData.title, formData.description].filter(Boolean).join('\n\n');
@@ -339,6 +355,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         imageUrl,
         videoUrl,
         tags: formData.tags,
+        media: uploadedMedia,
       });
 
       if (error || !data) {
@@ -354,6 +371,14 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         content,
         image: imageUrl,
         video: videoUrl,
+        media: uploadedMedia.map((m, i) => ({
+          id: `${data.id}-media-${i}`,
+          postId: data.id,
+          mediaUrl: m.media_url,
+          mediaType: m.media_type,
+          sortOrder: i,
+          createdAt: new Date().toISOString(),
+        })),
         likes: 0,
         comments: 0,
         shares: 0,
@@ -380,13 +405,22 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 
   const buildPost = useCallback((): CommunityPost => {
     const isVideo = formData.type === 'video' || formData.type === 'short';
+    const localMedia = mediaAssets.map((a, i) => ({
+      id: `media-${i}`,
+      postId: `local-${Date.now()}`,
+      mediaUrl: a.uri,
+      mediaType: a.type === 'image' ? 'image' as const : 'video' as const,
+      sortOrder: i,
+      createdAt: new Date().toISOString(),
+    }));
     return {
       id: `local-${Date.now()}`,
       user: currentUser,
       type: isVideo ? 'video' : 'photo',
       content: [formData.title, formData.description].filter(Boolean).join('\n\n'),
-      image: !isVideo && selectedMedia ? selectedMedia.uri : undefined,
-      video: isVideo && selectedMedia ? selectedMedia.uri : undefined,
+      image: !isVideo && mediaAssets[0] ? mediaAssets[0].uri : undefined,
+      video: isVideo && mediaAssets[0] ? mediaAssets[0].uri : undefined,
+      media: localMedia,
       likes: 0,
       comments: 0,
       shares: 0,
@@ -397,7 +431,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       createdAt: new Date().toISOString(),
       tags: formData.tags,
     };
-  }, [currentUser, formData, selectedMedia]);
+  }, [currentUser, formData, mediaAssets]);
 
   const handleViewPost = () => {
     const post = publishedPostRef.current ?? buildPost();
@@ -509,32 +543,36 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                     </TouchableOpacity>
                   </View>
                 </View>
-              ) : selectedMedia ? (
+              ) : mediaAssets.length > 0 ? (
                 <View style={styles.mediaPreviewWrap}>
-                  <View style={styles.mediaPreview}>
-                    {mediaType === 'video' ? (
-                      <View style={styles.videoPreview}>
-                        <Ionicons name="play-circle" size={52} color="#fff" />
-                        <Text style={styles.mediaPreviewMeta}>{selectedMedia.duration ? `${Math.round(selectedMedia.duration)}s` : 'Video'}</Text>
+                  <View style={styles.mediaPreviewRow}>
+                    {mediaAssets.map((asset, index) => (
+                      <View key={`${asset.uri}-${index}`} style={styles.mediaPreview}>
+                        {mediaType === 'video' ? (
+                          <View style={styles.videoPreview}>
+                            <Ionicons name="play-circle" size={40} color="#fff" />
+                          </View>
+                        ) : (
+                          <Image source={{ uri: asset.uri }} style={styles.mediaPreviewImage} />
+                        )}
+                        {mediaAssets.length > 1 && index === 0 && (
+                          <View style={styles.mediaPreviewBadge}>
+                            <Text style={styles.mediaPreviewBadgeText}>{mediaAssets.length} items</Text>
+                          </View>
+                        )}
                       </View>
-                    ) : (
-                      <Image source={{ uri: selectedMedia.uri }} style={styles.mediaPreviewImage} />
-                    )}
-                    <View style={styles.mediaPreviewBadge}>
-                      <Ionicons name={mediaType === 'video' ? 'videocam' : 'image'} size={12} color="#fff" />
-                      <Text style={styles.mediaPreviewBadgeText}>{mediaType === 'video' ? 'Video' : 'Image'}</Text>
-                    </View>
+                    ))}
                   </View>
-                  <Text style={styles.uploadTitle} numberOfLines={1}>{selectedMedia.fileName ?? 'Selected media'}</Text>
-                  <Text style={styles.uploadSubtitle}>{(selectedMedia.fileSize ? (selectedMedia.fileSize / (1024 * 1024)).toFixed(1) : 0) + ' MB · ready to upload'}</Text>
+                  <Text style={styles.uploadTitle} numberOfLines={1}>{mediaAssets[0].fileName ?? `${mediaAssets.length} selected`}</Text>
+                  <Text style={styles.uploadSubtitle}>{(mediaAssets.reduce((sum, a) => sum + (a.fileSize ?? 0), 0) / (1024 * 1024)).toFixed(1) + ' MB · ready to upload'}</Text>
                   <View style={styles.uploadSourcesRow}>
                     <TouchableOpacity style={styles.uploadSourceBtn} onPress={pickFromGallery}>
                       <Ionicons name="images-outline" size={16} color={colors.textSecondary} />
-                      <Text style={styles.uploadSourceText}>Replace</Text>
+                      <Text style={styles.uploadSourceText}>Add More</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.uploadSourceBtn, { borderColor: colors.error, borderWidth: 1 }]} onPress={clearMedia}>
                       <Ionicons name="trash-outline" size={16} color={colors.error} />
-                      <Text style={[styles.uploadSourceText, { color: colors.error }]}>Remove</Text>
+                      <Text style={[styles.uploadSourceText, { color: colors.error }]}>Remove All</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1055,7 +1093,8 @@ const createStyles = (colors: ThemeColors) =>
 
   // Media preview
   mediaPreviewWrap: { width: '100%', alignItems: 'center' },
-  mediaPreview: { width: '100%', height: 180, borderRadius: RADIUS.md, overflow: 'hidden', backgroundColor: '#141414', marginBottom: 12, position: 'relative' },
+  mediaPreviewRow: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 12 },
+  mediaPreview: { flex: 1, height: 180, borderRadius: RADIUS.md, overflow: 'hidden', backgroundColor: '#141414', marginBottom: 12, position: 'relative' },
   mediaPreviewImage: { width: '100%', height: '100%' },
   videoPreview: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
   mediaPreviewMeta: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 8, fontWeight: '600' },

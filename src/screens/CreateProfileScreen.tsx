@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, Image,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,6 +30,7 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [checkedFor, setCheckedFor] = useState('');
+  const [photoSheet, setPhotoSheet] = useState(false);
 
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -80,11 +81,11 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
   };
 
   const handleAvatarPress = () => {
-    Alert.alert('Add a Profile Photo', '', [
-      { text: 'Take Photo', onPress: () => pickImage(true) },
-      { text: 'Choose from Gallery', onPress: () => pickImage(false) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    if (Platform.OS === 'web') {
+      pickImage(false);
+      return;
+    }
+    setPhotoSheet(true);
   };
 
   const canContinue = usernameValid && !usernameTaken && !isChecking && !isSaving;
@@ -245,6 +246,44 @@ export const CreateProfileScreen: React.FC<{ navigation: any }> = ({ navigation 
           </FadeInView>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Photo source picker (native) */}
+      <Modal
+        transparent
+        visible={photoSheet}
+        animationType="fade"
+        onRequestClose={() => setPhotoSheet(false)}
+      >
+        <TouchableOpacity
+          style={styles.sheetBackdrop}
+          activeOpacity={1}
+          onPress={() => setPhotoSheet(false)}
+        >
+          <View style={styles.sheet}>
+            <Text style={styles.sheetTitle}>Add a Profile Photo</Text>
+            <TouchableOpacity
+              style={styles.sheetOption}
+              onPress={() => { setPhotoSheet(false); pickImage(true); }}
+            >
+              <Ionicons name="camera-outline" size={22} color={colors.text} />
+              <Text style={styles.sheetOptionText}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetOption}
+              onPress={() => { setPhotoSheet(false); pickImage(false); }}
+            >
+              <Ionicons name="images-outline" size={22} color={colors.text} />
+              <Text style={styles.sheetOptionText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetCancel}
+              onPress={() => setPhotoSheet(false)}
+            >
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -412,5 +451,46 @@ scrollContent: {
   },
   continueTextDisabled: {
     color: colors.textTertiary,
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.bgCard,
+    borderTopLeftRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.lg,
+    padding: SPACING.md,
+    paddingBottom: SPACING.xl,
+    gap: SPACING.xs,
+  },
+  sheetTitle: {
+    ...FONTS.h3,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  sheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+  },
+  sheetOptionText: {
+    ...FONTS.body,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  sheetCancel: {
+    marginTop: SPACING.xs,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  sheetCancelText: {
+    ...FONTS.button,
+    color: colors.textSecondary,
   },
 });

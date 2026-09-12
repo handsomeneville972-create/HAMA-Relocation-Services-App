@@ -482,6 +482,15 @@ export interface ServiceProvider {
 
 export type PostType = 'photo' | 'video' | 'tip' | 'review' | 'experience' | 'neighborhood' | 'advice';
 
+export interface CommunityPostMedia {
+  id: string;
+  postId: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  sortOrder: number;
+  createdAt: string;
+}
+
 export interface CommunityPost {
   id: string;
   user: User;
@@ -489,6 +498,7 @@ export interface CommunityPost {
   content: string;
   image?: string;
   video?: string;
+  media?: CommunityPostMedia[];
   likes: number;
   comments: number;
   shares: number;

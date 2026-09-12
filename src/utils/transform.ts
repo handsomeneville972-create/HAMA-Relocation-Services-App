@@ -53,6 +53,11 @@ const FIELD_RENAMES: Record<string, string> = {
   bookmarks_count: 'bookmarks',
   views_count: 'views',
 
+  // Community post media — child table rows
+  media_url: 'mediaUrl',
+  media_type: 'mediaType',
+  sort_order: 'sortOrder',
+
   // Notifications — non-standard naming
   action_link: 'action',
 
