@@ -18,6 +18,7 @@ import { useResponsive } from '../utils/responsive';
 import type { Product, Property, Neighborhood } from '../constants/types';
 import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
+import { getPropertyImage } from '../utils/propertyImages';
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors } = useTheme();
@@ -187,7 +188,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       navigation.navigate('PropertyDetail', { propertyId: property.id });
                     }}>
                       <GlassCard>
-                        <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
+                        <Image source={{ uri: getPropertyImage(property.images) }} style={styles.propertyImage} />
                         <View style={styles.propertyInfo}>
                           <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
                           <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>
@@ -210,7 +211,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       navigation.navigate('PropertyDetail', { propertyId: property.id });
                     }}>
                       <GlassCard>
-                        <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.propertyImage} />
+                        <Image source={{ uri: getPropertyImage(property.images) }} style={styles.propertyImage} />
                         <View style={styles.propertyInfo}>
                           <Text style={styles.propertyTitle} numberOfLines={1}>{property.title}</Text>
                           <Text style={styles.propertyPrice}>{formatPrice(property.price)}/mo</Text>

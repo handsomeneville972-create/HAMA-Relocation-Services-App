@@ -13,6 +13,7 @@ import { softSanitize } from '../utils/sanitize';
 import { useResponsive } from '../utils/responsive';
 import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
+import { getPropertyImage } from '../utils/propertyImages';
 import type { Property, Product, ServiceProvider } from '../constants/types';
 
 type SearchTab = 'all' | 'properties' | 'products' | 'services';
@@ -177,7 +178,7 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   <TouchableOpacity key={property.id} activeOpacity={0.9} style={styles.resultItem} onPress={() => navigation.navigate('PropertyDetail', { propertyId: property.id })}>
                     <GlassCard>
                       <View style={styles.resultRow}>
-                        <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/400x300/1a1a1a/666?text=No+Image' }} style={styles.resultImage} />
+                        <Image source={{ uri: getPropertyImage(property.images) }} style={styles.resultImage} />
                         <View style={styles.resultInfo}>
                           <Text style={styles.resultTitle} numberOfLines={1}>{property.title}</Text>
                           <Text style={styles.resultPrice}>KSh {property.price.toLocaleString()}/mo</Text>

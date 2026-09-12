@@ -12,6 +12,7 @@ import { Property } from '../constants/types';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useTheme } from '../contexts/ThemeContext';
 import { RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING, type ThemeColors } from '../constants/theme';
+import { getPropertyImage } from '../utils/propertyImages';
 
 interface PropertyCardProps {
   property: Property;
@@ -90,7 +91,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
     }).start();
   };
 
-  const imageUrl = property.images?.[0] ?? 'https://placehold.co/400x300/181818/666?text=No+Image';
+  const imageUrl = getPropertyImage(property.images);
   const photoCount = property.images?.length ?? 0;
 
   const formatPrice = (price: number) => {

@@ -13,6 +13,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useResponsive } from '../utils/responsive';
 import { RADIUS, SPACING, FONTS, SHADOWS, ANIMATION, EASING, type ThemeColors } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
+import { getPropertyImage } from '../utils/propertyImages';
 import { formatPrice } from '../utils/currency';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Property, PropertyReview } from '../constants/types';
@@ -230,7 +231,7 @@ export const PropertyDetailScreen: React.FC<{ route: any; navigation: any }> = (
 
   const heroGallery = (
     <Animated.View style={[styles.imageContainer, isDesktop && styles.imageContainerDesktop, { transform: [{ translateY: imageTranslateY }, { scale: imageScale }] }]}>
-      <Image source={{ uri: property.images?.[0] ?? 'https://placehold.co/800x600/1a1a1a/666?text=No+Image' }} style={styles.heroImage} />
+      <Image source={{ uri: getPropertyImage(property.images) }} style={styles.heroImage} />
       <LinearGradient colors={['transparent', colors.bg]} style={styles.imageGradient} />
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#fff" />
