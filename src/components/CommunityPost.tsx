@@ -1,7 +1,8 @@
-import React, { useRef, useState, useMemo } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { CommunityPost as CommunityPostType } from '../constants/types';
 import { UserAvatar } from './UserAvatar';
 import { RADIUS, SPACING, FONTS, SHADOWS, type ThemeColors } from '../constants/theme';
@@ -14,22 +15,49 @@ interface CommunityPostCardProps {
   onPress?: () => void;
 }
 
+const VideoMedia: React.FC<{ uri: string; style?: StyleProp<ViewStyle>; active: boolean; onPlayToggle: () => void }> = ({ uri, style, active, onPlayToggle }) => {
+  const player = useVideoPlayer(uri, player => {
+    player.loop = false;
+  });
+  useEffect(() => {
+    if (active && !player.playing) {
+      player.play();
+    } else if (!active && player.playing) {
+      player.pause();
+    }
+  }, [active, player]);
+  return (
+    <TouchableOpacity style={style} activeOpacity={1} onPress={onPlayToggle}>
+      <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="cover" nativeControls={false} />
+      {!active && (
+        <View style={mediaStyles.playOverlaySmall}>
+          <Ionicons name="play" size={18} color="#fff" />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
 const MediaGrid: React.FC<{ images: string[]; videos: string[] }> = ({ images, videos }) => {
   const items = [
     ...images.map(uri => ({ uri, type: 'image' as const })),
     ...videos.map(uri => ({ uri, type: 'video' as const })),
   ];
+  const [activeVideoUri, setActiveVideoUri] = useState<string | null>(isVideoOnly(items) ? items[0].uri : null);
+  const togglePlay = (uri: string) => {
+    setActiveVideoUri(prev => (prev === uri ? null : uri));
+  };
   if (items.length === 0) return null;
   if (items.length === 1) {
     const item = items[0];
     if (item.type === 'video') {
       return (
-        <View style={mediaStyles.videoContainer}>
-          <Image source={{ uri: item.uri }} style={mediaStyles.singleThumbnail} resizeMode="cover" />
-          <View style={mediaStyles.playOverlayLarge}>
-            <Ionicons name="play" size={32} color="#fff" />
-          </View>
-        </View>
+        <VideoMedia
+          uri={item.uri}
+          style={mediaStyles.videoContainer}
+          active={activeVideoUri === item.uri}
+          onPlayToggle={() => togglePlay(item.uri)}
+        />
       );
     }
     return (
@@ -40,25 +68,31 @@ const MediaGrid: React.FC<{ images: string[]; videos: string[] }> = ({ images, v
   }
   return (
     <View style={mediaStyles.gridRow}>
-      {items.map((item, idx) => (
-        <View key={`${item.uri}-${idx}`} style={mediaStyles.gridCell}>
-          <Image source={{ uri: item.uri }} style={mediaStyles.gridThumbnail} resizeMode="cover" />
-          {item.type === 'video' && (
-            <View style={mediaStyles.playOverlaySmall}>
-              <Ionicons name="play" size={18} color="#fff" />
-            </View>
-          )}
-        </View>
-      ))}
+      {items.map((item, idx) =>
+        item.type === 'video' ? (
+          <VideoMedia
+            key={`${item.uri}-${idx}`}
+            uri={item.uri}
+            style={mediaStyles.gridCell}
+            active={activeVideoUri === item.uri}
+            onPlayToggle={() => togglePlay(item.uri)}
+          />
+        ) : (
+          <View key={`${item.uri}-${idx}`} style={mediaStyles.gridCell}>
+            <Image source={{ uri: item.uri }} style={mediaStyles.gridThumbnail} resizeMode="cover" />
+          </View>
+        ),
+      )}
     </View>
   );
 };
 
+const isVideoOnly = (items: { type: string }[]) => items.length === 1 && items[0].type === 'video';
+
 const mediaStyles = StyleSheet.create({
   imageContainer: { borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: SPACING.sm },
-  videoContainer: { position: 'relative', borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: SPACING.sm },
+  videoContainer: { position: 'relative', width: '100%', height: 200, borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: SPACING.sm },
   singleThumbnail: { width: '100%', height: 200 },
-  playOverlayLarge: { position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -22 }, { translateY: -22 }], width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
   gridRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: SPACING.sm },
   gridCell: { width: '48%', aspectRatio: 1, borderRadius: RADIUS.md, overflow: 'hidden', position: 'relative' },
   gridThumbnail: { width: '100%', height: '100%' },
@@ -74,6 +108,7 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
   const [likeCount, setLikeCount] = useState(post.likes);
   const [bookmarkCount, setBookmarkCount] = useState(post.bookmarks);
   const [shareCount, setShareCount] = useState(post.shares);
+  const [legacyVideoPlaying, setLegacyVideoPlaying] = useState(false);
 
   const heartScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
@@ -184,12 +219,12 @@ export const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onPr
               )}
 
               {post.video && (
-                <View style={styles.videoContainer}>
-                  <Image source={{ uri: post.video }} style={styles.postImage} resizeMode="cover" />
-                  <View style={styles.playButton}>
-                    <Ionicons name="play" size={28} color="#fff" />
-                  </View>
-                </View>
+                <VideoMedia
+                  uri={post.video}
+                  style={styles.videoContainer}
+                  active={legacyVideoPlaying}
+                  onPlayToggle={() => setLegacyVideoPlaying(prev => !prev)}
+                />
               )}
             </>
           )}
@@ -309,21 +344,11 @@ const createStyles = (colors: ThemeColors) =>
   },
   videoContainer: {
     position: 'relative',
+    width: '100%',
+    height: 200,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
     marginBottom: SPACING.sm,
-  },
-  playButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -22 }, { translateY: -22 }],
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   actionBar: {
     flexDirection: 'row',

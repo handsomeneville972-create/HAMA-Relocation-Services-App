@@ -79,8 +79,8 @@ interface PostFormData {
 // ============================================================
 
 const POST_TYPES: { key: PostType; label: string; icon: string; desc: string; formats: string; maxSize: string; maxDuration?: string }[] = [
-  { key: 'video', label: 'Video', icon: 'videocam', desc: 'Upload long-form video content', formats: 'MP4, MOV, AVI, MKV, WEBM', maxSize: '2GB', maxDuration: '60 min' },
-  { key: 'short', label: 'Short', icon: 'flash', desc: 'Vertical videos up to 90 seconds', formats: 'MP4, MOV', maxSize: '500MB', maxDuration: '90 sec' },
+  { key: 'video', label: 'Video', icon: 'videocam', desc: 'Upload long-form video content', formats: 'MP4, MOV, AVI, MKV, WEBM', maxSize: '50MB', maxDuration: '60 min' },
+  { key: 'short', label: 'Short', icon: 'flash', desc: 'Vertical videos up to 90 seconds', formats: 'MP4, MOV', maxSize: '50MB', maxDuration: '90 sec' },
   { key: 'image', label: 'Image', icon: 'image', desc: 'Photos and carousel posts', formats: 'JPG, PNG, WEBP, HEIC', maxSize: '50MB' },
   { key: 'live', label: 'Live', icon: 'radio', desc: 'Live streaming — coming soon', formats: '—', maxSize: '—' },
 ];
@@ -327,11 +327,21 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     try {
       const isVideo = formData.type === 'video' || formData.type === 'short';
 
+      const MAX_UPLOAD_BYTES = 52_428_800;
+
       // Upload selected media to Supabase Storage (if any).
       let imageUrl: string | undefined;
       let videoUrl: string | undefined;
       const uploadedMedia: { media_url: string; media_type: 'image' | 'video' }[] = [];
       for (const asset of mediaAssets) {
+        if (asset.fileSize && asset.fileSize > MAX_UPLOAD_BYTES) {
+          Alert.alert(
+            'File Too Large',
+            `"${asset.fileName ?? 'Selected file'}" exceeds the 50MB upload limit. Please choose a smaller file.`,
+          );
+          setPublishing(false);
+          return;
+        }
         const res = await uploadFile(COMMUNITY_BUCKET, currentUserId, asset.uri);
         if ('error' in res) {
           Alert.alert('Upload Failed', res.error);
@@ -938,7 +948,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
               { icon: 'people-outline', title: 'Community Guidelines', desc: 'Be respectful, no spam, follow HAMA community rules.' },
               { icon: 'videocam-outline', title: 'Supported Content', desc: 'Housing, relocation, marketplace, lifestyle, and community posts.' },
               { icon: 'document-text-outline', title: 'Copyright Rules', desc: 'Only upload content you own or have rights to use.' },
-              { icon: 'folder-outline', title: 'File Limits', desc: 'Videos: 2GB / 60min. Shorts: 500MB / 90s. Images: 50MB / 20 per post.' },
+              { icon: 'folder-outline', title: 'File Limits', desc: 'Videos: 50MB / 60min. Shorts: 50MB / 90s. Images: 50MB / 20 per post.' },
               { icon: 'bulb-outline', title: 'Upload Tips', desc: 'Use good lighting, clear audio, and eye-catching thumbnails.' },
               { icon: 'film-outline', title: 'Video Recommendations', desc: '1080p+ resolution, MP4 format, 16:9 aspect ratio.' },
               { icon: 'shield-checkmark-outline', title: 'Safety Policies', desc: 'No harmful, illegal, or explicit content. AI moderation enabled.' },
