@@ -205,6 +205,19 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   }, []);
 
   // Pick media functions
+  // On web, ImagePickerAsset.type can be undefined — fall back to
+  // mimeType then file extension so desktop uploads get the right type.
+  const isImageAsset = useCallback((asset: ImagePicker.ImagePickerAsset): boolean => {
+    if (asset.type === 'image') return true;
+    if (asset.type === 'video') return false;
+    const mime = (asset.mimeType ?? '').toLowerCase();
+    if (mime.startsWith('image/')) return true;
+    if (mime.startsWith('video/')) return false;
+    const name = asset.fileName ?? asset.uri;
+    const ext = name.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
+    return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'bmp', 'avif'].includes(ext);
+  }, []);
+
   const pickFromGallery = useCallback(async () => {
     const hasPermission = await requestMediaLibraryPermission();
     if (!hasPermission) {
@@ -223,11 +236,11 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     });
     if (!result.canceled && result.assets.length > 0) {
       setMediaAssets(result.assets);
-      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setMediaType(isImageAsset(result.assets[0]) ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
     }
-  }, [formData.type, requestMediaLibraryPermission]);
+  }, [formData.type, requestMediaLibraryPermission, isImageAsset]);
 
   const pickFromCamera = useCallback(async () => {
     const hasPermission = await requestCameraPermission();
@@ -246,11 +259,11 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     });
     if (!result.canceled && result.assets[0]) {
       setMediaAssets(prev => [...prev, result.assets[0]]);
-      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setMediaType(isImageAsset(result.assets[0]) ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
     }
-  }, [formData.type, requestCameraPermission]);
+  }, [formData.type, requestCameraPermission, isImageAsset]);
 
   const pickFromFiles = useCallback(async () => {
     const hasPermission = await requestMediaLibraryPermission();
@@ -265,11 +278,11 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     });
     if (!result.canceled && result.assets[0]) {
       setMediaAssets(prev => [...prev, result.assets[0]]);
-      setMediaType(result.assets[0].type === 'image' ? 'image' : 'video');
+      setMediaType(isImageAsset(result.assets[0]) ? 'image' : 'video');
       setUploadProgress(0);
       simulateUpload();
     }
-  }, [requestMediaLibraryPermission]);
+  }, [requestMediaLibraryPermission, isImageAsset]);
 
   const clearMedia = useCallback(() => {
     setMediaAssets([]);
@@ -282,9 +295,9 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
     setMediaType(prev => {
       if (prev === null) return null;
       const remaining = mediaAssets.filter(a => a.uri !== uri);
-      return remaining.length > 0 ? (remaining[0].type === 'image' ? 'image' : 'video') : null;
+      return remaining.length > 0 ? (isImageAsset(remaining[0]) ? 'image' : 'video') : null;
     });
-  }, [mediaAssets]);
+  }, [mediaAssets, isImageAsset]);
 
   const simulateUpload = useCallback(() => {
     setUploading(true);
@@ -348,7 +361,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           setPublishing(false);
           return;
         }
-        const assetIsImage = asset.type === 'image';
+        const assetIsImage = isImageAsset(asset);
         if (assetIsImage) {
           imageUrl = imageUrl ?? res.url;
         } else {
@@ -419,7 +432,7 @@ export const CreatePostScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       id: `media-${i}`,
       postId: `local-${Date.now()}`,
       mediaUrl: a.uri,
-      mediaType: a.type === 'image' ? 'image' as const : 'video' as const,
+      mediaType: isImageAsset(a) ? 'image' as const : 'video' as const,
       sortOrder: i,
       createdAt: new Date().toISOString(),
     }));
