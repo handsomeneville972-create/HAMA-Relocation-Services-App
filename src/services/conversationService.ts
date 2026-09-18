@@ -68,7 +68,8 @@ export async function getUserConversations(
         }
       }
 
-      // Get unread counts per conversation
+      // Get unread counts per conversation: messages from others
+      // created after my last_read_at (true count, not boolean).
       const { data: participantRows } = await supabase
         .from('conversation_participants')
         .select('conversation_id, last_read_at')
@@ -76,12 +77,23 @@ export async function getUserConversations(
         .in('conversation_id', convIds);
 
       const unreadMap = new Map<string, number>();
-      for (const p of participantRows ?? []) {
-        const latest = latestByConversation.get(p.conversation_id);
-        if (latest && (!p.last_read_at || new Date(latest.created_at) > new Date(p.last_read_at))) {
-          unreadMap.set(p.conversation_id, (unreadMap.get(p.conversation_id) || 0) + 1);
-        }
-      }
+      await Promise.all(
+        (participantRows ?? []).map(async (p: any) => {
+          let query = supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('conversation_id', p.conversation_id)
+            .neq('sender_id', userId)
+            .is('deleted_at', null);
+          if (p.last_read_at) {
+            query = query.gt('created_at', p.last_read_at);
+          }
+          const { count } = await query;
+          if (count && count > 0) {
+            unreadMap.set(p.conversation_id, count);
+          }
+        }),
+      );
 
       const enriched = (data as unknown as Array<Record<string, unknown>>).map(c => {
         const latest = latestByConversation.get(c.id as string);
@@ -330,11 +342,21 @@ export async function markConversationAsRead(
 ): Promise<{ error: string | null }> {
   return executeQuery(
     async () => {
+      const readAt = new Date().toISOString();
       const { error } = await supabase
         .from('conversation_participants')
-        .update({ last_read_at: new Date().toISOString() })
+        .update({ last_read_at: readAt })
         .eq('conversation_id', conversationId)
         .eq('user_id', userId);
+
+      // Tell the other participant live so their ticks turn blue.
+      if (!error) {
+        supabase.channel(`conversation:${conversationId}`).send({
+          event: 'messages_seen',
+          payload: { user_id: userId, seen_at: readAt },
+          type: 'broadcast',
+        });
+      }
       return { data: null, error };
     },
     null,
@@ -517,11 +539,24 @@ export async function uploadAttachment(
 
     const filePath = `${userId}/${conversationId}/${Date.now()}_${fileName}`;
 
+    const lower = fileName.toLowerCase();
+    const contentType = lower.endsWith('.pdf')
+      ? 'application/pdf'
+      : lower.endsWith('.m4a')
+        ? 'audio/mp4'
+        : lower.endsWith('.mp3')
+          ? 'audio/mpeg'
+          : lower.endsWith('.wav')
+            ? 'audio/wav'
+            : lower.endsWith('.png')
+              ? 'image/png'
+              : lower.endsWith('.webp')
+                ? 'image/webp'
+                : 'image/jpeg';
+
     const { data, error } = await supabase.storage
       .from('chat-attachments')
-      .upload(filePath, arrayBuffer, {
-        contentType: fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
-      });
+      .upload(filePath, arrayBuffer, { contentType });
 
     if (error) return { data: null, error: error.message };
 

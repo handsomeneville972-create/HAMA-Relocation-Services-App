@@ -7,7 +7,7 @@
  */
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated, KeyboardAvoidingView, Platform, ImageBackground, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated, KeyboardAvoidingView, Platform, ImageBackground, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { getConversationById, sendMessage, editMessage, deleteMessage, markConversationAsRead, uploadAttachment } from '../../services/conversationService';
@@ -21,6 +21,7 @@ import { TypingIndicator } from './TypingIndicator';
 import { MessageContextMenu } from './MessageContextMenu';
 import { AttachmentPicker } from './AttachmentPicker';
 import { ReportModal } from './ReportModal';
+import { VoiceRecordBar } from './VoiceRecordBar';
 import { useTypingIndicator } from '../../hooks/useTypingIndicator';
 import { usePresence } from '../../hooks/usePresence';
 import { useRealtimeMessages } from '../../hooks/useRealtimeMessages';
@@ -78,15 +79,22 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
   const [attachmentPickerVisible, setAttachmentPickerVisible] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [reportedUserId, setReportedUserId] = useState('');
+  // Quoted reply state
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  // Voice recording state
+  const [recordingVoice, setRecordingVoice] = useState(false);
 
   // Custom hooks
-  const { messages, isLoading, loadInitial, loadMore, hasMore, addMessage, updateMessage, removeMessage, replaceOptimistic, removeOptimistic } = useMessages(conversationId);
+  const { messages, isLoading, loadInitial, loadMore, hasMore, addMessage, updateMessage, removeMessage, replaceOptimistic, removeOptimistic, markOwnMessagesRead } = useMessages(conversationId);
   const { isOtherUserTyping, startTyping, stopTyping } = useTypingIndicator(conversationId, currentUserId);
   const { isUserOnline, getUserLastSeen } = usePresence(conversationId, currentUserId);
   const { isConnected, broadcast } = useRealtimeMessages(conversationId, currentUserId, {
     onNewMessage: addMessage,
     onMessageEdited: (msgId, content, editedAt) => updateMessage(msgId, { content, text: content, edited_at: editedAt }),
     onMessageDeleted: (msgId) => updateMessage(msgId, { deleted_at: new Date().toISOString() }),
+    onMessagesSeen: (_userId, seenAt) => {
+      if (currentUserId) markOwnMessagesRead(currentUserId, seenAt);
+    },
   });
 
   // Fetch conversation data
@@ -120,7 +128,9 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
   const handleSend = useCallback(async () => {
     if (!messageText.trim() || sending || !currentUserId) return;
     const text = messageText.trim();
+    const replyTarget = replyingTo;
     setMessageText('');
+    setReplyingTo(null);
     setSending(true);
     stopTyping();
 
@@ -132,6 +142,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
       text,
       created_at: new Date().toISOString(),
       read: false,
+      reply_to_id: replyTarget?.id ?? null,
+      reply_to: replyTarget ?? undefined,
     };
     addMessage(optimisticMsg);
 
@@ -140,21 +152,24 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
         conversationId,
         senderId: currentUserId,
         text,
+        replyToId: replyTarget?.id,
       });
 
       if (error) {
         removeOptimistic(tempId);
         setMessageText(text);
+        setReplyingTo(replyTarget);
       } else if (data) {
-        replaceOptimistic(tempId, data);
+        replaceOptimistic(tempId, { ...data, reply_to: replyTarget ?? undefined });
       }
     } catch {
       removeOptimistic(tempId);
       setMessageText(text);
+      setReplyingTo(replyTarget);
     } finally {
       setSending(false);
     }
-  }, [messageText, sending, currentUserId, conversationId, addMessage, removeOptimistic, replaceOptimistic, stopTyping]);
+  }, [messageText, sending, currentUserId, conversationId, replyingTo, addMessage, removeOptimistic, replaceOptimistic, stopTyping]);
 
   // Handle typing
   const handleTyping = useCallback(() => {
@@ -194,6 +209,119 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
     setContextMenuVisible(true);
   }, []);
 
+  // Handle voice note send (uri from recorder, duration in seconds)
+  const handleSendVoice = useCallback(async (uri: string, durationSec: number) => {
+    if (!currentUserId) {
+      setRecordingVoice(false);
+      return;
+    }
+    setRecordingVoice(false);
+    setSending(true);
+    stopTyping();
+
+    const mins = Math.floor(durationSec / 60);
+    const secs = durationSec % 60;
+    const label = `🎤 Voice message (${mins}:${secs.toString().padStart(2, '0')})`;
+    const fileName = `voice-${Date.now()}.m4a`;
+
+    const tempId = `temp-${Date.now()}`;
+    addMessage({
+      id: tempId,
+      sender_id: currentUserId,
+      text: label,
+      created_at: new Date().toISOString(),
+      read: false,
+      message_type: 'voice',
+    });
+
+    try {
+      const { data: upload, error: uploadError } = await uploadAttachment(
+        uri,
+        fileName,
+        conversationId,
+        currentUserId,
+      );
+      if (uploadError || !upload) {
+        removeOptimistic(tempId);
+        Alert.alert('Upload Failed', 'Could not send the voice note. Please try again.');
+        return;
+      }
+      const { data, error } = await sendMessage({
+        conversationId,
+        senderId: currentUserId,
+        text: label,
+        messageType: 'voice',
+        attachmentUrl: upload.url,
+      });
+      if (error) {
+        removeOptimistic(tempId);
+        Alert.alert('Send Failed', 'Could not send the voice note. Please try again.');
+      } else if (data) {
+        replaceOptimistic(tempId, data);
+      }
+    } catch {
+      removeOptimistic(tempId);
+    } finally {
+      setSending(false);
+    }
+  }, [currentUserId, conversationId, addMessage, removeOptimistic, replaceOptimistic, stopTyping]);
+
+  // Handle reply (from context menu)
+  const handleReply = useCallback((msg: Message) => {
+    setReplyingTo(msg);
+    setContextMenuVisible(false);
+  }, []);
+
+  // Short human-readable summary of a message for quote previews
+  const describeMessage = useCallback((msg: Message): string => {
+    const t = msg.message_type || 'text';
+    if (t === 'image') return '📷 Photo';
+    if (t === 'file') return `📎 ${msg.text || 'Attachment'}`;
+    if (t === 'voice') return '🎤 Voice message';
+    if (t === 'property') return '🏠 Property listing';
+    if (t === 'product') return '🏠 Marketplace item';
+    if (t === 'service_provider') return '🏠 Service provider';
+    if (t === 'location') return '📍 Shared location';
+    const text = (msg.text || msg.content || '').trim();
+    return text.length > 80 ? text.slice(0, 77) + '...' : text;
+  }, []);
+
+  const replySenderName = useCallback(
+    (msg: Message): string => {
+      if (msg.sender_id === currentUserId) return 'You';
+      return otherUser?.name || 'Them';
+    },
+    [currentUserId, otherUser],
+  );
+
+  // Resolve the quoted parent for a reply (loaded messages, else optimistic copy)
+  const resolveReplyTo = useCallback(
+    (msg: Message): Message | null => {
+      if (!msg.reply_to_id) return msg.reply_to ?? null;
+      return (
+        messages.find((m) => m.id === msg.reply_to_id) ?? msg.reply_to ?? null
+      );
+    },
+    [messages],
+  );
+
+  // Jump to the original message when a quote is tapped
+  const scrollToMessage = useCallback(
+    (messageId: string) => {
+      const idx = flatListDataRef.current.findIndex(
+        (item: any) => item.type === 'message' && item.message.id === messageId,
+      );
+      if (idx >= 0) {
+        try {
+          flatListRef.current?.scrollToIndex({ index: idx, viewPosition: 0.5 });
+        } catch {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }
+      }
+    },
+    [],
+  );
+
   // Handle edit
   const handleEdit = useCallback(async () => {
     if (!selectedMessage) return;
@@ -227,6 +355,32 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
     ]);
   }, [selectedMessage, removeMessage]);
 
+  // Handle voice/video call via the phone network (E1).
+  // Logs a system message so the call is captured in-thread.
+  const handleCall = useCallback(async () => {
+    const phone = otherUser?.phone?.trim();
+    if (!phone) {
+      Alert.alert(
+        'No phone number',
+        `${otherUser?.name ?? 'This user'} hasn't shared a phone number yet. Send them a message to arrange a call.`,
+      );
+      return;
+    }
+    try {
+      await Linking.openURL(`tel:${phone}`);
+      if (!currentUserId) return;
+      const { data } = await sendMessage({
+        conversationId,
+        senderId: currentUserId,
+        text: `📞 Called ${otherUser?.name ?? 'them'}`,
+        messageType: 'system',
+      });
+      if (data) addMessage(data);
+    } catch {
+      Alert.alert('Call failed', 'Could not open the phone app. Please try again.');
+    }
+  }, [otherUser, currentUserId, conversationId, addMessage]);
+
   // Handle report
   const handleReport = useCallback(() => {
     if (!selectedMessage || !currentUserId) return;
@@ -253,15 +407,24 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
   // Render message
   const renderItem = useCallback(({ item, index }: { item: Message; index: number }) => {
     const isOwn = item.sender_id === currentUserId;
+    const parent = resolveReplyTo(item);
     return (
       <MessageBubble
         msg={item}
         isOwn={isOwn}
         avatar={otherUser?.avatar}
         onLongPress={handleLongPress}
+        replyTo={
+          parent
+            ? { senderName: replySenderName(parent), text: describeMessage(parent) }
+            : null
+        }
+        onQuotePress={
+          parent ? () => scrollToMessage(parent.id) : undefined
+        }
       />
     );
-  }, [currentUserId, otherUser, handleLongPress]);
+  }, [currentUserId, otherUser, handleLongPress, resolveReplyTo, replySenderName, describeMessage, scrollToMessage]);
 
   // Group messages by date for rendering
   const dateGroups = groupMessagesByDate(messages);
@@ -269,6 +432,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
     { type: 'date' as const, date: group.date, id: `date-${gi}` },
     ...group.messages.map(msg => ({ type: 'message' as const, message: msg, id: msg.id })),
   ]);
+  const flatListDataRef = useRef<typeof flatListData>(flatListData);
+  flatListDataRef.current = flatListData;
 
   const renderFlatItem = useCallback(({ item }: { item: any }) => {
     if (item.type === 'date') {
@@ -309,6 +474,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
           lastSeen={lastSeen}
           onBack={onBack}
           onMore={() => {}}
+          onCall={handleCall}
         />
 
         {/* Messages */}
@@ -329,6 +495,12 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
         />
 
         {/* Input Bar */}
+        {recordingVoice && (
+          <VoiceRecordBar
+            onCancel={() => setRecordingVoice(false)}
+            onSend={handleSendVoice}
+          />
+        )}
         <MessageComposer
           value={messageText}
           onChangeText={setMessageText}
@@ -336,6 +508,16 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
           onAttach={handleAttach}
           onTyping={handleTyping}
           sending={sending}
+          onMic={() => setRecordingVoice(true)}
+          replyPreview={
+            replyingTo
+              ? {
+                  senderName: replySenderName(replyingTo),
+                  text: describeMessage(replyingTo),
+                }
+              : null
+          }
+          onCancelReply={() => setReplyingTo(null)}
         />
         </KeyboardAvoidingView>
       </View>
@@ -345,7 +527,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({ conversationId, on
         visible={contextMenuVisible}
         onClose={() => setContextMenuVisible(false)}
         isOwn={selectedMessage?.sender_id === currentUserId}
-        onReply={() => {}}
+        onReply={() => selectedMessage && handleReply(selectedMessage)}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onReport={handleReport}

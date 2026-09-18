@@ -12,6 +12,7 @@
  */
 
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { supabase } from '../utils/supabaseClient';
 
 let Notifications: typeof import('expo-notifications') | null = null;
@@ -68,8 +69,13 @@ export async function registerForPushNotifications(
       return { token: null, error: 'Notification permissions not granted' };
     }
 
-    // Get the Expo push token
-    const tokenData = await Notifs.getExpoPushTokenAsync();
+    // Get the Expo push token (projectId required for EAS / standalone builds)
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+    const tokenData =
+      projectId && projectId !== 'YOUR_EAS_PROJECT_ID'
+        ? await Notifs.getExpoPushTokenAsync({ projectId })
+        : await Notifs.getExpoPushTokenAsync();
     const pushToken = tokenData.data;
 
     // Update the profiles table with the push token

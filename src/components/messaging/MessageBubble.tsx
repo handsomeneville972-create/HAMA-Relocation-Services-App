@@ -15,6 +15,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { PropertyMessageCard } from './PropertyMessageCard';
 import { ProductMessageCard } from './ProductMessageCard';
 import { ServiceProviderMessageCard } from './ServiceProviderMessageCard';
+import { VoicePlayer } from './VoicePlayer';
 import { UserAvatar } from '../UserAvatar';
 import type { Message } from '../../constants/types';
 
@@ -24,6 +25,8 @@ interface MessageBubbleProps {
   avatar?: string;
   onLongPress?: (msg: Message) => void;
   onPress?: (msg: Message) => void;
+  replyTo?: { senderName: string; text: string } | null;
+  onQuotePress?: () => void;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -32,6 +35,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   avatar,
   onLongPress,
   onPress,
+  replyTo = null,
+  onQuotePress,
 }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -51,6 +56,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const isDeleted = !!msg.deleted_at;
   const isEdited = !!msg.edited_at;
   const messageType = msg.message_type || 'text';
+
+  // Voice note duration is encoded in the label: "🎤 Voice message (M:SS)"
+  const voiceDurationSec = useMemo(() => {
+    if (messageType !== 'voice') return undefined;
+    const m = (msg.text || msg.content || '').match(/(\d+):(\d{2})/);
+    if (!m) return undefined;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }, [messageType, msg.text, msg.content]);
 
   const formatTime = (timestamp: string) => {
     if (!timestamp) return '';
@@ -92,6 +105,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {msg.text || 'File attachment'}
               </Text>
             </View>
+          </View>
+        );
+
+      case 'voice':
+        return msg.attachment_url ? (
+          <VoicePlayer uri={msg.attachment_url} durationSec={voiceDurationSec} isOwn={isOwn} />
+        ) : (
+          <View style={styles.fileContainer}>
+            <Ionicons name="mic-outline" size={24} color={colors.primary} />
+            <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
+              {msg.text || 'Voice message'}
+            </Text>
           </View>
         );
 
@@ -162,6 +187,29 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         onPress={() => onPress?.(msg)}
         style={[styles.messageBubble, isOwn ? styles.ownBubble : styles.otherBubble]}
       >
+        {replyTo && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onQuotePress}
+            style={styles.quoteContainer}
+          >
+            <View style={styles.quoteAccent} />
+            <View style={styles.quoteTextWrap}>
+              <Text
+                style={[styles.quoteName, isOwn && styles.ownQuoteName]}
+                numberOfLines={1}
+              >
+                {replyTo.senderName}
+              </Text>
+              <Text
+                style={[styles.quoteText, isOwn && styles.ownQuoteText]}
+                numberOfLines={2}
+              >
+                {replyTo.text}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
         {renderContent()}
 
         <View style={styles.metaRow}>
@@ -175,9 +223,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           {isOwn && (
             <Ionicons
-              name={msg.read ? 'checkmark-done' : 'checkmark'}
+              name={msg.id.startsWith('temp-') ? 'checkmark' : 'checkmark-done'}
               size={14}
-              color={msg.read ? colors.primary : colors.textTertiary}
+              color={
+                msg.read && !msg.id.startsWith('temp-')
+                  ? colors.primary
+                  : colors.textTertiary
+              }
               style={styles.readIcon}
             />
           )}
@@ -280,5 +332,37 @@ const createStyles = (colors: ThemeColors) =>
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,
+  },
+  quoteContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 6,
+    gap: 8,
+  },
+  quoteAccent: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
+  quoteTextWrap: {
+    flex: 1,
+  },
+  quoteName: {
+    ...FONTS.caption,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  ownQuoteName: {
+    color: '#fff',
+  },
+  quoteText: {
+    ...FONTS.caption,
+    color: colors.textSecondary,
+  },
+  ownQuoteText: {
+    color: 'rgba(255,255,255,0.85)',
   },
 });

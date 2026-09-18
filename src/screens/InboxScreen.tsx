@@ -8,7 +8,7 @@
  * - Tapping a user opens their full-screen chat (mobile-first; no split pane)
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, RefreshControl, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -55,23 +55,20 @@ export const InboxScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { currentUserId } = useAuth();
-  const conversations = useUserConversations();
+  const { conversations, loading, refresh } = useUserConversations();
   const totalUnread = useUserUnreadCount();
   const { isUserOnline } = useInboxPresence(currentUserId);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<InboxTab>('all');
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setRefreshing(false);
-  }, []);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh]);
 
   const getOtherUser = useCallback(
     (conv: Conversation): User | undefined =>

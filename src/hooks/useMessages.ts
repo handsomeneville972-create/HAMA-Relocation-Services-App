@@ -123,6 +123,19 @@ export function useMessages(conversationId: string | null) {
     setMessages((prev) => prev.filter((m) => m.id !== tempId));
   }, []);
 
+  // Mark my sent messages as read up to a timestamp
+  // (fired when the other participant's seen event arrives).
+  const markOwnMessagesRead = useCallback((myUserId: string, seenAt: string) => {
+    const seenTime = new Date(seenAt).getTime();
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.sender_id !== myUserId || m.read) return m;
+        const msgTime = new Date(m.created_at || m.timestamp || '').getTime();
+        return msgTime <= seenTime ? { ...m, read: true } : m;
+      }),
+    );
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -135,6 +148,7 @@ export function useMessages(conversationId: string | null) {
     removeMessage,
     replaceOptimistic,
     removeOptimistic,
+    markOwnMessagesRead,
     setMessages,
   };
 }

@@ -451,6 +451,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Best-effort: stop this device receiving the user's pushes.
+      import('../services/pushNotificationService')
+        .then(({ removePushToken }) => removePushToken(currentUserId))
+        .catch(() => {});
       await logAuditEvent({
         event_type: 'logout',
         user_id: currentUserId,

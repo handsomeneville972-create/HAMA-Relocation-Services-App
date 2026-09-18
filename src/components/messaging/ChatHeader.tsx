@@ -21,6 +21,7 @@ interface ChatHeaderProps {
   lastSeen?: string | null;
   onBack: () => void;
   onMore: () => void;
+  onCall?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -29,6 +30,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   lastSeen,
   onBack,
   onMore,
+  onCall,
 }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -54,6 +56,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           <OnlineIndicator isOnline={isOnline} lastSeen={lastSeen} />
         </View>
 
+        {onCall && (
+          <TouchableOpacity style={styles.callButton} onPress={onCall}>
+            <Ionicons name="call-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.moreButton} onPress={onMore}>
           <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -104,6 +111,14 @@ const createStyles = (colors: ThemeColors) =>
     color: colors.text,
   },
   moreButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.bgCard,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  callButton: {
     width: 40,
     height: 40,
     borderRadius: 20,

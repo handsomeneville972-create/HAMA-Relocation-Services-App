@@ -80,6 +80,81 @@ function SessionMonitor() {
 }
 
 /**
+ * PushBootstrap — registers the Expo push token after login, wires
+ * foreground/tap listeners, clears the badge on foreground, and
+ * deep-links notification taps into the chat thread.
+ */
+function PushBootstrap() {
+  const { isAuthenticated, currentUserId } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId) return;
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { registerForPushNotifications, setupNotificationListeners } =
+          await import('../src/services/pushNotificationService');
+        const { clearBadge } = await import(
+          '../src/services/pushNotificationService'
+        );
+        await registerForPushNotifications(currentUserId);
+        if (cancelled) return;
+        cleanup = await setupNotificationListeners({
+          onTap: (response: any) => {
+            const data = response?.notification?.request?.content?.data as
+              | { conversationId?: string }
+              | undefined;
+            if (data?.conversationId) {
+              router.push({
+                pathname: '/Chat',
+                params: { conversationId: data.conversationId },
+              });
+            } else {
+              router.push('/Inbox');
+            }
+          },
+        });
+        // Cold start: app opened from a tapped notification
+        const Notifs = await import('expo-notifications').catch(() => null);
+        const lastResponse =
+          await Notifs?.getLastNotificationResponseAsync?.();
+        const coldData = lastResponse?.notification.request.content.data as
+          | { conversationId?: string }
+          | undefined;
+        if (coldData?.conversationId && !cancelled) {
+          router.push({
+            pathname: '/Chat',
+            params: { conversationId: coldData.conversationId },
+          });
+        }
+        await clearBadge();
+      } catch {
+        // Push is best-effort — never break the app over it.
+      }
+    })();
+
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        import('../src/services/pushNotificationService').then(
+          ({ clearBadge }) => clearBadge().catch(() => {}),
+        );
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+      sub.remove();
+    };
+  }, [isAuthenticated, currentUserId, router]);
+
+  return null;
+}
+
+/**
  * TrialEndedGate — shows the trial-ended/subscription-expired popup
  * once the 7-day free trial expires or paid subscription lapses.
  * Dismissal lasts for the current app session.
@@ -134,6 +209,7 @@ function RootApp() {
               <SubscriptionProvider>
               <AuthGuard>
                 <SessionMonitor />
+                <PushBootstrap />
                 <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
                 <View style={{ flex: 1 }}>
                   <Stack

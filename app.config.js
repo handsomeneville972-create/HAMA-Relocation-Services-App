@@ -22,6 +22,8 @@ export default {
       bundleIdentifier: 'com.hama.app',
       infoPlist: {
         NSFaceIDUsageDescription: 'HAMA uses Face ID to securely authenticate you.',
+        NSMicrophoneUsageDescription:
+          'HAMA needs microphone access so you can send voice messages to landlords, sellers and movers.',
       },
     },
     android: {
@@ -30,6 +32,7 @@ export default {
         backgroundColor: '#0A0A0F',
       },
       package: 'com.hama.app',
+      permissions: ['RECORD_AUDIO'],
     },
     web: {
       bundler: 'metro',
@@ -58,10 +61,22 @@ export default {
           color: '#FF6B00',
         },
       ],
+      [
+        'expo-audio',
+        {
+          microphonePermission:
+            'HAMA needs microphone access so you can send voice messages to landlords, sellers and movers.',
+        },
+      ],
     ],
     extra: {
       supabaseUrl: SUPABASE_URL,
       supabaseAnonKey: SUPABASE_ANON_KEY,
+      // Set after running `eas init` (or paste your EAS project ID here).
+      // Required for Expo push tokens in standalone/dev builds.
+      eas: {
+        projectId: process.env.EAS_PROJECT_ID ?? 'YOUR_EAS_PROJECT_ID',
+      },
     },
   },
 };

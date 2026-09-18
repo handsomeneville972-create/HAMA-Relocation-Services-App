@@ -20,6 +20,9 @@ interface MessageComposerProps {
   onTyping?: () => void;
   sending?: boolean;
   disabled?: boolean;
+  replyPreview?: { senderName: string; text: string } | null;
+  onCancelReply?: () => void;
+  onMic?: () => void;
 }
 
 export const MessageComposer: React.FC<MessageComposerProps> = ({
@@ -30,6 +33,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   onTyping,
   sending = false,
   disabled = false,
+  replyPreview = null,
+  onCancelReply,
+  onMic,
 }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -53,6 +59,26 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   return (
     <View style={styles.container}>
+      {replyPreview && (
+        <View style={styles.replyBar}>
+          <View style={styles.replyAccent} />
+          <View style={styles.replyTextWrap}>
+            <Text style={styles.replyName} numberOfLines={1}>
+              {replyPreview.senderName}
+            </Text>
+            <Text style={styles.replySnippet} numberOfLines={1}>
+              {replyPreview.text}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={onCancelReply}
+            activeOpacity={0.7}
+            style={styles.replyCancel}
+          >
+            <Ionicons name="close" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.row}>
         <TouchableOpacity style={styles.attachButton} onPress={onAttach} activeOpacity={0.7}>
           <Ionicons name="add-circle-outline" size={26} color={colors.textSecondary} />
@@ -80,24 +106,34 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             }],
           }}
         >
-          <TouchableOpacity
-            style={[styles.sendButton, hasText && styles.sendButtonActive]}
-            onPress={onSend}
-            onPressIn={() => animateSendPress(true)}
-            onPressOut={() => animateSendPress(false)}
-            disabled={!hasText || sending || disabled}
-            activeOpacity={0.7}
-          >
-            {sending ? (
-              <Ionicons name="hourglass" size={20} color={colors.textTertiary} />
-            ) : (
-              <Ionicons
-                name="send"
-                size={20}
-                color={hasText ? '#fff' : colors.textTertiary}
-              />
-            )}
-          </TouchableOpacity>
+          {hasText || sending || disabled ? (
+            <TouchableOpacity
+              style={[styles.sendButton, hasText && styles.sendButtonActive]}
+              onPress={onSend}
+              onPressIn={() => animateSendPress(true)}
+              onPressOut={() => animateSendPress(false)}
+              disabled={!hasText || sending || disabled}
+              activeOpacity={0.7}
+            >
+              {sending ? (
+                <Ionicons name="hourglass" size={20} color={colors.textTertiary} />
+              ) : (
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={hasText ? '#fff' : colors.textTertiary}
+                />
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={onMic}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="mic-outline" size={22} color={colors.primary} />
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
     </View>
@@ -156,5 +192,42 @@ const createStyles = (colors: ThemeColors) =>
   sendButtonActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  replyBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgCard,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    marginBottom: SPACING.sm,
+    gap: SPACING.sm,
+  },
+  replyAccent: {
+    width: 3,
+    alignSelf: 'stretch',
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
+  replyTextWrap: {
+    flex: 1,
+  },
+  replyName: {
+    ...FONTS.caption,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  replySnippet: {
+    ...FONTS.caption,
+    color: colors.textSecondary,
+  },
+  replyCancel: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

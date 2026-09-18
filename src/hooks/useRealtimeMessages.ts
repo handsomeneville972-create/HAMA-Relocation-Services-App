@@ -14,6 +14,7 @@ interface RealtimeCallbacks {
   onNewMessage: (msg: Message) => void;
   onMessageEdited: (msgId: string, content: string, editedAt: string) => void;
   onMessageDeleted: (msgId: string) => void;
+  onMessagesSeen?: (userId: string, seenAt: string) => void;
 }
 
 export function useRealtimeMessages(
@@ -75,6 +76,16 @@ export function useRealtimeMessages(
       .on('broadcast', { event: 'message_deleted' }, (payload) => {
         const { message_id } = payload.payload as { message_id: string };
         callbacksRef.current.onMessageDeleted(message_id);
+      })
+      // Broadcast: other participant read up to seen_at
+      .on('broadcast', { event: 'messages_seen' }, (payload) => {
+        const { user_id, seen_at } = payload.payload as {
+          user_id: string;
+          seen_at: string;
+        };
+        // Ignore my own read echoes
+        if (user_id === currentUserId) return;
+        callbacksRef.current.onMessagesSeen?.(user_id, seen_at);
       })
       // Postgres Changes: fallback for missed broadcasts (e.g. offline → online)
       .on(

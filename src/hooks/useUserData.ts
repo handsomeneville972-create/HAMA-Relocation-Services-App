@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   MOCK_CONVERSATIONS,
@@ -73,32 +73,44 @@ export const useUserFavorites = () => {
  * Returns conversations where the current user is a participant.
  * Queries Supabase first, falls back to mock data.
  */
-export const useUserConversations = (): Conversation[] => {
+export const useUserConversations = (): {
+  conversations: Conversation[];
+  loading: boolean;
+  refresh: () => Promise<void>;
+} => {
   const { currentUserId } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     MOCK_CONVERSATIONS.filter(conv =>
       conv.participants.some(p => p.id === currentUserId)
     )
   );
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     if (!currentUserId) return;
-
-    getSupabaseConversations(currentUserId).then(({ data }) => {
-      if (data && data.length > 0) {
-        setConversations(data);
-      }
-    });
+    const { data } = await getSupabaseConversations(currentUserId);
+    if (data && data.length > 0) {
+      setConversations(data);
+    }
   }, [currentUserId]);
 
-  return conversations;
+  useEffect(() => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    refresh().finally(() => setLoading(false));
+  }, [currentUserId, refresh]);
+
+  return { conversations, loading, refresh };
 };
 
 /**
  * Returns total unread count from all of the current user's conversations.
  */
 export const useUserUnreadCount = (): number => {
-  const conversations = useUserConversations();
+  const { conversations } = useUserConversations();
 
   return useMemo(() => {
     return conversations.reduce((sum, c) => sum + c.unreadCount, 0);

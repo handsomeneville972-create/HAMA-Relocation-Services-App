@@ -621,7 +621,7 @@ export type UserType = 'seeker' | 'landlord' | 'seller' | 'service_provider';
 
 // ============ CHAT / MESSAGING TYPES ============
 
-export type MessageType = 'text' | 'image' | 'file' | 'property' | 'product' | 'service_provider' | 'location' | 'system';
+export type MessageType = 'text' | 'image' | 'file' | 'voice' | 'property' | 'product' | 'service_provider' | 'location' | 'system';
 
 export interface Message {
   id: string;
